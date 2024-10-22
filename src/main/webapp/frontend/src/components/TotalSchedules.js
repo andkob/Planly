@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 function TotalSchedules() {
     const [scheduleCount, setScheduleCount] = useState(0); // State to hold the count
+    const [recentEntries, setRecentEntries] = useState(0);
     const [loading, setLoading] = useState(true); // State for loading status
     const [error, setError] = useState(null); // State to hold any error messages
 
@@ -24,7 +25,21 @@ function TotalSchedules() {
             }
         };
 
+        const countRecentEntries = async (timeframe=7) => {
+            try {
+                const response = await fetch("/api/schedule/recent-entries");
+                if (!response.ok) {
+                    throw new Error('fetch recent entries response not ok');
+                }
+                const count = await response.json();
+                setRecentEntries(count);
+            } catch (error) {
+                console.error('Error fetching recent entry count:', error);
+            }
+        }
+
         fetchScheduleCount(); // Call the function to fetch data
+        countRecentEntries();
     }, []); // Empty dependency array means this effect runs once when the component mounts
 
     if (loading) {
@@ -36,7 +51,10 @@ function TotalSchedules() {
     }
 
     return (
-        <div className="text-2xl font-bold">{scheduleCount}</div>
+        <div>
+            <div className="text-2xl font-bold">{scheduleCount}</div>
+            <p className="text-xs text-gray-500">+{recentEntries} from last week</p>
+        </div>
     );
 }
 

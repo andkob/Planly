@@ -25,7 +25,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -118,18 +121,28 @@ public class GoogleSheetsService {
      * @throws SomeSpecificException if there's an issue with the data or saving (if applicable).
      */
     @Transactional
-    public Schedule convertToSchedule(List<List<Object>> scheduleData, String scheduleName) {
+    public Schedule convertToSchedule(List<List<Object>> scheduleData, String scheduleName, String spreadsheetID) {
         Schedule schedule = new Schedule();
+        schedule.setId(spreadsheetID);
         schedule.setName(scheduleName);
         List<ScheduleEntry> entries = new ArrayList<>();
 
-        for (List<Object> row : scheduleData) {
+        // formatter for the timestamp
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss");
+
+        // Iterate over each schedule entry in the schedule, skipping the column names
+        Iterator<List<Object>> scheduleIter = scheduleData.iterator();
+        scheduleIter.next(); // skip the column names
+
+        while (scheduleIter.hasNext()) {
+            List<Object> row = scheduleIter.next();
             ScheduleEntry entry = new ScheduleEntry();
-            int index = 0;
+            int columnName = 0;
             for (Object column : row) {
-                switch (index) {
+                switch (columnName) {
                     case TIMESTAMP:
-                        entry.setTimestamp(column.toString());
+                        LocalDateTime dateTime = LocalDateTime.parse(column.toString(), formatter);
+                        entry.setTimestamp(dateTime);
                         break;
                     case EMAIL:
                         entry.setEmail(column.toString());
@@ -150,7 +163,7 @@ public class GoogleSheetsService {
                         entry.setFridayTimes(column.toString());
                         break;
                 }
-                index++;
+                columnName++;
             }
             entry.setSchedule(schedule); // Set reference to the parent schedule
             entries.add(entry);
@@ -167,6 +180,25 @@ public class GoogleSheetsService {
      */
     public long countSchedules() {
         return scheduleRepository.count();
+    }
+
+    // TODO - make this more efficient by database query instead of fetching everything
+    public int countRecentEntries() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Schedule> schedules = scheduleRepository.findAll();
+
+        int recentEntries = 0;
+        for (Schedule schedule : schedules) {
+            List<ScheduleEntry> entries = schedule.getEntries();
+            for (ScheduleEntry entry : entries) {
+                LocalDateTime dateTime = entry.getTimestamp();
+                if (dateTime.isAfter(now.minusDays(7))) {
+                    recentEntries++;
+                }
+            }
+
+        }
+        return recentEntries;
     }
 
     /**

@@ -4,19 +4,21 @@ import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+/**
+ * A schedule is NOT an individual's schedule. An organization can specify
+ * schedules for its members (e.g. classes, work) and each member's "schedule"
+ * will be stored as a Schedule ENTRY
+ */
 @Entity
 public class Schedule {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private String id;
 
     private String scheduleName;
 
@@ -30,6 +32,10 @@ public class Schedule {
 
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ScheduleEntry> entries;
+
+    public void setId(String sheetId) {
+        this.id = sheetId;
+    }
 
     public void setName(String scheduleName) {
         this.scheduleName = scheduleName;

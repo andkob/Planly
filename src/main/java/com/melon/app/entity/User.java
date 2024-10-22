@@ -32,12 +32,22 @@ public class User {
       inverseJoinColumns = @JoinColumn(name = "organization_id"))
     private Set<Organization> organizations;
 
+    public User() {}
+
+    public User(String email, String passwordHash) {
+        this.email = email;
+        this.passwordHash = passwordHash;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }
 
-    // TODO - Implement Hashing either here or somewhere else
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void addOrganization(Organization org) {
+        organizations.add(org);
     }
 }

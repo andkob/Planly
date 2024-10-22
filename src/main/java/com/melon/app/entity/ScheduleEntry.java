@@ -1,5 +1,7 @@
 package com.melon.app.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +21,7 @@ public class ScheduleEntry {
     @JoinColumn(name = "schedule_id")
     private Schedule schedule; // Reference to the parent schedule
 
-    private String timestamp;
+    private LocalDateTime timestamp;
     private String email;
     private String mondayTimes;
     private String tuesdayTimes;
@@ -31,11 +33,11 @@ public class ScheduleEntry {
         this.schedule = schedule;
     }
 
-    public String getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 

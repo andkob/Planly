@@ -8,7 +8,7 @@ export default function Dashboard({ handleFetchResponses }) {
   const [showCreateScheduleModal, setShowCreateScheduleModal] = useState(false);
 
   const openModal = () => setShowCreateScheduleModal(true);
-  const closeModal = () => setShowCreateScheduleModal(false)
+  const closeModal = () => setShowCreateScheduleModal(false);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -63,7 +63,6 @@ export default function Dashboard({ handleFetchResponses }) {
               <Calendar className="h-4 w-4 text-gray-400" />
             </div>
             <TotalSchedules />
-            <p className="text-xs text-gray-500">+2 from last week</p>
           </div>
           
           <div className="bg-white rounded-lg shadow p-6">
@@ -71,7 +70,7 @@ export default function Dashboard({ handleFetchResponses }) {
               <h3 className="text-sm font-medium text-gray-500">Active Users</h3>
               <Users className="h-4 w-4 text-gray-400" />
             </div>
-            <div className="text-2xl font-bold">48</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-gray-500">Active in last 24h</p>
           </div>
           
@@ -80,7 +79,7 @@ export default function Dashboard({ handleFetchResponses }) {
               <h3 className="text-sm font-medium text-gray-500">Upcoming Events</h3>
               <Clock className="h-4 w-4 text-gray-400" />
             </div>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-gray-500">Next 7 days</p>
           </div>
         </div>

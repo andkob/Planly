@@ -25,18 +25,18 @@ public class ScheduleController {
         this.googleSheetsService = googleSheetsService;
     }
 
-    @GetMapping("/schedule")
+    @GetMapping("/schedule/fetch")
     public List<List<Object>> getScheduleData(@RequestParam(value = "sheetID") String spreadsheetID) throws IOException {
         System.out.println("getSchedule endpoint reached");
         return googleSheetsService.getDataFromSheet(spreadsheetID, "A1:Z");
     }
 
-    @GetMapping("/store-schedule")
-    public Schedule storeScheduleData(@RequestParam(value = "sheetID") String spreadsheetID) throws IOException {
+    @GetMapping("/schedule/fetch-store")
+    public Schedule fetchAndStoreScheduleData(@RequestParam(value = "sheetID") String spreadsheetID) throws IOException {
         System.out.println("Store schedule endpoint reached");
         Schedule schedule = new Schedule(); // initialize with empty schedule to avoid possible related errors
         try {
-            schedule = googleSheetsService.convertToSchedule(googleSheetsService.getDataFromSheet(spreadsheetID, "A1:Z"), "testSchedule");
+            schedule = googleSheetsService.convertToSchedule(googleSheetsService.getDataFromSheet(spreadsheetID, "A1:Z"), "testSchedule", spreadsheetID);
             System.out.println("Success");
         } catch (IOException e) {
             System.out.println("FAIL");
@@ -48,6 +48,11 @@ public class ScheduleController {
     @GetMapping("/schedule/count")
     public long getScheduleCount() {
         return googleSheetsService.countSchedules();
+    }
+
+    @GetMapping("/schedule/recent-entries")
+    public int getRecentScheduleEntries() {
+        return googleSheetsService.countRecentEntries();
     }
 
     @GetMapping("/poll-updates")
