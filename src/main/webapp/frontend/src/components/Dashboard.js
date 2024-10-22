@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LayoutGrid, Calendar, Users, Clock, Search } from 'lucide-react';
-import CreateSchedule from './CreateSchedule';
+import CreateSchedule from './modals/CreateSchedule';
 import DropdownMenu from './DropdownMenu';
 import TotalSchedules from './TotalSchedules';
 
