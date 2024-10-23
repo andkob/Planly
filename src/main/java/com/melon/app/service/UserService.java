@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.melon.app.entity.User;
 import com.melon.app.repository.UserRepository;
 
+import jakarta.servlet.http.HttpSession;
+
 @Service
 public class UserService {
     @Autowired
@@ -17,9 +19,10 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Optional<User> login(String email, String password) {
+    public Optional<User> login(String email, String password, HttpSession session) {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPasswordHash())) {
+            session.setAttribute("user", user.get()); // store the user in the session
             return user;
         }
         return Optional.empty();

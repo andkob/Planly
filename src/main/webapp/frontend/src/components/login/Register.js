@@ -14,8 +14,8 @@ function Register() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }), // Make sure the keys match what your backend expects
-        credentials: 'include'  // This is required if your CORS policy allows credentials
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
       });
   
       const data = await response.text();

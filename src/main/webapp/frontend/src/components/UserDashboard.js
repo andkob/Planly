@@ -9,12 +9,12 @@ export default function UserDashboard() {
   const closeModal = () => setShowAddScheduleModal(false);
 
   const postSchedule = async (scheduleData) => {
-
     try {
-      const response = await fetch("/api/schedules/store-schedule", {
+      const response = await fetch("/api/schedules/create", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(scheduleData),
         credentials: 'include'
