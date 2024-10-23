@@ -10,9 +10,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 /**
- * A schedule is NOT an individual's schedule. An organization can specify
+ * A schedule is an individual's schedule. An organization can specify
  * schedules for its members (e.g. classes, work) and each member's "schedule"
- * will be stored as a Schedule ENTRY
+ * will have scheduleEntries for each "event"
+ * 
+ * Users can also have personal schedules they can add to organizations.
  */
 @Entity
 public class Schedule {
@@ -24,7 +26,7 @@ public class Schedule {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private User user; // owner of this schedule
 
     @ManyToOne
     @JoinColumn(name = "organization_id")
@@ -33,12 +35,23 @@ public class Schedule {
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ScheduleEntry> entries;
 
+    public Schedule() {}
+
+    public Schedule(String scheduleName, User owner) {
+        this.scheduleName = scheduleName;
+        this.user = owner;
+    }
+
     public void setId(String sheetId) {
         this.id = sheetId;
     }
 
     public void setName(String scheduleName) {
         this.scheduleName = scheduleName;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public void setEntries(List<ScheduleEntry> entries) {
