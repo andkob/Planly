@@ -3,15 +3,19 @@ package com.melon.app.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+
+import com.melon.app.security.JwtAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -20,7 +24,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
     
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         http
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable()) // TODO Disable CSRF protection (not recommended in production)
@@ -30,19 +34,17 @@ public class SecurityConfig {
                 .requestMatchers("/h2-console/*").permitAll()
                 .anyRequest().authenticated() // require authentication for any other requests
             )
-            .formLogin(form -> form.disable())
-            .sessionManagement(session -> session 
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // JWT filter
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.disable())  // Disable X-Frame-Options for H2 console
-            )
-            .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout")) // config logout behavior
-                .logoutSuccessUrl("/login?logout") // redirect to /login after logging out
-                .invalidateHttpSession(true) // invalidate session after logging out
             );
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 
     @Bean
