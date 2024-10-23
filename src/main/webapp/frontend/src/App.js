@@ -38,7 +38,7 @@ function App() {
         <Route path='register' element={<Register />} />
         <Route 
           path="/dashboard" 
-          element={isAuthenticated ? <Dashboard handleFetchResponses={handleFetchResponses} /> : <Navigate to="/login" />} 
+          element={isAuthenticated ? <UserDashboard /> : <Navigate to="/login" />} 
         />
         <Route path="/" element={<Navigate to="/login" />} /> {/* Redirect root to login */}
       </Routes>

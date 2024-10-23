@@ -10,11 +10,15 @@ export default function UserDashboard() {
 
   const postSchedule = async (scheduleData) => {
     try {
+      // get the JWT token
+      const token = localStorage.getItem('jwtToken');
+
       const response = await fetch("/api/schedules/create", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}` // Include the HWT token in the auth header
         },
         body: JSON.stringify(scheduleData),
         credentials: 'include'

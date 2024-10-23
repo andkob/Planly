@@ -24,6 +24,10 @@ function UserLogin({ setIsAuthenticated }) {
       });
 
       if (response.ok) {
+          // store the JWT token in local storage
+          const data = await response.json();
+          localStorage.setItem('jwtToken', data.token);
+
           console.log('Login successful');
           setMessage('Login successful');
           setIsAuthenticated(true);
