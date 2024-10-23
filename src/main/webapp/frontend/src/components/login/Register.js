@@ -9,7 +9,7 @@ function Register() {
     event.preventDefault();
 
     try {
-      const response = await fetch('/api/auth/user-register', {
+      const response = await fetch('/api/auth/user/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

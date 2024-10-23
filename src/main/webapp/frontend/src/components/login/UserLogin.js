@@ -11,7 +11,7 @@ function UserLogin({ setIsAuthenticated }) {
     event.preventDefault();
 
     try {
-      const response = await fetch('/api/auth/user-login', {
+      const response = await fetch('/api/auth/user/login', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/x-www-form-urlencoded',

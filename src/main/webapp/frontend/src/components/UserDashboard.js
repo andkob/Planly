@@ -4,14 +4,34 @@ import AddScheduleModal from './modals/AddScheduleModal';
 
 export default function UserDashboard() {
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
-  const [schedules, setSchedules] = useState([]);
 
   const openModal = () => setShowAddScheduleModal(true);
   const closeModal = () => setShowAddScheduleModal(false);
 
-  const addSchedule = (newSchedule) => {
-    setSchedules([...schedules, newSchedule]);
-    console.log('Schedules:', schedules); // You can handle saving schedules to your backend here
+  const postSchedule = async (scheduleData) => {
+
+    try {
+      const response = await fetch("/api/schedules/store-schedule", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(scheduleData),
+        credentials: 'include'
+      });
+
+      console.log(scheduleData);
+
+      if (response.ok) {
+        alert('Schedule saved successfully');
+        closeModal();
+      } else {
+        alert('Error saving schedule');
+      }
+
+    } catch (error) {
+      console.error("Error: " + error);
+    }
   };
 
   return (
@@ -36,7 +56,7 @@ export default function UserDashboard() {
                 <AddScheduleModal
                   showModal={showCreateScheduleModal}
                   closeModal={closeModal} 
-                  addSchedule={addSchedule}
+                  postSchedule={postSchedule}
                 />
               )}
             </div>

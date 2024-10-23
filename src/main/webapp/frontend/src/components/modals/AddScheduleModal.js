@@ -10,7 +10,7 @@ const daysOfWeek = [
   'Saturday',
 ];
 
-const AddScheduleModal = ({ showModal, closeModal, addSchedule }) => {
+const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
   const [scheduleName, setScheduleName] = useState('');
   const [days, setDays] = useState([{ day: '', startTime: '', endTime: '', eventName: '' }]);
 
@@ -26,7 +26,8 @@ const AddScheduleModal = ({ showModal, closeModal, addSchedule }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addSchedule({ name: scheduleName, days });
+    const scheduleData = { name: scheduleName, days };
+    postSchedule(scheduleData)
     closeModal();
   };
 
