@@ -37,10 +37,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
+/** BROKEN
  * A service for interacting with Google Sheets API to retrieve data from Google Sheets.
  */
-@Service
+// @Service commented out to be excluded in the classpath (this class will be removed in the future)
 public class GoogleSheetsService {
     private static final String APPLICATION_NAME = "Schedule Coordination App";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();

@@ -14,8 +14,9 @@ import com.melon.app.entity.Schedule;
 import com.melon.app.service.GoogleSheetsService;
 import com.melon.app.service.objects.FormUpdateResponse;
 
-@RestController
-@RequestMapping("/api")
+// BROKEN
+// @RestController commented out to remove from the classpath (will be removed in the future)
+// @RequestMapping("/api")
 public class GoogleScheduleController {
 
     private final GoogleSheetsService googleSheetsService;
