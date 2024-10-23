@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,11 +26,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // TODO Disable CSRF protection (not recommended in production)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // Allow preflight CORS requests
-                .requestMatchers("/api/auth/login", "/api/auth/register").permitAll() // allow everyone to access these endpoints
+                .requestMatchers("/api/auth/user/login", "/api/auth/user/register").permitAll() // allow everyone to access these endpoints
                 .requestMatchers("/h2-console/*").permitAll()
                 .anyRequest().authenticated() // require authentication for any other requests
             )
             .formLogin(form -> form.disable())
+            .sessionManagement(session -> session 
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+            )
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.disable())  // Disable X-Frame-Options for H2 console
             )

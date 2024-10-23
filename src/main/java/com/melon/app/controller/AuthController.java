@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.melon.app.entity.User;
 import com.melon.app.service.UserService;
 
+import jakarta.servlet.http.HttpSession;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -23,8 +25,8 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/user/login")
-    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password) {
-        Optional<User> user = userService.login(email, password);
+    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password, HttpSession session) {
+        Optional<User> user = userService.login(email, password, session);
         
         if (user.isPresent()) {
             return ResponseEntity.ok("Login successful");
