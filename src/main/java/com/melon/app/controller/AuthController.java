@@ -22,7 +22,7 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/user-login")
+    @PostMapping("/user/login")
     public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password) {
         Optional<User> user = userService.login(email, password);
         
@@ -33,7 +33,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/user-register")
+    @PostMapping("/user/register")
     public ResponseEntity<String> register(@RequestBody Map<String, String> userData) {
         userService.registerUser(userData.get("email"), userData.get("password"));
         return ResponseEntity.ok("Registration successful");
