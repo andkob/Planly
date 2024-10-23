@@ -4,6 +4,8 @@ import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -20,7 +22,8 @@ import jakarta.persistence.OneToMany;
 public class Schedule {
     
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
     private String scheduleName;
 
@@ -42,14 +45,18 @@ public class Schedule {
         this.user = owner;
     }
 
-    public void setId(String sheetId) {
-        this.id = sheetId;
+    public String getName() {
+        return scheduleName;
     }
 
     public void setName(String scheduleName) {
         this.scheduleName = scheduleName;
     }
 
+    public User getUser() {
+        return user;
+    }
+    
     public void setUser(User user) {
         this.user = user;
     }
