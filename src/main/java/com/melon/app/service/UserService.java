@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.melon.app.entity.User;
+import com.melon.app.exception.EmailAlreadyExistsException;
 import com.melon.app.repository.UserRepository;
 
 @Service
@@ -37,7 +38,11 @@ public class UserService implements UserDetailsService {
         return Optional.empty();
     }
 
-    public User registerUser(String email, String password) {
+    public User registerUser(String email, String password) throws EmailAlreadyExistsException {
+        if (userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyExistsException("Email is already in use.");
+        }
+
         String passwordHash = passwordEncoder.encode(password);
         User user = new User(email, passwordHash);
         return userRepository.save(user);
