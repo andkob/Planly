@@ -45,6 +45,10 @@ public class Schedule {
         this.user = owner;
     }
 
+    public Long getId() {
+        return id;
+    }
+
     public String getName() {
         return scheduleName;
     }

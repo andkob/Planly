@@ -1,7 +1,5 @@
 package com.melon.app.entity;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -25,6 +23,10 @@ public class ScheduleEntry {
     private String eventStartTime;
     private String eventEndTime;
     private String eventName;
+
+    public Long getId() {
+        return id;
+    }
 
     public void setSchedule(Schedule schedule) {
         this.schedule = schedule;

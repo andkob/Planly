@@ -1,6 +1,7 @@
 package com.melon.app.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.melon.app.controller.DTO.ScheduleRequest;
 import com.melon.app.controller.DTO.ScheduleRequest.DaySchedule;
+import com.melon.app.controller.DTO.ScheduleResponseDTO;
+import com.melon.app.controller.DTO.EntryDTO;
 import com.melon.app.entity.Schedule;
 import com.melon.app.entity.ScheduleEntry;
 import com.melon.app.entity.User;
@@ -45,6 +48,26 @@ public class ScheduleService {
 
     public List<Schedule> getUserSchedules(User user) {
         return scheduleRepo.findByUser(user);
+    }
+
+    public List<ScheduleResponseDTO> getUserScheduleEntries(User user) {
+        List<Schedule> schedules = scheduleRepo.findByUser(user);
+
+        return schedules.stream()
+            .map(schedule -> new ScheduleResponseDTO(
+                schedule.getId(),
+                schedule.getName(),
+                schedule.getEntries().stream()
+                    .map(entry -> new EntryDTO(
+                        entry.getId(),
+                        entry.getEventDay(),
+                        entry.getEventStartTime(),
+                        entry.getEventEndTime(),
+                        entry.getEventName()
+                    ))
+                    .collect(Collectors.toList())
+            ))
+            .collect(Collectors.toList());
     }
 
     public void saveSchedule(ScheduleRequest scheduleRequest) {

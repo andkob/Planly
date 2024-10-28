@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.melon.app.controller.DTO.ScheduleRequest;
+import com.melon.app.controller.DTO.ScheduleResponseDTO;
 import com.melon.app.entity.Schedule;
 import com.melon.app.entity.User;
 import com.melon.app.service.ScheduleService;
@@ -56,7 +57,8 @@ public class ScheduleController {
         return ResponseEntity.ok(schedule);
     }
 
-    @GetMapping("/retrieve")
+    // TODO old
+    @GetMapping("/get/schedules-all")
     public ResponseEntity<?> getUserSchedules(HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -64,6 +66,19 @@ public class ScheduleController {
         }
 
         List<Schedule> schedules = scheduleService.getUserSchedules(user);
+        return ResponseEntity.ok(schedules);
+    }
+
+    @GetMapping("/get/user-entries")
+    public ResponseEntity<?> getUserScheduleEntries() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+        }
+
+        User user = (User) auth.getPrincipal();
+        List<ScheduleResponseDTO> schedules = scheduleService.getUserScheduleEntries(user);
+
         return ResponseEntity.ok(schedules);
     }
 }

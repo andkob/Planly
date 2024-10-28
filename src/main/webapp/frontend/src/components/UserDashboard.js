@@ -1,12 +1,32 @@
 import React, { useState } from 'react';
 import { LayoutGrid, Calendar, Users, Clock } from 'lucide-react';
 import AddScheduleModal from './modals/AddScheduleModal';
+import UserSchedules from './UserSchedules';
 
 export default function UserDashboard() {
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
+  const [schedules, setSchedules] = useState([]);
 
   const openModal = () => setShowAddScheduleModal(true);
   const closeModal = () => setShowAddScheduleModal(false);
+
+  const fetchSchedules = async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch('/api/schedules/get/user-entries', {
+        method: "GET",
+        headers: {
+          'Content-type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      }); 
+      const data = await response.json();
+      setSchedules(data);
+    } catch (error) {
+        console.error("Error fetching schedules: ", error);
+    }
+  };
 
   const postSchedule = async (scheduleData) => {
     try {
@@ -18,17 +38,16 @@ export default function UserDashboard() {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}` // Include the HWT token in the auth header
+          'Authorization': `Bearer ${token}` // Include the JWT token in the auth header
         },
         body: JSON.stringify(scheduleData),
         credentials: 'include'
       });
 
-      console.log(scheduleData);
-
       if (response.ok) {
-        alert('Schedule saved successfully');
+        console.log('Schedule saved successfully');
         closeModal();
+        fetchSchedules(); // update list
       } else {
         alert('Error saving schedule');
       }
@@ -156,7 +175,7 @@ export default function UserDashboard() {
             <h3 className="text-lg font-medium">My Schedules</h3>
           </div>
           <div className="overflow-x-auto">
-            {/* <UserSchedules /> Component to display user's schedules */}
+            <UserSchedules schedules={schedules} fetchSchedules={fetchSchedules} />
           </div>
         </div>
 
