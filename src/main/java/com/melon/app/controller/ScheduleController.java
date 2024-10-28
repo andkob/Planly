@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.melon.app.controller.DTO.ScheduleRequest;
@@ -80,5 +81,20 @@ public class ScheduleController {
         List<ScheduleResponseDTO> schedules = scheduleService.getUserScheduleEntries(user);
 
         return ResponseEntity.ok(schedules);
+    }
+
+    @GetMapping("/get/count/events-per-day")
+    public ResponseEntity<?> getScheduleEntryCountByUser(@RequestParam String scheduleName) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+        }
+
+        User user = (User) auth.getPrincipal();
+        int[] res = scheduleService.getScheduleEntryCountByUser(user, scheduleName);
+        System.out.print("Returning Count: ");
+        for (int i : res) {System.out.print(i + ", ");}
+        System.out.println();
+        return ResponseEntity.ok(res);
     }
 }

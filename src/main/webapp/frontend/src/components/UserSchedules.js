@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import WeeklyScheduleChart from "./charts/WeeklyScheduleChart"
 
 export default function UserSchedules( { schedules, fetchSchedules } ) {
   const [expandedSchedule, setExpandedSchedule] = useState(null);
@@ -24,13 +25,7 @@ export default function UserSchedules( { schedules, fetchSchedules } ) {
           </div>
 
           {expandedSchedule === schedule.id && (
-              <ul className="mt-2">
-              {schedule.entries.map((entry) => (
-                  <li key={entry.id} className="text-sm text-gray-600 pl-4 py-1">
-                  {entry.eventDay}: {entry.eventStartTime} - {entry.eventEndTime} "{entry.eventName}"
-                  </li>
-              ))}
-              </ul>
+            <WeeklyScheduleChart entries={schedule.entries || []} />
           )}
         </div>
       ))}

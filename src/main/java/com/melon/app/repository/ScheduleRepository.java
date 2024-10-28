@@ -11,4 +11,5 @@ import com.melon.app.entity.User;
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findByUser(User user);  // Find schedules for a specific user
+    List<Schedule> findByUserAndScheduleName(User user, String scheduleName);
 }
