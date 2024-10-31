@@ -43,7 +43,7 @@ public class ScheduleController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createSchedule(@RequestBody ScheduleRequest scheduleRequest) {
-        System.out.println("/schedules/create endpoint reached");
+        System.out.println("arrived at /schedules/create endpoint");
 
         // Retrieve the current user's authentication from the SecurityContext
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -85,6 +85,7 @@ public class ScheduleController {
 
     @GetMapping("/get/count/events-per-day")
     public ResponseEntity<?> getScheduleEntryCountByUser(@RequestParam String scheduleName) {
+        System.out.println("arrived at /events-per-day endpoint");
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");

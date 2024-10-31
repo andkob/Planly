@@ -14,6 +14,7 @@ import com.melon.app.controller.DTO.EntryDTO;
 import com.melon.app.entity.Schedule;
 import com.melon.app.entity.ScheduleEntry;
 import com.melon.app.entity.User;
+import com.melon.app.exception.ConflictingSchedulesException;
 import com.melon.app.repository.ScheduleRepository;
 import com.melon.app.repository.UserRepository;
 
@@ -26,9 +27,13 @@ public class ScheduleService {
     @Autowired
     private UserRepository userRepo;
 
-    public Schedule createSchedule(User user, ScheduleRequest scheduleRequest) {
+    public Schedule createSchedule(User user, ScheduleRequest scheduleRequest) throws ConflictingSchedulesException {
+        // see if a schedule with that name exists
+        if (scheduleRepo.findByUserAndScheduleName(user, scheduleRequest.getName()) == null) {
+            throw new ConflictingSchedulesException("Schedule with that name already exists.");
+        }
         Schedule schedule = new Schedule(scheduleRequest.getName(), user);
-        
+
         List<DaySchedule> events = scheduleRequest.getDays();
         List<ScheduleEntry> entries = new ArrayList<>();
 
@@ -75,5 +80,47 @@ public class ScheduleService {
         scheduleRequest.getDays().forEach(day -> {
             System.out.println("Day: " + day.getDay() + ", Start: " + day.getStartTime() + ", End: " + day.getEndTime() + ", Event: " + day.getEventName());
         });
+    }
+
+    public int[] getScheduleEntryCountByUser(User user, String scheduleName) throws ConflictingSchedulesException {
+        List<Schedule> s = scheduleRepo.findByUserAndScheduleName(user, scheduleName);
+        if (s.size() > 1) {
+            throw new ConflictingSchedulesException("This case has not been thought about yet");
+        } else if (s.size() == 0) {
+            throw new ConflictingSchedulesException("Wrong exeption name here but there aint no schedule with that schedule name dawg: " + scheduleName);
+        }
+        //                       S  M  T  W  Th F  Sa
+        int[] entryCountByDay = {0, 0, 0, 0, 0, 0, 0};
+
+        Schedule schedule = s.get(0);
+        List<ScheduleEntry> entries = schedule.getEntries();
+        for (ScheduleEntry e : entries) {
+            String day = e.getEventDay();
+            switch (day) {
+                case "Sunday":
+                    entryCountByDay[0]++;
+                    break;
+                case "Monday":
+                    entryCountByDay[1]++;
+                    break;
+                case "Tuesday":
+                    entryCountByDay[2]++;
+                    break;
+                case "Wednesday":
+                    entryCountByDay[3]++;
+                    break;
+                case "Thursday":
+                    entryCountByDay[4]++;
+                    break;
+                case "Friday":
+                    entryCountByDay[5]++;
+                    break;
+                case "Saturday":
+                    entryCountByDay[6]++;
+                    break;
+            }
+        }
+        
+        return entryCountByDay;
     }
 }
