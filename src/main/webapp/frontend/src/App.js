@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'r
 import Dashboard from './components/Dashboard';
 import UserLogin from './components/login/UserLogin';
 import Register from './components/login/Register';
-import UserDashboard from './components/UserDashboard';
+import UserDashboard from './components/dashboard/UserDashboard';
 
 function App() {
   console.log('App component rendering');

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { LayoutGrid, Calendar, Users, Clock } from 'lucide-react';
-import AddScheduleModal from './modals/AddScheduleModal';
-import UserSchedules from './UserSchedules';
+import { LayoutGrid, Calendar, Users, Clock, MessageCircle } from 'lucide-react';
+import AddScheduleModal from '../modals/AddScheduleModal';
+import UserSchedules from '../UserSchedules';
+import Hello from './Hello'
+import CalendarSection from './CalendarSection';
 
 export default function UserDashboard() {
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
@@ -58,23 +60,49 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Navigation Bar */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+    <div className="min-h-screen flex bg-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow-lg p-4 space-y-4">
+        <div className='flex items-center'>
+          <LayoutGrid className="h-8 w-8 text-indigo-500" />
+          <h2 className="text-2xl font-semibold ml-2 mb-1">Dashboard</h2>
+        </div>
+        <nav className="space-y-2">
+          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+            <Users className="h-5 w-5 mr-3" /> Organizations
+          </a>
+          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+            <Calendar className="h-5 w-5 mr-3" /> Events
+          </a>
+          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+            <Clock className="h-5 w-5 mr-3" /> Schedules
+          </a>
+          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+            <Calendar className="h-5 w-5 mr-3" /> My Calendar
+          </a>
+          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+            <Calendar className="h-5 w-5 mr-3" /> Organization Calendar
+          </a>
+          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+            <MessageCircle className="h-5 w-5 mr-3" /> Chat
+          </a>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 p-8">
+        <nav className="bg-white shadow-sm mb-8">
+          <div className="flex justify-between h-16 px-6">
             <div className="flex items-center">
-              <LayoutGrid className="h-8 w-8 text-indigo-500" />
-              <span className="ml-2 text-xl font-semibold">Dashboard</span>
+            <Hello />
             </div>
             <div className="flex items-center">
               <button 
                 className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 onClick={openModal}
-                >
+              >
                 Add a schedule
               </button>
-              {/* Show the modal when "New Schedule" button is clicked */}
               {showCreateScheduleModal && (
                 <AddScheduleModal
                   showModal={showCreateScheduleModal}
@@ -84,41 +112,9 @@ export default function UserDashboard() {
               )}
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500">Schedules</h3>
-              <Calendar className="h-4 w-4 text-gray-400" />
-            </div>
-            {/* Here should list the name of each schedule the user has*/}
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500">Organizations</h3>
-              <Users className="h-4 w-4 text-gray-400" />
-            </div>
-            <div className="text-2xl font-bold">1</div>
-            <p className="text-xs text-gray-500">Joined Organizations</p>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-500">Upcoming Events</h3>
-              <Clock className="h-4 w-4 text-gray-400" />
-            </div>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-gray-500">Next 7 days</p>
-          </div>
-        </div>
-
-        {/* Upcoming Events Table*/}
+        {/* Main dashboard sections */}
         <div className="mt-8 bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h3 className="text-lg font-medium">Upcoming Events</h3>
@@ -169,7 +165,10 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* User's Schedules Section */}
+        <div className='mt-8 bg-white rounded-lg shadow'>
+          <CalendarSection />
+        </div>
+
         <div className="mt-8 bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h3 className="text-lg font-medium">My Schedules</h3>
@@ -178,8 +177,7 @@ export default function UserDashboard() {
             <UserSchedules schedules={schedules} fetchSchedules={fetchSchedules} />
           </div>
         </div>
-
-      </main>
+      </div>
     </div>
   );
 }

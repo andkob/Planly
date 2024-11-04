@@ -24,9 +24,9 @@ ChartJS.register(
   ArcElement
 );
 
-const WeeklyScheduleChart = ({ entries }) => {
+const WeeklyScheduleChart = ({ entries, scheduleName }) => {
+  //                                          S  M  T  W  Th F  Sa
   const [eventData, setEventData] = useState([0, 0, 0, 0, 0, 0, 0]);
-  const scheduleName = "work";
   const token = localStorage.getItem("jwtToken");
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const WeeklyScheduleChart = ({ entries }) => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` // if using JWT or other token-based auth
+            "Authorization": `Bearer ${token}`
           }
         });
 

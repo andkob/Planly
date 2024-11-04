@@ -1,0 +1,52 @@
+/* calendarStyles.css */
+.rbc-calendar {
+    background-color: #f0f8ff; /* Light blue background */
+    border-radius: 12px; /* Rounded corners for the calendar */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Light shadow */
+}
+
+/* Style for the header */
+.rbc-header {
+    background-color: #87cefa; /* Sky blue */
+    color: white; /* Text color */
+    border: none; /* Remove borders */
+    border-radius: 10px; /* Rounded header */
+}
+
+/* Style for the events */
+.rbc-event {
+    background-color: #ffcc00; /* Bright yellow for events */
+    border-radius: 20px; /* Rounded events */
+    padding: 5px; /* Space inside event */
+    margin: 2px 0; /* Space between events */
+    color: #000; /* Text color */
+}
+
+/* Style for the time slots */
+.rbc-time-slot {
+    border: none; /* Remove default border */
+}
+
+/* Style for the toolbar */
+.rbc-toolbar {
+    background-color: #f0f8ff; /* Match the calendar background */
+    border-bottom: 2px solid #87cefa; /* Slightly darker border */
+}
+
+/* Add hover effects for events */
+.rbc-event:hover {
+    background-color: #ffeb3b; /* Lighter yellow on hover */
+    cursor: pointer; /* Pointer cursor */
+}
+
+/* Adjust the day and date styles */
+.rbc-day-slot {
+    background-color: #e0ffff; /* Lighter blue for day slots */
+    border: none; /* Remove border */
+}
+
+/* Selected event styles */
+.rbc-selected {
+    background-color: #ff7f50; /* Coral color for selected event */
+    color: white; /* Text color for selected event */
+}

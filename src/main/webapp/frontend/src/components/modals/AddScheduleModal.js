@@ -20,7 +20,7 @@ const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
     setDays(updatedDays);
   };
 
-  const addDay = () => {
+  const addEvent = () => {
     setDays([...days, { day: '', startTime: '', endTime: '', eventName: '' }]);
   };
 
@@ -98,10 +98,10 @@ const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
             ))}
             <button
               type="button"
-              onClick={addDay}
+              onClick={addEvent}
               className="mb-4 text-blue-500 hover:underline"
             >
-              Add Day
+              Add Event
             </button>
             <div className="flex justify-end">
               <button
