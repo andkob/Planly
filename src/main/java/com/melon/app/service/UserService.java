@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import com.melon.app.entity.User;
 import com.melon.app.exception.EmailAlreadyExistsException;
+import com.melon.app.exception.IncorrectPasswordException;
+import com.melon.app.exception.UserNoExistException;
 import com.melon.app.repository.UserRepository;
 
 @Service
@@ -32,10 +34,12 @@ public class UserService implements UserDetailsService {
 
     public Optional<User> login(String email, String password) {
         Optional<User> user = userRepository.findByEmail(email);
-        if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
-            return user;
+        if (!user.isPresent()) {
+            throw new UserNoExistException("User " + email + " does not exist");
+        } else if (!passwordEncoder.matches(password, user.get().getPassword())) {
+            throw new IncorrectPasswordException("Incorrect password");
         }
-        return Optional.empty();
+        return user;
     }
 
     public User registerUser(String email, String password) throws EmailAlreadyExistsException {
