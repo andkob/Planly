@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function UserLogin({ setIsAuthenticated }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate(); // Initialize the navigate function
+  const location = useLocation();
+
+  // Check if the URL has a `logout=true` parameter
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('logout') === 'true') {
+      setMessage('Logout successful');
+    }
+  }, [location]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -26,6 +35,7 @@ function UserLogin({ setIsAuthenticated }) {
       if (response.ok) {
           // store the JWT token in local storage
           const data = await response.json();
+          console.log('Token received:', data.token); // Log the token received
           localStorage.setItem('jwtToken', data.token);
 
           console.log('Login successful');
@@ -33,12 +43,14 @@ function UserLogin({ setIsAuthenticated }) {
           setIsAuthenticated(true);
           navigate('/dashboard'); // redirect to dashboard
       } else {
-          console.error('Login failed');
-          setMessage('Login failed');
+          const errorText = await response.text();
+          console.error('Login failed: ' + errorText);
+          setMessage(errorText);
       }
-  } catch (error) {
-      console.error('Error:', error);
-  }
+    } catch (error) {
+        console.error('Error:', error);
+        setMessage('An unexpected error occured. Please try again.');
+    }
   };
 
   return (

@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Pencil, ChevronUp, ChevronDown } from "lucide-react";
 import WeeklyScheduleChart from "./charts/WeeklyScheduleChart"
 
 export default function UserSchedules( { schedules, fetchSchedules } ) {
   const [expandedSchedule, setExpandedSchedule] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchSchedules();
@@ -10,6 +13,10 @@ export default function UserSchedules( { schedules, fetchSchedules } ) {
 
   const toggleSchedule = (scheduleId) => {
       setExpandedSchedule(expandedSchedule === scheduleId ? null : scheduleId);
+  };
+
+  const editSchedule = (scheduleId) => {
+    navigate("/edit-schedule");
   };
 
   return (
@@ -21,7 +28,18 @@ export default function UserSchedules( { schedules, fetchSchedules } ) {
             onClick={() => toggleSchedule(schedule.id)}
           >
             <h4 className="text-md font-semibold">{schedule.name}</h4>
-            <span>{expandedSchedule === schedule.id ? "▲" : "▼"}</span>
+            <span className="flex items-center space-x-4">
+              <span
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevents toggleSchedule from triggering
+                  editSchedule(schedule.id);
+                }}
+                className="p-2 hover:bg-gray-200 rounded cursor-pointer"
+              >
+                <Pencil />
+              </span>
+              <span>{expandedSchedule === schedule.id ? <ChevronUp /> : <ChevronDown />}</span>
+            </span>
           </div>
 
           {expandedSchedule === schedule.id && (

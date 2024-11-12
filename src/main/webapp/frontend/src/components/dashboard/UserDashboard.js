@@ -1,16 +1,30 @@
 import React, { useState } from 'react';
-import { LayoutGrid, Calendar, Users, Clock, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut } from 'lucide-react';
 import AddScheduleModal from '../modals/AddScheduleModal';
 import UserSchedules from '../UserSchedules';
 import Hello from './Hello'
 import CalendarSection from './CalendarSection';
+import JoinOrgModal from '../modals/JoinOrgModal';
+
+// temp
+import AddOrgModal from '../modals/TEMP/AddOrgModal';
 
 export default function UserDashboard() {
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
+  const [showJoinOrgModal, setShowJoinOrgModal] = useState(false);
+  const [showAddOrgModal, setShowAddOrgModal] = useState(false); // TODO - TEMp
   const [schedules, setSchedules] = useState([]);
+  const navigate = useNavigate();
 
-  const openModal = () => setShowAddScheduleModal(true);
-  const closeModal = () => setShowAddScheduleModal(false);
+  const openAddScheduleModal = () => setShowAddScheduleModal(true);
+  const closeAddScheduleModal = () => setShowAddScheduleModal(false);
+  const openJoinOrgModal = () => setShowJoinOrgModal(true);
+  const closeJoinOrgModal = () => setShowJoinOrgModal(false);
+
+  // TEMP - for testing purposes
+  const openAddOrgModal = () => setShowAddOrgModal(true);
+  const closeAddOrgModal = () => setShowAddOrgModal(false);
 
   const fetchSchedules = async () => {
     try {
@@ -48,7 +62,7 @@ export default function UserDashboard() {
 
       if (response.ok) {
         console.log('Schedule saved successfully');
-        closeModal();
+        closeAddScheduleModal();
         fetchSchedules(); // update list
       } else {
         alert('Error saving schedule');
@@ -57,6 +71,11 @@ export default function UserDashboard() {
     } catch (error) {
       console.error("Error: " + error);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    navigate('/login?logout=true');
   };
 
   return (
@@ -74,7 +93,7 @@ export default function UserDashboard() {
           <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
             <Calendar className="h-5 w-5 mr-3" /> Events
           </a>
-          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+          <a href="edit-schedule" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
             <Clock className="h-5 w-5 mr-3" /> Schedules
           </a>
           <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
@@ -86,6 +105,12 @@ export default function UserDashboard() {
           <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
             <MessageCircle className="h-5 w-5 mr-3" /> Chat
           </a>
+          <button
+            onClick={handleLogout}
+            className="flex items-center p-2 text-red-700 hover:bg-gray-100 rounded w-full text-left"
+          >
+            <LogOut className="h-5 w-5 mr-3" /> Logout
+          </button>
         </nav>
       </aside>
 
@@ -97,16 +122,40 @@ export default function UserDashboard() {
             <Hello />
             </div>
             <div className="flex items-center">
+              <button
+                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-orange-700 hover:bg-gray-50"
+                onClick={openAddOrgModal}
+              >
+                add an org (test)
+              </button>
+              {showAddOrgModal && (
+                <AddOrgModal
+                  showModal={showAddOrgModal}
+                  closeModal={closeAddOrgModal}
+                />
+              )}
+              <button
+                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onClick={openJoinOrgModal}
+              >
+                Join an Organization
+              </button>
+              {showJoinOrgModal && (
+                <JoinOrgModal 
+                  showModal={showJoinOrgModal}  
+                  closeModal={closeJoinOrgModal}
+                />
+              )}
               <button 
                 className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onClick={openModal}
+                onClick={openAddScheduleModal}
               >
                 Add a schedule
               </button>
               {showCreateScheduleModal && (
                 <AddScheduleModal
                   showModal={showCreateScheduleModal}
-                  closeModal={closeModal} 
+                  closeModal={closeAddScheduleModal} 
                   postSchedule={postSchedule}
                 />
               )}

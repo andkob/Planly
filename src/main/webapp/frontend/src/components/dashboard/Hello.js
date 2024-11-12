@@ -38,7 +38,9 @@ export default function Hello() {
 
     }, []);
 
-    return (
-        <span className="ml-2 text-xl font-semibold">Good {keyword}, {name}</span>
-    );
+    if (keyword && name) {
+        return ( <span className="ml-2 text-xl font-semibold">Good {keyword}, {name}</span> );
+    }
+
+    return (<></>);
 }

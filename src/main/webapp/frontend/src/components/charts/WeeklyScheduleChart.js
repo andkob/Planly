@@ -52,7 +52,7 @@ const WeeklyScheduleChart = ({ entries, scheduleName }) => {
     };
 
     fetchEventData();
-  }, [scheduleName, token]); // Dependency array
+  }, [scheduleName, token]);
 
   const chartData = {
     labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
