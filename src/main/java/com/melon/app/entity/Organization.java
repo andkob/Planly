@@ -18,10 +18,20 @@ public class Organization {
 
     private String organizationName;
 
+    public Organization() {}
+
+    public Organization(String organizationName) {
+        this.organizationName = organizationName;
+    }
+
     @ManyToMany(mappedBy = "organizations")
     private Set<User> users;
 
     @OneToMany(mappedBy = "organization")
     private Set<Schedule> schedules;
+
+    public String getName() {
+        return organizationName;
+    }
     
 }
