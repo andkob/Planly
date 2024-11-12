@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.melon</groupId>
-	<artifactId>group-scheduler</artifactId>
+	<artifactId>Planly</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>group-scheduler</name>
-	<description>project using spring boot</description>
+	<name>Planly</name>
+	<description>This is a descriptive description</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -46,6 +46,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+		<!-- Enables reloading on code changes w/o restarting the JVM -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
