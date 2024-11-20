@@ -20,7 +20,7 @@ Planly is a web application designed as a centralized hub for coordinating and m
 ### Prerequisites
 
 Before running the application, ensure that you have the following installed:
-- **Java JDK 21** or later
+- **Java JDK 21**
 - **Maven** for project building and dependency management
 - The latest version of **npm** (node package manager)
 
@@ -35,9 +35,8 @@ $ git clone https://github.com/andkob/Planly.git
 $ cd Planly
 ```
 2. Build the project with maven
-(*must be run with the -DskipTests flag cuz all the tests will fail and the build process will explode*)
 ```bash
-$ mvn clean install -DskipTests
+$ mvn clean install
 ```
 3. Generate and add a JWT secret to application.properties
 
@@ -46,8 +45,10 @@ $ mvn clean install -DskipTests
     ```bash
     $ openssl rand -base64 32
     ```
-    Or you can use the provided **JwtSecretGenerator.java** class located at
-    > src/main/java/com/melon/app/security/JwtSecretGenerator.java
+    Or if you're on Windows, you can use the provided powershell script located in the root directory:
+    ```bash
+    $ powershell -File jwt-secret-generator.ps1
+    ```
 * Copy the generated secret and hardcode it into the **application.properties** file (located in resources)
 ```properties
 jwt.secret=YourSuperSecretKeyThatIsHardToGuess
@@ -75,6 +76,6 @@ $ npm start
 ## License
 This software is proprietary and under a custom restrictive license. While the code is publicly visible and contributions are welcome, the software may not be run, deployed, or used without explicit permission from the copyright holder.
 
-See the [LICENSE](./LICENSE.txt) file for full terms.
+See the [LICENSE](./LICENSE) file for full terms.
 
 Copyright (c) 2024 Andrew J Kobus - All Rights Reserved
