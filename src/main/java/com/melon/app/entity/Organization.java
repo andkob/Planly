@@ -3,6 +3,9 @@ package com.melon.app.entity;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,12 +21,15 @@ public class Organization {
 
     private String organizationName;
 
+    @JsonManagedReference
     @ManyToMany(mappedBy = "organizations")
     private Set<User> users = new HashSet<>();
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
     private Set<Schedule> schedules = new HashSet<>();
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
     private Set<UpcomingEvent> events = new HashSet<>();
 

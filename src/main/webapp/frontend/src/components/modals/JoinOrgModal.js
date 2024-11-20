@@ -20,14 +20,18 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
       },
       credentials: 'include'
     })
-      .then(response => {
+      .then(async response => {
         if (!response.ok) {
+          const errorText = await response.text();
           addToast('error', 'Failed to fetch organizations');
-          throw new Error('Failed to fetch organizations');
+          throw new Error(errorText || 'Failed to fetch organizations');
         }
         return response.json();
       })
       .then(data => {
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid response format');
+        }
         setMatchingOrganizations(data);
         if (data.length === 0) {
           addToast('info', 'No matching organizations found');
@@ -36,8 +40,10 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
         }
       })
       .catch(err => {
-        setError(err.message);
-        addToast('error', err.message);
+        console.error(err.message);
+        setError('An unexpected error occurred. Please try again.');
+        addToast('error', 'Oops! Encountered an unexpected error.');
+        setMatchingOrganizations([]);
       })
       .finally(() => {
         setLoading(false);
@@ -55,17 +61,17 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
       },
       credentials: 'include'
     })
-      .then(response => {
+      .then(async response => {
+        const responseText = await response.text();
         if (!response.ok) {
-          return response.text().then(errorText => {
-            if (response.status === 409) {
-              addToast('info', errorText);
-            } else {
-              console.error(errorText);
-              addToast('error', errorText || 'Failed to join organization');
-              setError(errorText);
-            }
-          });
+          if (response.status === 409) { // Conflict
+            addToast('info', responseText);
+          } else {
+            console.error(responseText);
+            addToast('error', responseText || 'Failed to join organization');
+            setError(responseText);
+          }
+          return;
         }
         addToast('success', `Successfully joined ${orgName}`);
         closeModal();
