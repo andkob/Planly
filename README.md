@@ -42,7 +42,7 @@ $ mvn clean install -DskipTests
 3. Generate and add a JWT secret to application.properties
 
 *This is a temporary solution for development only*
-* If you're on Linux of macOS, you can generate a random secret key with the following command:
+* If you're on Linux or macOS, you can generate a random secret key with the following command:
     ```bash
     $ openssl rand -base64 32
     ```
@@ -73,4 +73,8 @@ $ npm start
 - Integration with Google Calendar to manage events and schedules.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+This software is proprietary and under a custom restrictive license. While the code is publicly visible and contributions are welcome, the software may not be run, deployed, or used without explicit permission from the copyright holder.
+
+See the [LICENSE](./LICENSE.txt) file for full terms.
+
+Copyright (c) 2024 Andrew J Kobus - All Rights Reserved
