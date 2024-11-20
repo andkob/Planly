@@ -6,25 +6,48 @@ import UserSchedules from '../UserSchedules';
 import Hello from './Hello'
 import CalendarSection from './CalendarSection';
 import JoinOrgModal from '../modals/JoinOrgModal';
+import Toast from '../notification/Toast';
 
 // temp
 import AddOrgModal from '../modals/TEMP/AddOrgModal';
+import AddEventModal from '../modals/AddEventModal';
+import OrganizationEvents from '../OrganizationEvents';
 
 export default function UserDashboard() {
+  const [toasts, setToasts] = useState([]);
+  const [toastCounter, setToastCounter] = useState(0);
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showJoinOrgModal, setShowJoinOrgModal] = useState(false);
   const [showAddOrgModal, setShowAddOrgModal] = useState(false); // TODO - TEMp
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [schedules, setSchedules] = useState([]);
+  const [isNewEvents, setIsNewEvents] = useState(false); // so OrganizationEvents knows when to refresh
   const navigate = useNavigate();
 
   const openAddScheduleModal = () => setShowAddScheduleModal(true);
   const closeAddScheduleModal = () => setShowAddScheduleModal(false);
   const openJoinOrgModal = () => setShowJoinOrgModal(true);
   const closeJoinOrgModal = () => setShowJoinOrgModal(false);
+  const openAddEventModal = () => setShowAddEventModal(true);
+  const closeAddEventModal = () => setShowAddEventModal(false);
 
   // TEMP - for testing purposes
   const openAddOrgModal = () => setShowAddOrgModal(true);
   const closeAddOrgModal = () => setShowAddOrgModal(false);
+
+  const addToast = (type, message) => {
+    const newToast = {
+      id: toastCounter,
+      type,
+      message
+    };
+    setToasts(prev => [...prev, newToast]);
+    setToastCounter(prev => prev + 1);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   const fetchSchedules = async () => {
     try {
@@ -54,7 +77,7 @@ export default function UserDashboard() {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}` // Include the JWT token in the auth header
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(scheduleData),
         credentials: 'include'
@@ -134,6 +157,25 @@ export default function UserDashboard() {
                   closeModal={closeAddOrgModal}
                 />
               )}
+
+              {/* TEMPORARY (should only be used for organizations for now) */}
+              <button
+                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-yellow-300 hover:bg-gray-50"
+                onClick={openAddEventModal}
+              >
+                Add event (org)
+              </button>
+              {showAddEventModal && (
+                <AddEventModal
+                  showModal={showAddEventModal}
+                  closeModal={closeAddEventModal}
+                  orgId={2} // TODO - not sure what to do abt this yet
+                  addToast={addToast}
+                  setIsNewEvents={setIsNewEvents}
+                />
+              )}
+              {/* END TEMP */}
+
               <button
                 className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                 onClick={openJoinOrgModal}
@@ -144,6 +186,7 @@ export default function UserDashboard() {
                 <JoinOrgModal 
                   showModal={showJoinOrgModal}  
                   closeModal={closeJoinOrgModal}
+                  addToast={addToast}
                 />
               )}
               <button 
@@ -164,55 +207,11 @@ export default function UserDashboard() {
         </nav>
 
         {/* Main dashboard sections */}
-        <div className="mt-8 bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-medium">Upcoming Events</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-500">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3">Event Name</th>
-                  <th scope="col" className="px-6 py-3">Created By</th>
-                  <th scope="col" className="px-6 py-3">Date</th>
-                  <th scope="col" className="px-6 py-3">Type</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="bg-white border-b">
-                  <td className="px-6 py-4">Camping Trip</td>
-                  <td className="px-6 py-4">PDT</td>
-                  <td className="px-6 py-4">2024-10-15</td>
-                  <td className="px-6 py-4">
-                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      Brotherhood
-                    </span>
-                  </td>
-                </tr>
-                <tr className="bg-white border-b">
-                  <td className="px-6 py-4">Chapter Meeting</td>
-                  <td className="px-6 py-4">PDT</td>
-                  <td className="px-6 py-4">2024-10-19</td>
-                  <td className="px-6 py-4">
-                    <span className="bg-red-300 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      Mandatory
-                    </span>
-                  </td>
-                </tr>
-                <tr className="bg-white border-b">
-                  <td className="px-6 py-4">Food Pantry</td>
-                  <td className="px-6 py-4">PDT</td>
-                  <td className="px-6 py-4">2024-10-24</td>
-                  <td className="px-6 py-4">
-                    <span className="bg-yellow-300 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      Community Service
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <OrganizationEvents
+          orgId={2} // TODO - fix
+          isNewEvents={isNewEvents}
+          setIsNewEvents={setIsNewEvents}
+        />
 
         <div className='mt-8 bg-white rounded-lg shadow'>
           <CalendarSection />
@@ -227,6 +226,16 @@ export default function UserDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Toast notifications container */}
+      {toasts.map(toast => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
     </div>
   );
 }

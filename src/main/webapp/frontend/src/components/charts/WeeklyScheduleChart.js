@@ -55,7 +55,7 @@ const WeeklyScheduleChart = ({ entries, scheduleName }) => {
   }, [scheduleName, token]);
 
   const chartData = {
-    labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    labels: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     datasets: [
       {
         label: 'Events per Day',

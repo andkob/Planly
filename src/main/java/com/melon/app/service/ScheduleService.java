@@ -1,8 +1,10 @@
 package com.melon.app.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,33 @@ public class ScheduleService {
     @Autowired
     private UserRepository userRepo;
 
+    private List<ScheduleEntry> mapEntries(Schedule parentSchedule, List<DaySchedule> events) {
+        List<ScheduleEntry> entries = new ArrayList<>();
+        for (DaySchedule event : events) {
+            ScheduleEntry entry = new ScheduleEntry();
+            entry.setEventDay(event.getDay());
+            entry.setEventStartTime(event.getStartTime());
+            entry.setEventEndTime(event.getEndTime());
+            entry.setEventName(event.getEventName());
+            entry.setSchedule(parentSchedule);
+            entries.add(entry);
+        }
+        return entries;
+    }
+
+    private void mapEntriesFromEntryDTO(Schedule parentSchedule, List<EntryDTO> newEntries) {
+        List<ScheduleEntry> oldEntries = parentSchedule.getEntries();
+        Iterator<ScheduleEntry> iter = oldEntries.iterator();
+        for (EntryDTO newEntry : newEntries) {
+            ScheduleEntry oldEntry = iter.next();
+            oldEntry.setEventName(newEntry.getEventName());
+            oldEntry.setEventDay(newEntry.getEventDay());
+            oldEntry.setEventStartTime(newEntry.getEventStartTime());
+            oldEntry.setEventEndTime(newEntry.getEventEndTime());
+        }
+        // TODO - support deletion
+    }
+
     public Schedule createSchedule(User user, ScheduleRequest scheduleRequest) throws ConflictingSchedulesException {
         // see if a schedule with that name exists
         if (scheduleRepo.findByUserAndScheduleName(user, scheduleRequest.getName()) == null) {
@@ -35,18 +64,19 @@ public class ScheduleService {
         Schedule schedule = new Schedule(scheduleRequest.getName(), user);
 
         List<DaySchedule> events = scheduleRequest.getDays();
-        List<ScheduleEntry> entries = new ArrayList<>();
+        schedule.setEntries(mapEntries(schedule, events));
 
-        for (DaySchedule event : events) {
-            ScheduleEntry entry = new ScheduleEntry();
-            entry.setEventDay(event.getDay());
-            entry.setEventStartTime(event.getStartTime());
-            entry.setEventEndTime(event.getEndTime());
-            entry.setEventName(event.getEventName());
-            entry.setSchedule(schedule); // parent schedule
-            entries.add(entry);
+        return scheduleRepo.save(schedule);
+    }
+
+    public Schedule updateScheduleEntries(Long scheduleId, List<EntryDTO> updatedEntries) {
+        Optional<Schedule> scheduleToUpdate = scheduleRepo.findById(scheduleId);
+        if (scheduleToUpdate.isEmpty()) {
+            // idk
+            System.out.println("FUCK THERES NO SCHEDULE WTFF");
         }
-        schedule.setEntries(entries);
+        Schedule schedule = scheduleToUpdate.get();
+        mapEntriesFromEntryDTO(schedule, updatedEntries);
 
         return scheduleRepo.save(schedule);
     }

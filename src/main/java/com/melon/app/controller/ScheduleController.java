@@ -6,12 +6,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.melon.app.controller.DTO.EntryDTO;
 import com.melon.app.controller.DTO.ScheduleRequest;
 import com.melon.app.controller.DTO.ScheduleResponseDTO;
 import com.melon.app.entity.Schedule;
@@ -56,6 +59,19 @@ public class ScheduleController {
 
         Schedule schedule = scheduleService.createSchedule(user, scheduleRequest);
         return ResponseEntity.ok(schedule);
+    }
+
+    @PutMapping("/update/{scheduleId}")
+    public ResponseEntity<?> updateSchedule(@PathVariable Long scheduleId, @RequestBody List<EntryDTO> updatedEntries) {
+        System.out.println("arrived at /schedules/update/{scheduleId} endpoint");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+        }
+
+        Schedule updatedSchedule = scheduleService.updateScheduleEntries(scheduleId, updatedEntries);
+        ScheduleResponseDTO res = new ScheduleResponseDTO(updatedSchedule);
+        return ResponseEntity.ok(res); // TODO change response type
     }
 
     // TODO old

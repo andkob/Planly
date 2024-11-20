@@ -27,6 +27,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
     }
 
+    @ExceptionHandler(OrganizationException.class)
+    public ResponseEntity<String> handleOrganizationException(OrganizationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(OrganizationDoesNotExistException.class)
+    public ResponseEntity<String> handleOrganizationDoesNotExistException(OrganizationDoesNotExistException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidIdException.class)
+    public ResponseEntity<String> handleInvalidIdException(InvalidIdException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
     // Class to represent the error response structure
     public static class ErrorResponse {
         private String error;

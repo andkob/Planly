@@ -22,7 +22,7 @@ import jakarta.persistence.OneToMany;
 public class Schedule {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String scheduleName;
@@ -74,5 +74,9 @@ public class Schedule {
 
     public List<ScheduleEntry> getEntries() {
         return entries;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
     }
 }

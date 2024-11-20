@@ -27,7 +27,7 @@ import jakarta.persistence.Table;
 public class User implements UserDetails {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true)
@@ -39,9 +39,7 @@ public class User implements UserDetails {
     @JoinTable(
       name = "user_organization", 
       joinColumns = @JoinColumn(name = "user_id"),
-      foreignKey = @ForeignKey(name = "FK_USER_ORGANIZATION_USER"),
-      inverseJoinColumns = @JoinColumn(name = "organization_id"),
-      inverseForeignKey = @ForeignKey(name = "FK_USER_ORGANIZATION_ORGANIZATION"))
+      inverseJoinColumns = @JoinColumn(name = "organization_id"))
     private Set<Organization> organizations = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

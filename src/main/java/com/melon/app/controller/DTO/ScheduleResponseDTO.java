@@ -1,6 +1,9 @@
 package com.melon.app.controller.DTO;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.melon.app.entity.Schedule;
 
 public class ScheduleResponseDTO {
     private Long id;
@@ -11,6 +14,20 @@ public class ScheduleResponseDTO {
         this.id = id;
         this.name = name;
         this.entries = entries;
+    }
+
+    public ScheduleResponseDTO(Schedule schedule) {
+        this.id = schedule.getId();
+        this.name = schedule.getName();
+        this.entries = schedule.getEntries().stream()
+            .map(entry -> new EntryDTO(
+                entry.getId(),
+                entry.getEventDay(),
+                entry.getEventStartTime(),
+                entry.getEventEndTime(),
+                entry.getEventName()
+            ))
+            .collect(Collectors.toList());
     }
 
     public Long getId() { return id; }
