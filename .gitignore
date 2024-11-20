@@ -56,3 +56,8 @@ src/main/webapp/frontend/.env.production.local
 src/main/webapp/frontend/npm-debug.log*
 src/main/webapp/frontend/yarn-debug.log*
 src/main/webapp/frontend/yarn-error.log*
+
+# other
+/stashed
+*.db
+.github
