@@ -49,27 +49,6 @@ public class UpcomingEvent {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "created_by_user_id", nullable = false)
-    // private User createdBy;
-
-    // @Column(nullable = false)
-    // private LocalDate createdAt;
-
-    // @Column(nullable = false)
-    // private LocalDate updatedAt;
-
-    // @PrePersist
-    // protected void onCreate() {
-    //     createdAt = LocalDate.now();
-    //     updatedAt = LocalDate.now();
-    // }
-
-    // @PreUpdate
-    // protected void onUpdate() {
-    //     updatedAt = LocalDate.now();
-    // }
-
     // Custom enum for event types
     public enum EventType {
         BROTHERHOOD,
