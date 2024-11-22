@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut, Boxes } from 'lucide-react';
+import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut, Boxes, Menu, X, CircleEllipsis } from 'lucide-react';
 import AddScheduleModal from '../modals/AddScheduleModal';
 import UserSchedules from '../UserSchedules';
 import Hello from './Hello'
@@ -15,6 +15,8 @@ import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
 
 export default function UserDashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [toastCounter, setToastCounter] = useState(0);
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
@@ -28,6 +30,9 @@ export default function UserDashboard() {
   const [selectedOrgId, setSelectedOrgId] = useState(-1); // Selected org ID (via dropdown) for viewing events (only this for now)
   const [ownedOrgs, setOwnedOrgs] = useState([]); // List of organizations owned by this user
   const navigate = useNavigate();
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const toggleActionMenu = () => setIsActionMenuOpen(!isActionMenuOpen);
 
   const openAddScheduleModal = () => setShowAddScheduleModal(true);
   const closeAddScheduleModal = () => setShowAddScheduleModal(false);
@@ -52,7 +57,18 @@ export default function UserDashboard() {
         id: newOrgData.id,
         name: newOrgData.name
     }]);
-};
+  };
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isSidebarOpen && !event.target.closest('.sidebar')) {
+        setIsSidebarOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSidebarOpen]);
 
   const fetchOwnedOrganizationIdsNames = async () => {
     try {
@@ -106,7 +122,6 @@ export default function UserDashboard() {
         name: org.name
       }));
       setMyOrganizations(organizations);
-      console.log(JSON.stringify(data, null, 2)); // TODO remove
     } catch (error) {
       console.error('Error fetching organizations:', error);
       addToast('error', error.message);
@@ -186,164 +201,228 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg p-4 space-y-4">
-        <div className='flex items-center'>
-          <LayoutGrid className="h-8 w-8 text-indigo-500" />
-          <h2 className="text-2xl font-semibold ml-2 mb-1">Dashboard</h2>
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
+        <button 
+          onClick={toggleSidebar} 
+          className="p-2 hover:bg-gray-100 rounded-lg"
+          aria-label="Toggle menu"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        <div className="flex items-center">
+          <LayoutGrid className="h-6 w-6 text-indigo-500" />
+          <h1 className="text-xl font-semibold ml-2">Dashboard</h1>
         </div>
-        <nav className="space-y-2">
-          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-            <Users className="h-5 w-5 mr-3" /> Organizations
-          </a>
-          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-            <Calendar className="h-5 w-5 mr-3" /> Events
-          </a>
-          <a href="edit-schedule" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-            <Clock className="h-5 w-5 mr-3" /> Schedules
-          </a>
-          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-            <Calendar className="h-5 w-5 mr-3" /> My Calendar
-          </a>
-          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-            <Calendar className="h-5 w-5 mr-3" /> Organization Calendar
-          </a>
-          <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-            <MessageCircle className="h-5 w-5 mr-3" /> Chat
-          </a>
-          {ownedOrgs.map((ownedOrg) => (
-            <a
-              key={ownedOrg.id}
-              href={`org/${ownedOrg.id}`}
-              className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-              <Boxes className="h-5 w-5 mr-3" /> {ownedOrg.name}
-            </a>
-          ))}
-          <button
-            onClick={handleLogout}
-            className="flex items-center p-2 text-red-700 hover:bg-gray-100 rounded w-full text-left"
-          >
-            <LogOut className="h-5 w-5 mr-3" /> Logout
-          </button>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 p-8">
-        <nav className="bg-white shadow-sm mb-8">
-          <div className="flex justify-between h-16 px-6">
-            <div className="flex items-center">
-            <Hello />
-            </div>
-            <div className="flex items-center">
-              <button
-                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onClick={openStartOrgModal}
-              >
-                Start an Organization
-              </button>
-              {showStartOrgModal && (
-                <CreateOrgModal
-                  showModal={showStartOrgModal}
-                  closeModal={closeStartOrgModal}
-                  saveOrg={startNewOrg}
-                  addToast={addToast}
-                />
-              )}
-              <button
-                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-orange-700 hover:bg-gray-50"
-                onClick={openAddOrgModal}
-              >
-                add an org (test)
-              </button>
-              {showAddOrgModal && (
-                <AddOrgModal
-                  showModal={showAddOrgModal}
-                  closeModal={closeAddOrgModal}
-                />
-              )}
-
-              {/* TEMPORARY (should only be used for organizations for now) */}
-              <button
-                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-yellow-300 hover:bg-gray-50"
-                onClick={openAddEventModal}
-              >
-                Add event (org)
-              </button>
-              {showAddEventModal && (
-                <AddEventModal
-                  showModal={showAddEventModal}
-                  closeModal={closeAddEventModal}
-                  orgId={selectedOrgId}
-                  addToast={addToast}
-                  setIsNewEvents={setIsNewEvents}
-                />
-              )}
-              {/* END TEMP */}
-
-              <button
-                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onClick={openJoinOrgModal}
-              >
-                Join an Organization
-              </button>
-              {showJoinOrgModal && (
-                <JoinOrgModal 
-                  showModal={showJoinOrgModal}  
-                  closeModal={closeJoinOrgModal}
-                  addToast={addToast}
-                />
-              )}
+        <button 
+          onClick={toggleActionMenu} 
+          className="p-2 hover:bg-gray-100 rounded-lg"
+          aria-label="Toggle actions"
+        >
+          <CircleEllipsis className="h-6 w-6" />
+        </button>
+      </div>
+  
+      <div className="flex">
+        {/* Sidebar */}
+        <div className='fixed'>
+          <aside className={`
+            sidebar fixed z-30
+            w-64 h-screen bg-white shadow-lg
+            transition-transform duration-300 ease-in-out
+            overflow-y-auto
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            lg:translate-x-0 lg:static
+          `}>
+            <div className="p-4 h-full flex flex-col">
+              <div className="hidden lg:flex items-center mb-6">
+                <LayoutGrid className="h-8 w-8 text-indigo-500" />
+                <h2 className="text-2xl font-semibold ml-2">Dashboard</h2>
+              </div>
+              
               <button 
-                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onClick={openAddScheduleModal}
+                onClick={toggleSidebar}
+                className="lg:hidden absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg"
+                aria-label="Close menu"
               >
-                Add a schedule
+                <X className="h-6 w-6" />
               </button>
-              {showCreateScheduleModal && (
-                <AddScheduleModal
-                  showModal={showCreateScheduleModal}
-                  closeModal={closeAddScheduleModal} 
-                  postSchedule={postSchedule}
-                />
-              )}
+    
+              <nav className="space-y-2 flex-1">
+                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Users className="h-5 w-5 mr-3" /> Organizations
+                </a>
+                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Calendar className="h-5 w-5 mr-3" /> Events
+                </a>
+                <a href="edit-schedule" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Clock className="h-5 w-5 mr-3" /> Schedules
+                </a>
+                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Calendar className="h-5 w-5 mr-3" /> My Calendar
+                </a>
+                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Calendar className="h-5 w-5 mr-3" /> Organization Calendar
+                </a>
+                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <MessageCircle className="h-5 w-5 mr-3" /> Chat
+                </a>
+                
+                {/* Owned Organizations */}
+                <div className="pt-4">
+                  <h3 className="px-2 text-sm font-semibold text-gray-600 mb-2">Owned Organizations</h3>
+                  {ownedOrgs.map((ownedOrg) => (
+                    <a
+                      key={ownedOrg.id}
+                      href={`org/${ownedOrg.id}`}
+                      className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded"
+                    >
+                      <Boxes className="h-5 w-5 mr-3" /> {ownedOrg.name}
+                    </a>
+                  ))}
+                </div>
+              </nav>
+    
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center p-2 text-red-700 hover:bg-gray-100 rounded w-full text-left mt-4"
+              >
+                <LogOut className="h-5 w-5 mr-3" /> Logout
+              </button>
             </div>
-          </div>
-        </nav>
-
-        {/* Main dashboard sections */}
-        <OrganizationEvents 
-          isNewEvents={isNewEvents}
-          setIsNewEvents={setIsNewEvents}
-          openJoinOrgModal={openJoinOrgModal}
-          myOrganizations={myOrganizations} // Array of {id, name} objects
-          selectedOrgId={selectedOrgId}
-          setSelectedOrgId={setSelectedOrgId}
-        />
-
-        <div className='mt-8 bg-white rounded-lg shadow'>
-          <CalendarSection />
+          </aside>
         </div>
-
-        <div className="mt-8 bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-medium">My Schedules</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <UserSchedules schedules={schedules} fetchSchedules={fetchSchedules} />
+  
+        {/* Main Content */}
+        <div className="flex-1 lg:ml-64 overflow-auto">
+          <div className="p-4 lg:p-8">
+            {/* Top Action Bar */}
+            <nav className="bg-white shadow-sm mb-8 rounded-lg">
+              <div className="p-4">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex items-center">
+                    <Hello />
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className={`
+                    ${isActionMenuOpen ? 'flex' : 'hidden'} 
+                    lg:flex flex-col lg:flex-row items-stretch lg:items-center gap-2
+                  `}>
+                    <button
+                      onClick={openStartOrgModal}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Start an Organization
+                    </button>
+                    <button
+                      onClick={openJoinOrgModal}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Join an Organization
+                    </button>
+                    <button
+                      onClick={openAddScheduleModal}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Add a Schedule
+                    </button>
+                    
+                    {/* Development/Testing Buttons */}
+                    <button
+                      onClick={openAddOrgModal}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-orange-700 hover:bg-gray-50"
+                    >
+                      Add an org (test)
+                    </button>
+                    <button
+                      onClick={openAddEventModal}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-yellow-300 hover:bg-gray-50"
+                    >
+                      Add event (org)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </nav>
+  
+            {/* Main Content Sections */}
+            <div className="space-y-8">
+              <OrganizationEvents 
+                isNewEvents={isNewEvents}
+                setIsNewEvents={setIsNewEvents}
+                openJoinOrgModal={openJoinOrgModal}
+                myOrganizations={myOrganizations}
+                selectedOrgId={selectedOrgId}
+                setSelectedOrgId={setSelectedOrgId}
+              />
+  
+              <div className="bg-white rounded-lg shadow">
+                <CalendarSection />
+              </div>
+  
+              <div className="bg-white rounded-lg shadow">
+                <div className="p-6 border-b">
+                  <h3 className="text-lg font-medium">My Schedules</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <UserSchedules schedules={schedules} fetchSchedules={fetchSchedules} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      
-      {/* Toast notifications container */}
+  
+      {/* Modals */}
+      {showStartOrgModal && (
+        <CreateOrgModal
+          showModal={showStartOrgModal}
+          closeModal={closeStartOrgModal}
+          saveOrg={startNewOrg}
+          addToast={addToast}
+        />
+      )}
+      {showAddOrgModal && (
+        <AddOrgModal
+          showModal={showAddOrgModal}
+          closeModal={closeAddOrgModal}
+        />
+      )}
+      {showAddEventModal && (
+        <AddEventModal
+          showModal={showAddEventModal}
+          closeModal={closeAddEventModal}
+          orgId={selectedOrgId}
+          addToast={addToast}
+          setIsNewEvents={setIsNewEvents}
+        />
+      )}
+      {showJoinOrgModal && (
+        <JoinOrgModal 
+          showModal={showJoinOrgModal}  
+          closeModal={closeJoinOrgModal}
+          addToast={addToast}
+        />
+      )}
+      {showCreateScheduleModal && (
+        <AddScheduleModal
+          showModal={showCreateScheduleModal}
+          closeModal={closeAddScheduleModal} 
+          postSchedule={postSchedule}
+        />
+      )}
+  
+      {/* Toast Notifications */}
       {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }
