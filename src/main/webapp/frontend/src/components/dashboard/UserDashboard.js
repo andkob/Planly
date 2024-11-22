@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut } from 'lucide-react';
 import AddScheduleModal from '../modals/AddScheduleModal';
@@ -22,6 +22,8 @@ export default function UserDashboard() {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [schedules, setSchedules] = useState([]);
   const [isNewEvents, setIsNewEvents] = useState(false); // so OrganizationEvents knows when to refresh
+  const [myOrganizations, setMyOrganizations] = useState([]); // List of joined organization IDs
+  const [selectedOrgId, setSelectedOrgId] = useState(-1); // Selected org ID (via dropdown) for viewing events (only this for now)
   const navigate = useNavigate();
 
   const openAddScheduleModal = () => setShowAddScheduleModal(true);
@@ -34,6 +36,46 @@ export default function UserDashboard() {
   // TEMP - for testing purposes
   const openAddOrgModal = () => setShowAddOrgModal(true);
   const closeAddOrgModal = () => setShowAddOrgModal(false);
+
+  const addNewOrg = (newOrgId) => {
+    myOrganizations.push(newOrgId);
+    setMyOrganizations(myOrganizations);
+  };
+
+  const fetchOrganizations = async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch('/api/user/get/joined-orgs', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to fetch joined organizations');
+      }
+      const data = await response.json();
+
+      // Extract only the IDs from the OrganizationIdNameDTO objects
+      const organizations = data.map(org => ({
+        id: org.id,
+        name: org.name
+      }));
+      setMyOrganizations(organizations);
+      console.log(JSON.stringify(data, null, 2)); // TODO remove
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+      addToast('error', error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
 
   const addToast = (type, message) => {
     const newToast = {
@@ -169,7 +211,7 @@ export default function UserDashboard() {
                 <AddEventModal
                   showModal={showAddEventModal}
                   closeModal={closeAddEventModal}
-                  orgId={2} // TODO - not sure what to do abt this yet
+                  orgId={selectedOrgId}
                   addToast={addToast}
                   setIsNewEvents={setIsNewEvents}
                 />
@@ -207,10 +249,13 @@ export default function UserDashboard() {
         </nav>
 
         {/* Main dashboard sections */}
-        <OrganizationEvents
-          orgId={2} // TODO - fix
+        <OrganizationEvents 
           isNewEvents={isNewEvents}
           setIsNewEvents={setIsNewEvents}
+          openJoinOrgModal={openJoinOrgModal}
+          myOrganizations={myOrganizations} // Array of {id, name} objects
+          selectedOrgId={selectedOrgId}
+          setSelectedOrgId={setSelectedOrgId}
         />
 
         <div className='mt-8 bg-white rounded-lg shadow'>

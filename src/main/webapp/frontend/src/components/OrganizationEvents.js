@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, Search, AlertCircle } from 'lucide-react';
 
+
 const EVENT_TYPES = [
   { id: 'BROTHERHOOD', label: 'Brotherhood', color: 'bg-green-100 text-green-800' },
   { id: 'MANDATORY', label: 'Mandatory', color: 'bg-red-300 text-red-800' },
@@ -9,7 +10,14 @@ const EVENT_TYPES = [
   { id: 'OTHER', label: 'Other', color: 'bg-gray-100 text-gray-800' }
 ];
 
-export default function OrganizationEvents({ orgId, isNewEvents, setIsNewEvents }) {
+export default function OrganizationEvents({ 
+  isNewEvents, 
+  setIsNewEvents, 
+  openJoinOrgModal,
+  myOrganizations, // Array of org objects with id and name
+  selectedOrgId,
+  setSelectedOrgId
+}) {
   const[events, setEvents] = useState([]);
   const[loading, setLoading] = useState(false);
   const[error, setError] = useState('');
@@ -21,7 +29,7 @@ export default function OrganizationEvents({ orgId, isNewEvents, setIsNewEvents 
 
       const token = localStorage.getItem('jwtToken');
       try {
-        const response = await fetch(`/api/org/get/events/${orgId}`, {
+        const response = await fetch(`/api/org/get/events/${selectedOrgId}`, {
           method: 'GET',
           headers: {
               'Content-Type': 'application/json',
@@ -45,10 +53,10 @@ export default function OrganizationEvents({ orgId, isNewEvents, setIsNewEvents 
       }
     };
 
-  if (orgId) {
-    fetchEvents();
-  }
-}, [orgId, isNewEvents])
+    if (selectedOrgId !== -1 || selectedOrgId !== undefined) {
+      fetchEvents();
+    }
+  }, [selectedOrgId, isNewEvents]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -65,12 +73,44 @@ export default function OrganizationEvents({ orgId, isNewEvents, setIsNewEvents 
     });
   };
 
+  const renderHeader = () => (
+    <div className="p-6 border-b">
+      <div className="flex items-center justify-between space-x-4">
+        <div className="flex items-center space-x-4">
+          <h3 className="text-lg font-medium">Upcoming Events</h3>
+          {myOrganizations?.length > 0 && (
+            <select
+              value={selectedOrgId}
+              onChange={(e) => setSelectedOrgId(Number(e.target.value))}
+              className="block w-[200px] pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            >
+              <option value={-1}>Select organization</option>
+              {myOrganizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Search events..."
+          />
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="mt-8 bg-white rounded-lg shadow">
-        <div className="p-6 border-b">
-          <h3 className="text-lg font-medium">Upcoming Events</h3>
-        </div>
+        {renderHeader()}
         <div className="p-8 text-center">
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
@@ -85,9 +125,7 @@ export default function OrganizationEvents({ orgId, isNewEvents, setIsNewEvents 
   if (error) {
     return (
       <div className="mt-8 bg-white rounded-lg shadow">
-        <div className="p-6 border-b">
-          <h3 className="text-lg font-medium">Upcoming Events</h3>
-        </div>
+        {renderHeader()}
         <div className="p-8 text-center">
           <div className="flex flex-col items-center justify-center text-gray-500">
             <AlertCircle className="w-12 h-12 mb-4" />
@@ -99,12 +137,10 @@ export default function OrganizationEvents({ orgId, isNewEvents, setIsNewEvents 
     );
   }
 
-  if (!events?.length) {
+  if (!events?.length && selectedOrgId !== -1) {
     return (
       <div className="mt-8 bg-white rounded-lg shadow">
-        <div className="p-6 border-b">
-          <h3 className="text-lg font-medium">Upcoming Events</h3>
-        </div>
+        {renderHeader()}
         <div className="p-8 text-center">
           <div className="flex flex-col items-center justify-center text-gray-500">
             <Calendar className="w-12 h-12 mb-4" />
@@ -116,23 +152,29 @@ export default function OrganizationEvents({ orgId, isNewEvents, setIsNewEvents 
     );
   }
 
-  return (
-    <div className="mt-8 bg-white rounded-lg shadow">
-      <div className="p-6 border-b">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Upcoming Events</h3>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              placeholder="Search events..."
-            />
+  if (selectedOrgId === -1) {
+    return (
+      <div className="mt-8 bg-white rounded-lg shadow">
+        {renderHeader()}
+        <div className="p-8 text-center">
+          <div className="flex flex-col items-center justify-center text-gray-500">
+            <Calendar className="w-12 h-12 mb-4" />
+            <p className="text-lg font-medium">Nothing to see here!</p>
+            <p className="text-sm">Select an organization to view its events</p>
+            {!myOrganizations?.length && (
+              <p className='text-sm text-blue-500 mt-2'>
+                <button onClick={openJoinOrgModal}>Join an organization</button>
+              </p>
+            )}
           </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="mt-8 bg-white rounded-lg shadow">
+      {renderHeader()}
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left text-gray-500">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50">

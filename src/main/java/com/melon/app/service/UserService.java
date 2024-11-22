@@ -1,6 +1,7 @@
 package com.melon.app.service;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.melon.app.entity.Organization;
 import com.melon.app.entity.User;
 import com.melon.app.exception.EmailAlreadyExistsException;
 import com.melon.app.exception.IncorrectPasswordException;
@@ -50,5 +52,11 @@ public class UserService implements UserDetailsService {
         String passwordHash = passwordEncoder.encode(password);
         User user = new User(email, passwordHash);
         return userRepository.save(user);
+    }
+
+    public Set<Organization> getOrganizations(User user) {
+        Long userId = userRepository.findById(user.getId()).get().getId(); // must reopen session to fetch the ID
+        Set<Organization> orgs = userRepository.findOrganizationsByUserId(userId);
+        return orgs;
     }
 }
