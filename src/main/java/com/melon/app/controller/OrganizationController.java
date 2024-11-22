@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.melon.app.controller.DTO.EventDTO;
-import com.melon.app.controller.DTO.OrganizationDTO;
+import com.melon.app.controller.DTO.OrganizationIdNameDTO;
 import com.melon.app.entity.Organization;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
@@ -71,13 +71,13 @@ public class OrganizationController {
         }
         
         List<Organization> foundOrganizations = orgService.findOrgsByName(orgName);
-        List<OrganizationDTO> orgDTOs = foundOrganizations.stream().map(OrganizationDTO::new).collect(Collectors.toList());
+        List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());
 
         // TODO - response should say this stuff
         if (orgDTOs.isEmpty()) {
             System.out.println("No orgs with that name");
         } else {
-            for (OrganizationDTO org : orgDTOs) {
+            for (OrganizationIdNameDTO org : orgDTOs) {
                 System.out.println("Found: " + org.getName());
             }
         }

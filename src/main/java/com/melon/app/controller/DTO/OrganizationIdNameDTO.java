@@ -6,11 +6,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OrganizationDTO {
+public class OrganizationIdNameDTO {
     private Long id;
     private String name;
     
-    public OrganizationDTO(Organization org) {
+    public OrganizationIdNameDTO(Organization org) {
         this.id = org.getId();
         this.name = org.getOrganizationName();
     }
