@@ -24,12 +24,8 @@ public class User implements UserDetails {
 
     private String passwordHash;
 
-    @ManyToMany
-    @JoinTable(
-      name = "user_organization", 
-      joinColumns = @JoinColumn(name = "user_id"),
-      inverseJoinColumns = @JoinColumn(name = "organization_id"))
-    private Set<Organization> organizations = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<OrganizationMembership> organizationMemberships = new HashSet<>();
 
     @OneToMany(mappedBy = "owner")
     @JsonBackReference
@@ -43,12 +39,15 @@ public class User implements UserDetails {
     public User(String email, String passwordHash) {
         this.email = email;
         this.passwordHash = passwordHash;
-        this.organizations = new HashSet<>();
+        this.organizationMemberships = new HashSet<>();
         this.ownedOrganizations = new HashSet<>();
     }
 
-    public boolean addOrganization(Organization org) {
-        return organizations.add(org);
+    public boolean addOrganization(Organization org, Role role) {
+        OrganizationMembership membership = new OrganizationMembership(this, org, role);
+        boolean added = organizationMemberships.add(membership);
+        org.getMemberships().add(membership);
+        return added;
     }
 
     public boolean addOwnedOrganization(Organization org) {
@@ -77,8 +76,8 @@ public class User implements UserDetails {
         return passwordHash;
     }
 
-    public Set<Organization> getOrganizations() {
-        return organizations;
+    public Set<OrganizationMembership> getOrganizationMemberships() {
+        return organizationMemberships;
     }
 
     public Set<Organization> getOwnedOrganizations() {
@@ -134,7 +133,7 @@ public class User implements UserDetails {
                 "id=" + id +
                 ", email='" + email + '\'' +
                 ", ownedOrganizationsCount=" + ownedOrganizations.size() +
-                ", organizationsCount=" + organizations.size() +
+                ", organizationsCount=" + organizationMemberships.size() +
                 '}';
     }
 }
