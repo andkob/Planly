@@ -38,7 +38,6 @@ public class UserController {
 
     @GetMapping("/get/joined-orgs")
     public ResponseEntity<?> getOrganizations() {
-        System.out.println("Getting joined organizations");
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Set<Organization> orgs = userService.getOrganizations(user);
         List<OrganizationIdNameDTO> orgIdNameDTOs = orgs.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());

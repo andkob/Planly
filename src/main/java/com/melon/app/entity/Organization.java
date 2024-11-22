@@ -21,6 +21,10 @@ public class Organization {
 
     private String organizationName;
 
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = true) // TODO - should be false
+    private User owner;
+
     @JsonManagedReference
     @ManyToMany(mappedBy = "organizations")
     private Set<User> users = new HashSet<>();
@@ -38,6 +42,11 @@ public class Organization {
 
     public Organization(String organizationName) {
         this.organizationName = organizationName;
+    }
+
+    public Organization(String organizationName, User owner) {
+        this.organizationName = organizationName;
+        this.owner = owner;
     }
 
     // Helper methods for managing users
@@ -108,10 +117,15 @@ public class Organization {
     // Override toString() for better logging
     @Override
     public String toString() {
+        String owner = "NONE";
+        if (this.owner != null) {
+            owner = this.owner.getUsername();
+        }
         return "Organization{" +
-                "id=" + id +
-                ", name='" + organizationName + '\'' +
-                '}';
+            "id=" + id +
+            ", name='" + organizationName + '\'' +
+            ", owner='" + owner + '\'' +
+            '}';
     }
 
     // For compatibility with older code

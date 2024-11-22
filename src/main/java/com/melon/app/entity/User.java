@@ -1,26 +1,15 @@
 package com.melon.app.entity;
 
 import java.util.Set;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "\"user\"")  // Escape the table name due to "user" being a reserved keyword
@@ -42,6 +31,10 @@ public class User implements UserDetails {
       inverseJoinColumns = @JoinColumn(name = "organization_id"))
     private Set<Organization> organizations = new HashSet<>();
 
+    @OneToMany(mappedBy = "owner")
+    @JsonBackReference
+    private Set<Organization> ownedOrganizations = new HashSet<>();
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Schedule> schedules;
 
@@ -50,11 +43,24 @@ public class User implements UserDetails {
     public User(String email, String passwordHash) {
         this.email = email;
         this.passwordHash = passwordHash;
-        this.organizations = new HashSet<>(); // initialize set
+        this.organizations = new HashSet<>();
+        this.ownedOrganizations = new HashSet<>();
     }
 
     public boolean addOrganization(Organization org) {
         return organizations.add(org);
+    }
+
+    public boolean addOwnedOrganization(Organization org) {
+        if (ownedOrganizations.add(org)) {
+            org.setOwner(this);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeOwnedOrganization(Organization org) {
+        return ownedOrganizations.remove(org);
     }
 
     public Long getId() {
@@ -75,6 +81,13 @@ public class User implements UserDetails {
         return organizations;
     }
 
+    public Set<Organization> getOwnedOrganizations() {
+        return ownedOrganizations;
+    }
+
+    public void setOwnedOrganizations(Set<Organization> ownedOrganizations) {
+        this.ownedOrganizations = ownedOrganizations;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -99,5 +112,29 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    // Override equals() and hashCode() based on the ID
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return id != null && id.equals(user.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", ownedOrganizationsCount=" + ownedOrganizations.size() +
+                ", organizationsCount=" + organizations.size() +
+                '}';
     }
 }

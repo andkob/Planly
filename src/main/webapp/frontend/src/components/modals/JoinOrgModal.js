@@ -23,20 +23,26 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
       .then(async response => {
         if (!response.ok) {
           const errorText = await response.text();
+          if (response.status === 409) { // CONFLICT
+            addToast('info', errorText);
+            return;
+          }
           addToast('error', 'Failed to fetch organizations');
           throw new Error(errorText || 'Failed to fetch organizations');
         }
         return response.json();
       })
       .then(data => {
-        if (!Array.isArray(data)) {
-          throw new Error('Invalid response format');
-        }
-        setMatchingOrganizations(data);
-        if (data.length === 0) {
-          addToast('info', 'No matching organizations found');
-        } else {
-          addToast('success', `Found ${data.length} matching organization(s)`);
+        if (data !== null) {
+          if (!Array.isArray(data)) {
+            throw new Error('Invalid response format');
+          }
+          setMatchingOrganizations(data);
+          if (data.length === 0) {
+            addToast('info', 'No matching organizations found');
+          } else {
+            addToast('success', `Found ${data.length} matching organization(s)`);
+          }
         }
       })
       .catch(err => {
