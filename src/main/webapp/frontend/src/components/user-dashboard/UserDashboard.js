@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut } from 'lucide-react';
+import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut, Boxes } from 'lucide-react';
 import AddScheduleModal from '../modals/AddScheduleModal';
 import UserSchedules from '../UserSchedules';
 import Hello from './Hello'
 import CalendarSection from './CalendarSection';
 import JoinOrgModal from '../modals/JoinOrgModal';
 import Toast from '../notification/Toast';
+import CreateOrgModal from '../modals/CreateOrgModal';
 
 // temp
-import AddOrgModal from '../modals/TEMP/AddOrgModal';
+import AddOrgModal from '../modals/AddOrgModal';
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
 
@@ -20,10 +21,12 @@ export default function UserDashboard() {
   const [showJoinOrgModal, setShowJoinOrgModal] = useState(false);
   const [showAddOrgModal, setShowAddOrgModal] = useState(false); // TODO - TEMp
   const [showAddEventModal, setShowAddEventModal] = useState(false);
+  const [showStartOrgModal, setShowStartOrgModal] = useState(false);
   const [schedules, setSchedules] = useState([]);
   const [isNewEvents, setIsNewEvents] = useState(false); // so OrganizationEvents knows when to refresh
   const [myOrganizations, setMyOrganizations] = useState([]); // List of joined organization IDs
   const [selectedOrgId, setSelectedOrgId] = useState(-1); // Selected org ID (via dropdown) for viewing events (only this for now)
+  const [ownedOrgs, setOwnedOrgs] = useState([]); // List of organizations owned by this user
   const navigate = useNavigate();
 
   const openAddScheduleModal = () => setShowAddScheduleModal(true);
@@ -32,6 +35,8 @@ export default function UserDashboard() {
   const closeJoinOrgModal = () => setShowJoinOrgModal(false);
   const openAddEventModal = () => setShowAddEventModal(true);
   const closeAddEventModal = () => setShowAddEventModal(false);
+  const openStartOrgModal = () => setShowStartOrgModal(true);
+  const closeStartOrgModal = () => setShowStartOrgModal(false);
 
   // TEMP - for testing purposes
   const openAddOrgModal = () => setShowAddOrgModal(true);
@@ -41,6 +46,42 @@ export default function UserDashboard() {
     myOrganizations.push(newOrgId);
     setMyOrganizations(myOrganizations);
   };
+
+  const startNewOrg = (newOrgData) => {
+    setOwnedOrgs(prevOrgs => [...prevOrgs, {
+        id: newOrgData.id,
+        name: newOrgData.name
+    }]);
+};
+
+  const fetchOwnedOrganizationIdsNames = async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch('/api/org/get/owned/id-name', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to fetch joined organizations');
+      }
+      const data = await response.json();
+
+      const organizations = data.map(org => ({
+        id: org.id,
+        name: org.name
+      }));
+      setOwnedOrgs(organizations);
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+      addToast('error', error.message);
+    }
+  }
 
   const fetchOrganizations = async () => {
     try {
@@ -60,7 +101,6 @@ export default function UserDashboard() {
       }
       const data = await response.json();
 
-      // Extract only the IDs from the OrganizationIdNameDTO objects
       const organizations = data.map(org => ({
         id: org.id,
         name: org.name
@@ -75,6 +115,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     fetchOrganizations();
+    fetchOwnedOrganizationIdsNames();
   }, []);
 
   const addToast = (type, message) => {
@@ -170,6 +211,14 @@ export default function UserDashboard() {
           <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
             <MessageCircle className="h-5 w-5 mr-3" /> Chat
           </a>
+          {ownedOrgs.map((ownedOrg) => (
+            <a
+              key={ownedOrg.id}
+              href={`org/${ownedOrg.id}`}
+              className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+              <Boxes className="h-5 w-5 mr-3" /> {ownedOrg.name}
+            </a>
+          ))}
           <button
             onClick={handleLogout}
             className="flex items-center p-2 text-red-700 hover:bg-gray-100 rounded w-full text-left"
@@ -187,6 +236,20 @@ export default function UserDashboard() {
             <Hello />
             </div>
             <div className="flex items-center">
+              <button
+                className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onClick={openStartOrgModal}
+              >
+                Start an Organization
+              </button>
+              {showStartOrgModal && (
+                <CreateOrgModal
+                  showModal={showStartOrgModal}
+                  closeModal={closeStartOrgModal}
+                  saveOrg={startNewOrg}
+                  addToast={addToast}
+                />
+              )}
               <button
                 className="ml-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-orange-700 hover:bg-gray-50"
                 onClick={openAddOrgModal}

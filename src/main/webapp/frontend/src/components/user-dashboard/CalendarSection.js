@@ -3,9 +3,6 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './css/calendarStyles.css';
-// import './css/pastelStyles.css'
-// import './css/cheerfulStyles.css'
-// import './css/gradientStyles.css'
 
 export default function CalendarSection() {
     const localizer = momentLocalizer(moment);

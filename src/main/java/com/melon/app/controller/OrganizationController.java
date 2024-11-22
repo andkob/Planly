@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,10 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.melon.app.controller.DTO.EventDTO;
+import com.melon.app.controller.DTO.OrganizationDTO;
 import com.melon.app.controller.DTO.OrganizationIdNameDTO;
 import com.melon.app.entity.Organization;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
+import com.melon.app.exception.CannotJoinOwnedOrgException;
 import com.melon.app.service.OrganizationService;
 
 @RestController
@@ -45,7 +48,12 @@ public class OrganizationController {
         }
 
         User user = (User) auth.getPrincipal();
-        boolean success = orgService.joinOrganization(user, orgId);
+        boolean success = false;
+        try {
+            success = orgService.joinOrganization(user, orgId);
+        } catch (CannotJoinOwnedOrgException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
 
         System.out.println("Joining org? -> " + success);
 
@@ -61,6 +69,28 @@ public class OrganizationController {
 
         orgService.createNewOrganization(orgName);
         return ResponseEntity.ok("Organization successfully created");
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createOwnedOrganization(@RequestParam String orgName) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Organization newOrg = orgService.createNewOwnedOrganization(orgName, user);
+        System.out.println("Created new org: " + newOrg.toString());
+        return ResponseEntity.ok(new OrganizationDTO(newOrg));
+    }
+
+    // TODO no need to get all org data really
+    @GetMapping("/get/owned/id-name")
+    public ResponseEntity<List<OrganizationIdNameDTO>> getOwnedOrganizationsIdName() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) auth.getPrincipal();
+        List<Organization> ownedOrgs = orgService.findOrganizationsByOwner(user);
+        
+        List<OrganizationIdNameDTO> orgDTOs = ownedOrgs.stream()
+            .map(OrganizationIdNameDTO::new)
+            .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(orgDTOs);
     }
 
     @GetMapping("/get/org-name")
@@ -113,5 +143,12 @@ public class OrganizationController {
             .collect(Collectors.toList());
 
     return ResponseEntity.ok(eventDTOs);
+    }
+
+    @GetMapping("/details/{orgId}")
+    public ResponseEntity<?> getOrganizationDetails(@PathVariable Long orgId) {
+        Organization org = orgService.findOrgById(orgId);
+        OrganizationDTO orgDTO = new OrganizationDTO(org);
+        return ResponseEntity.ok(orgDTO);
     }
 }

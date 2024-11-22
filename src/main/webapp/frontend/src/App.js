@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import UserLogin from './components/login/UserLogin';
 import Register from './components/login/Register';
-import UserDashboard from './components/dashboard/UserDashboard';
+import UserDashboard from './components/user-dashboard/UserDashboard';
 import EditSchedule from './components/edit-schedule-page/EditSchedulePage';
+import OrganizationDashboard from './components/organization-dashboard/OrganizationDashboard';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -19,32 +20,80 @@ function App() {
     setLoading(false);
   }, []);
 
+  // Protected Route wrapper component
+  const ProtectedRoute = ({ children }) => {
+    if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  };
+
+  // Error Boundary component
+  const ErrorBoundary = () => {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md">
+          <h2 className="text-lg font-semibold mb-2 text-red-800">
+            Oops! Something went wrong
+          </h2>
+          <p className="text-sm text-red-600">
+            We couldn't find what you were looking for. Please try again or return to the dashboard.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // Router configuration
+  const router = createBrowserRouter([
+    {
+      path: '/',
+      element: <Navigate to="/dashboard" replace />
+    },
+    {
+      path: '/login',
+      element: <UserLogin setIsAuthenticated={setIsAuthenticated} />
+    },
+    {
+      path: '/register',
+      element: <Register />
+    },
+    {
+      path: '/dashboard',
+      element: (
+        <ProtectedRoute>
+          <UserDashboard />
+        </ProtectedRoute>
+      )
+    },
+    {
+      path: '/org/:orgId',
+      element: (
+        <ProtectedRoute>
+          <OrganizationDashboard />
+        </ProtectedRoute>
+      ),
+      errorElement: <ErrorBoundary />
+    },
+    {
+      path: '/edit-schedule',
+      element: (
+        <ProtectedRoute>
+          <EditSchedule />
+        </ProtectedRoute>
+      )
+    },
+    {
+      path: '*',
+      element: <ErrorBoundary />
+    }
+  ]);
+
   if (loading) {
-    return <div>Loading...</div>; // Or a more elegant loading component but doesn't matter rn
+    return <div>Loading...</div>; // Or a more elegant loading component
   }
 
-  return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<UserLogin setIsAuthenticated={setIsAuthenticated} />} />
-        <Route path='/register' element={<Register />} />
-        <Route 
-          path="/dashboard"
-          element={isAuthenticated ? <UserDashboard /> : <Navigate to="/login" />} 
-        />
-        <Route path="/" element={<Navigate to="/login" />} /> {/* Redirect root to login */}
-        <Route path='/edit-schedule' element={isAuthenticated ? <EditSchedule /> : <Navigate to="/login" />} />
-      </Routes>
-    </Router>
-  );
-  // return (
-  //   <Router>
-  //     <Routes>
-  //       <Route path="/dashboard" element={<UserDashboard />} />
-  //       <Route path='/edit-schedule' element={<EditSchedule />} />
-  //     </Routes>
-  //   </Router>
-  // )
+  return <RouterProvider router={router} />;
 }
 
 export default App;
