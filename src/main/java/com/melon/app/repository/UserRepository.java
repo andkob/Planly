@@ -19,18 +19,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     // Fetch organizations for a specific user
-    @Query("SELECT u.organizations FROM User u WHERE u.id = :userId")
+    @Query("SELECT m.organization FROM OrganizationMembership m WHERE m.user.id = :userId")
     Set<Organization> findOrganizationsByUserId(Long userId);
     
     // Fetch users who belong to a specific organization
-    @Query("SELECT u FROM User u JOIN u.organizations o WHERE o.id = :organizationId")
-    List<User> findUsersByOrganizationId(Long organizationId);
+    @Query("SELECT m.user FROM OrganizationMembership m WHERE m.organization.id = :orgId")
+    List<User> findUsersByOrganizationId(@Param("orgId") Long orgId);
     
     // Fetch users who belong to multiple organizations
-    @Query("SELECT u FROM User u JOIN u.organizations o WHERE o.id IN :organizationIds GROUP BY u HAVING COUNT(DISTINCT o.id) = :totalOrgs")
+    @Query("SELECT m.user FROM OrganizationMembership m WHERE m.organization.id IN :organizationIds GROUP BY m.user HAVING COUNT(DISTINCT m.organization.id) = :totalOrgs")
     List<User> findUsersByOrganizationIds(@Param("organizationIds") List<Long> organizationIds, @Param("totalOrgs") Long totalOrgs);
     
     // Check if a user belongs to a specific organization
-    @Query("SELECT COUNT(u) > 0 FROM User u JOIN u.organizations o WHERE u.id = :userId AND o.id = :organizationId")
+    @Query("SELECT COUNT(m) > 0 FROM OrganizationMembership m WHERE m.user.id = :userId AND m.organization.id = :organizationId")
     boolean isUserInOrganization(@Param("userId") Long userId, @Param("organizationId") Long organizationId);
 }

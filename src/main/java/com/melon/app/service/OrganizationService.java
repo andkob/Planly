@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.melon.app.entity.Organization;
+import com.melon.app.entity.Role;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
 import com.melon.app.exception.CannotJoinOwnedOrgException;
@@ -41,18 +42,17 @@ public class OrganizationService {
 
         Long id = Long.parseLong(orgId);
         Optional<Organization> orgToJoin = orgRepo.findById(id);
-        System.out.println("Organization found with id: " + orgId);
 
         if (orgToJoin.isEmpty()) {
             throw new OrganizationDoesNotExistException("No org with the ID "+id+" to join");
         }
         Organization org = orgToJoin.get();
 
-        if (org.getOwner().equals(user)) {
+        if (org.getOwner() != null && org.getOwner().equals(user)) {
             throw new CannotJoinOwnedOrgException("You own this organization");
         }
 
-        boolean isAdded = org.addUser(user);          // associate user with org
+        boolean isAdded = org.addUser(user, Role.MEMBER);          // associate user with org
 
         if (!isAdded) {
             throw new OrganizationException("You are already associated with " + org.getName());
@@ -69,11 +69,11 @@ public class OrganizationService {
         return orgRepo.save(newOrg);
     }
 
+    @Transactional
     public Organization createNewOwnedOrganization(String orgName, User owner) {
         owner = userRepo.findById(owner.getId()).get();
         Organization newOrg = new Organization(orgName, owner);
-        owner.addOwnedOrganization(newOrg);
-        userRepo.save(owner);
+        newOrg.addUser(owner, Role.OWNER); // add creator as the org owner
         return orgRepo.save(newOrg);
     }
 

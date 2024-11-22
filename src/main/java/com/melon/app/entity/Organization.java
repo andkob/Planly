@@ -25,9 +25,8 @@ public class Organization {
     @JoinColumn(name = "owner_id", nullable = true) // TODO - should be false
     private User owner;
 
-    @JsonManagedReference
-    @ManyToMany(mappedBy = "organizations")
-    private Set<User> users = new HashSet<>();
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<OrganizationMembership> memberships = new HashSet<>();
 
     @JsonManagedReference
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL)
@@ -50,20 +49,23 @@ public class Organization {
     }
 
     // Helper methods for managing users
-    public boolean addUser(User user) {
-        if (users.add(user)) {
-            user.addOrganization(this);
+    public boolean addUser(User user, Role role) {
+        OrganizationMembership membership = new OrganizationMembership(user, this, role);
+        if (memberships.add(membership)) {
+            user.getOrganizationMemberships().add(membership);
             return true;
         }
         return false;
     }
 
     public boolean removeUser(User user) {
-        if (users.remove(user)) {
-            user.getOrganizations().remove(this);
-            return true;
-        }
-        return false;
+        return memberships.removeIf(membership -> {
+            if (membership.getUser().equals(user)) {
+                user.getOrganizationMemberships().remove(membership);
+                return true;
+            }
+            return false;
+        });
     }
 
     // Helper methods for managing events

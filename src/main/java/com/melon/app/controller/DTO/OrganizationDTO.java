@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.melon.app.entity.Organization;
+import com.melon.app.entity.OrganizationMembership;
+import com.melon.app.entity.Role;
 import com.melon.app.entity.Schedule;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
@@ -33,6 +35,7 @@ public class OrganizationDTO {
         private Long id;
         private String username;
         private String email;
+        private Role role;
     }
 
     @Getter
@@ -61,12 +64,15 @@ public class OrganizationDTO {
     public OrganizationDTO(Organization organization) {
         this.id = organization.getId();
         this.name = organization.getOrganizationName();
-        this.memberCount = organization.getUsers().size();
-        this.owner = convertToUserSummary(organization.getOwner());
+        this.memberCount = organization.getMemberships().size();
+        this.owner = convertToUserSummary(organization.getMemberships().stream()
+            .filter(m -> m.getRole() == Role.OWNER)
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Organization has no owner")));
         
         // Convert users to UserSummaryDTO
-        this.members = organization.getUsers().stream()
-            .map(user -> convertToUserSummary(user))
+        this.members = organization.getMemberships().stream()
+            .map(member -> convertToUserSummary(member))
             .collect(Collectors.toSet());
 
         // Convert schedules to ScheduleSummaryDTO
@@ -81,11 +87,13 @@ public class OrganizationDTO {
     }
 
     // Static conversion methods
-    private static UserSummaryDTO convertToUserSummary(User user) {
+    private static UserSummaryDTO convertToUserSummary(OrganizationMembership member) {
         UserSummaryDTO dto = new UserSummaryDTO();
+        User user = member.getUser();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getUsername());
+        dto.setRole(member.getRole());
         return dto;
     }
 
