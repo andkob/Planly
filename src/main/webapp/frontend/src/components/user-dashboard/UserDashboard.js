@@ -270,7 +270,7 @@ export default function UserDashboard() {
                 
                 {/* Owned Organizations */}
                 <div className="pt-4">
-                  <h3 className="px-2 text-sm font-semibold text-gray-600 mb-2">Owned Organizations</h3>
+                  {ownedOrgs.length > 0 && <h3 className="px-2 text-sm font-semibold text-gray-600 mb-2">Owned Organizations</h3> }
                   {ownedOrgs.map((ownedOrg) => (
                     <a
                       key={ownedOrg.id}
@@ -312,19 +312,19 @@ export default function UserDashboard() {
                   `}>
                     <button
                       onClick={openStartOrgModal}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
                       Start an Organization
                     </button>
                     <button
                       onClick={openJoinOrgModal}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
                       Join an Organization
                     </button>
                     <button
                       onClick={openAddScheduleModal}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
                       Add a Schedule
                     </button>
@@ -332,13 +332,13 @@ export default function UserDashboard() {
                     {/* Development/Testing Buttons */}
                     <button
                       onClick={openAddOrgModal}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-orange-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-orange-700 hover:bg-gray-50"
                     >
                       Add an org (test)
                     </button>
                     <button
                       onClick={openAddEventModal}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-yellow-300 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-yellow-300 hover:bg-gray-50"
                     >
                       Add event (org)
                     </button>
