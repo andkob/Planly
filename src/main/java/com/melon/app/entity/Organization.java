@@ -26,6 +26,7 @@ public class Organization {
     private User owner;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("org-memberships")
     private Set<OrganizationMembership> memberships = new HashSet<>();
 
     @JsonManagedReference

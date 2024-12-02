@@ -10,6 +10,7 @@ import java.util.List;
 import jakarta.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "\"user\"")  // Escape the table name due to "user" being a reserved keyword
@@ -25,6 +26,7 @@ public class User implements UserDetails {
     private String passwordHash;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("user-memberships")
     private Set<OrganizationMembership> organizationMemberships = new HashSet<>();
 
     @OneToMany(mappedBy = "owner")
