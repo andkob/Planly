@@ -1,24 +1,23 @@
 package com.melon.app.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.melon.app.controller.DTO.OrganizationMemberDTO;
 import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.Role;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
 import com.melon.app.exception.CannotJoinOwnedOrgException;
+import com.melon.app.exception.CannotRemoveOwnerException;
 import com.melon.app.exception.InvalidIdException;
 import com.melon.app.exception.OrganizationDoesNotExistException;
 import com.melon.app.exception.OrganizationException;
+import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.repository.OrganizationRepository;
 import com.melon.app.repository.UpcomingEventRepository;
 import com.melon.app.repository.UserRepository;
@@ -34,6 +33,33 @@ public class OrganizationService {
 
     @Autowired
     private UpcomingEventRepository eventRepo;
+
+    public void removeMember(Long orgId, Long userId) {
+        Organization org = orgRepo.findById(orgId)
+            .orElseThrow(() -> new OrganizationDoesNotExistException("Organization not found"));
+        
+        User user = userRepo.findById(userId)
+            .orElseThrow(() -> new UserNotInOrganizationException("User not found"));
+
+        // Find the membership
+        Optional<OrganizationMembership> membershipOpt = org.getMemberships().stream()
+            .filter(m -> m.getUser().getId().equals(userId))
+            .findFirst();
+
+        if (membershipOpt.isEmpty()) {
+            throw new UserNotInOrganizationException("User is not a member of this organization");
+        }
+        
+        // Check if trying to remove an owner
+        OrganizationMembership membership = membershipOpt.get();
+        if (membership.getRole() == Role.OWNER) {
+            throw new CannotRemoveOwnerException("Cannot remove the owner of the organization");
+        }
+
+        org.removeUser(user);
+        orgRepo.save(org);
+        userRepo.save(user);
+    }
 
     @Transactional // keeps the Hibernate session open throughout the method execution
     public boolean joinOrganization(User user, String orgId) {
