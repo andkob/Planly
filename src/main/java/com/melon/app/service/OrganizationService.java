@@ -71,31 +71,38 @@ public class OrganizationService {
             throw new InvalidIdException("Invalid ID format: " + orgId);
         }
 
-        // Reload user from the DB to reattach to the session
-        user = userRepo.findById(user.getId()).get();
+        Long oId = Long.parseLong(orgId);
+        
+        // Fetch fresh instances from the database
+        User freshUser = userRepo.findById(user.getId())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+            
+        Organization org = orgRepo.findById(oId)
+            .orElseThrow(() -> new OrganizationDoesNotExistException("No org with the ID " + oId + " to join"));
 
-        Long id = Long.parseLong(orgId);
-        Optional<Organization> orgToJoin = orgRepo.findById(id);
-
-        if (orgToJoin.isEmpty()) {
-            throw new OrganizationDoesNotExistException("No org with the ID "+id+" to join");
-        }
-        Organization org = orgToJoin.get();
-
-        if (org.getOwner() != null && org.getOwner().equals(user)) {
+        // Check if user owns the organization
+        if (org.getOwner() != null && org.getOwner().getId().equals(freshUser.getId())) {
             throw new CannotJoinOwnedOrgException("You own this organization");
         }
 
-        boolean isAdded = org.addUser(user, Role.MEMBER);          // associate user with org
+        // Check if membership already exists
+        boolean membershipExists = org.getMemberships().stream()
+            .anyMatch(membership -> membership.getUser().getId().equals(freshUser.getId()));
 
-        if (!isAdded) {
+        if (membershipExists) {
             throw new OrganizationException("You are already associated with " + org.getName());
         }
 
-        userRepo.save(user);
-        orgRepo.save(org);
+        // Create new membership
+        OrganizationMembership membership = new OrganizationMembership(freshUser, org, Role.MEMBER);
+        org.getMemberships().add(membership);
+        freshUser.getOrganizationMemberships().add(membership);
 
-        return isAdded;
+        // Save both entities
+        orgRepo.save(org);
+        userRepo.save(freshUser);
+
+        return true;
     }
 
     public Organization createNewOrganization(String orgName) {
