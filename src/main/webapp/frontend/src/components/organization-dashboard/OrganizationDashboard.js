@@ -14,6 +14,7 @@ import {
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
 import Toast from '../notification/Toast';
+import OrganizationMembers from './OrganizationMembers';
 
 export default function OrganizationDashboard() {
   const { orgId } = useParams();
@@ -61,6 +62,29 @@ export default function OrganizationDashboard() {
 
   const removeToast = (id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
+  // TEMPORARRY LOCATION FOR THIS !!!!!!!!!!
+  const fetchMembers = async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const response = await fetch(`/api/org/get/members?orgId=${orgId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch member details');
+      }
+      const data = await response.json();
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -137,6 +161,7 @@ export default function OrganizationDashboard() {
             <OrganizationEvents
               isNewEvents={isNewEvents}
               setIsNewEvents={setIsNewEvents}
+              openJoinOrgModal={() => {}}
               myOrganizations={[{ id: orgId, name: orgDetails?.name }]}
               selectedOrgId={orgId}
               setSelectedOrgId={() => {}}
@@ -151,8 +176,7 @@ export default function OrganizationDashboard() {
             <h3 className="text-lg font-medium">Members</h3>
           </div>
           <div className="p-6">
-            {/* Member list component would go here */}
-            <p className="text-gray-500">Member management coming soon...</p>
+            <OrganizationMembers orgId={orgId}/>
           </div>
         </div>
 

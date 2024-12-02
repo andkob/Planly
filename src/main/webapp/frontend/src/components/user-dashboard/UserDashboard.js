@@ -356,6 +356,7 @@ export default function UserDashboard() {
                 myOrganizations={myOrganizations}
                 selectedOrgId={selectedOrgId}
                 setSelectedOrgId={setSelectedOrgId}
+                showDropdown={true}
               />
   
               <div className="bg-white rounded-lg shadow">
