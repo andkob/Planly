@@ -4,7 +4,6 @@ import {
   Users, 
   Calendar, 
   Settings, 
-  PlusCircle, 
   MessageCircle,
   ChevronLeft,
   UserPlus,
@@ -14,6 +13,7 @@ import {
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
 import Toast from '../notification/Toast';
+import OrganizationMembers from './OrganizationMembers';
 
 export default function OrganizationDashboard() {
   const { orgId } = useParams();
@@ -137,6 +137,7 @@ export default function OrganizationDashboard() {
             <OrganizationEvents
               isNewEvents={isNewEvents}
               setIsNewEvents={setIsNewEvents}
+              openJoinOrgModal={() => {}}
               myOrganizations={[{ id: orgId, name: orgDetails?.name }]}
               selectedOrgId={orgId}
               setSelectedOrgId={() => {}}
@@ -151,8 +152,7 @@ export default function OrganizationDashboard() {
             <h3 className="text-lg font-medium">Members</h3>
           </div>
           <div className="p-6">
-            {/* Member list component would go here */}
-            <p className="text-gray-500">Member management coming soon...</p>
+            <OrganizationMembers orgId={orgId} addToast={addToast} />
           </div>
         </div>
 

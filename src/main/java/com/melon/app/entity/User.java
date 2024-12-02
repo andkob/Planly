@@ -10,6 +10,7 @@ import java.util.List;
 import jakarta.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "\"user\"")  // Escape the table name due to "user" being a reserved keyword
@@ -19,12 +20,13 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(name="email", unique = true)
     private String email;
 
     private String passwordHash;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("user-memberships")
     private Set<OrganizationMembership> organizationMemberships = new HashSet<>();
 
     @OneToMany(mappedBy = "owner")
@@ -43,11 +45,15 @@ public class User implements UserDetails {
         this.ownedOrganizations = new HashSet<>();
     }
 
-    public boolean addOrganization(Organization org, Role role) {
-        OrganizationMembership membership = new OrganizationMembership(this, org, role);
-        boolean added = organizationMemberships.add(membership);
-        org.getMemberships().add(membership);
-        return added;
+    /**
+     * Constructor for testing purposes
+     * @param email
+     */
+    public User(Long id, String email) {
+        this.id = id;
+        this.email = email;
+        this.organizationMemberships = new HashSet<>();
+        this.ownedOrganizations = new HashSet<>();
     }
 
     public boolean addOwnedOrganization(Organization org) {

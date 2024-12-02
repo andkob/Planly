@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,10 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.melon.app.controller.DTO.EventDTO;
 import com.melon.app.controller.DTO.OrganizationDTO;
 import com.melon.app.controller.DTO.OrganizationIdNameDTO;
+import com.melon.app.controller.DTO.OrganizationMemberDTO;
 import com.melon.app.entity.Organization;
+import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
 import com.melon.app.exception.CannotJoinOwnedOrgException;
+import com.melon.app.exception.CannotRemoveOwnerException;
+import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.service.OrganizationService;
 
 @RestController
@@ -57,6 +62,23 @@ public class OrganizationController {
         System.out.println("Joining org? -> " + success);
 
         return success ? ResponseEntity.ok("Organization joined successfully") : ResponseEntity.ok("Org not joined");
+    }
+
+    @DeleteMapping("/members")
+    public ResponseEntity<String> removeMember(@RequestParam Long orgId, @RequestParam Long userId) {
+         try {
+            String username = orgService.removeMember(orgId, userId);
+            return ResponseEntity.ok("Successfully removed "+ username);
+        } catch (CannotRemoveOwnerException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Cannot remove the owner of the organization");
+        } catch (UserNotInOrganizationException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("User is not a member of this organization");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while removing the member");
+        }
     }
 
     @PostMapping("/post/new-org")
@@ -141,7 +163,7 @@ public class OrganizationController {
             .map(EventDTO::new)  // Uses the new constructor
             .collect(Collectors.toList());
 
-    return ResponseEntity.ok(eventDTOs);
+        return ResponseEntity.ok(eventDTOs);
     }
 
     @GetMapping("/details/{orgId}")
@@ -149,5 +171,24 @@ public class OrganizationController {
         Organization org = orgService.findOrgById(orgId);
         OrganizationDTO orgDTO = new OrganizationDTO(org);
         return ResponseEntity.ok(orgDTO);
+    }
+
+    @GetMapping("/get/members")
+    public ResponseEntity<?> getOrganizationMembers(@RequestParam Long orgId) {
+        List<OrganizationMembership> members = orgService.getMembers(orgId);
+        List<OrganizationMemberDTO> memberDTO = members.stream()
+            .map(member -> {
+                OrganizationMemberDTO dto = new OrganizationMemberDTO();
+                User user = member.getUser();
+                dto.setUserId(user.getId());
+                dto.setUsername(user.getUsername());
+                dto.setEmail(user.getUsername());
+                dto.setRole(member.getRole());
+                dto.setCreatedAt(LocalDate.now().toString()); // TODO - implement JoinedAt timestamp
+                return dto;
+            })
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(memberDTO);
     }
 }

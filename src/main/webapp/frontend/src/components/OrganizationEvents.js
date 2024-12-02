@@ -12,11 +12,12 @@ const EVENT_TYPES = [
 
 export default function OrganizationEvents({ 
   isNewEvents, 
-  setIsNewEvents, 
-  openJoinOrgModal,
-  myOrganizations, // Array of org objects with id and name
+  setIsNewEvents,
+  openJoinOrgModal, // Shortcut in case user has no orgs
+  myOrganizations,  // Array of org objects with id and name
   selectedOrgId,
-  setSelectedOrgId
+  setSelectedOrgId,
+  showDropdown
 }) {
   const[events, setEvents] = useState([]);
   const[loading, setLoading] = useState(false);
@@ -78,7 +79,7 @@ export default function OrganizationEvents({
       <div className="flex items-center justify-between space-x-4">
         <div className="flex items-center space-x-4">
           <h3 className="text-lg font-medium">Upcoming Events</h3>
-          {myOrganizations?.length > 0 && (
+          {showDropdown && myOrganizations?.length > 0 && (
             <select
               value={selectedOrgId}
               onChange={(e) => setSelectedOrgId(Number(e.target.value))}

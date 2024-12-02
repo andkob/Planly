@@ -26,6 +26,7 @@ public class Organization {
     private User owner;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("org-memberships")
     private Set<OrganizationMembership> memberships = new HashSet<>();
 
     @JsonManagedReference
@@ -46,6 +47,16 @@ public class Organization {
     public Organization(String organizationName, User owner) {
         this.organizationName = organizationName;
         this.owner = owner;
+    }
+
+    /**
+     * Constructor for testing purposes
+     * @param organizationName
+     * @param id
+     */
+    public Organization(Long id, String organizationName) {
+        this.id = id;
+        this.organizationName = organizationName;
     }
 
     // Helper methods for managing users

@@ -61,6 +61,7 @@ public class ScheduleService {
         if (scheduleRepo.findByUserAndScheduleName(user, scheduleRequest.getName()) == null) {
             throw new ConflictingSchedulesException("Schedule with that name already exists.");
         }
+        user = userRepo.findById(user.getId()).get(); // load user entity
         Schedule schedule = new Schedule(scheduleRequest.getName(), user);
 
         List<DaySchedule> events = scheduleRequest.getDays();

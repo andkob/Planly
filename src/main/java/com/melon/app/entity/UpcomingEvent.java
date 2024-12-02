@@ -58,6 +58,19 @@ public class UpcomingEvent {
         OTHER
     }
 
+    /**
+     * Constructor for testing purposes
+     * @param type
+     */
+    public UpcomingEvent(Long id, String name) {
+        this.id = id;
+        this.name = name;
+        this.date = LocalDate.now();
+        this.startTime = LocalTime.now();
+        this.type = EventType.OTHER;
+        this.location = "Test Location";
+    }
+
     // Helper method to validate event type
     public static boolean isValidEventType(String type) {
         try {
@@ -66,6 +79,19 @@ public class UpcomingEvent {
         } catch (IllegalArgumentException e) {
             return false;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UpcomingEvent)) return false;
+        UpcomingEvent that = (UpcomingEvent) o;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : getClass().hashCode();
     }
 
     @Override
