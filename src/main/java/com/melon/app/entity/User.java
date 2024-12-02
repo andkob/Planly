@@ -45,6 +45,17 @@ public class User implements UserDetails {
         this.ownedOrganizations = new HashSet<>();
     }
 
+    /**
+     * Constructor for testing purposes
+     * @param email
+     */
+    public User(Long id, String email) {
+        this.id = id;
+        this.email = email;
+        this.organizationMemberships = new HashSet<>();
+        this.ownedOrganizations = new HashSet<>();
+    }
+
     public boolean addOrganization(Organization org, Role role) {
         OrganizationMembership membership = new OrganizationMembership(this, org, role);
         boolean added = organizationMemberships.add(membership);

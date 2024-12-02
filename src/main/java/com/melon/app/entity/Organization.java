@@ -49,6 +49,16 @@ public class Organization {
         this.owner = owner;
     }
 
+    /**
+     * Constructor for testing purposes
+     * @param organizationName
+     * @param id
+     */
+    public Organization(Long id, String organizationName) {
+        this.id = id;
+        this.organizationName = organizationName;
+    }
+
     // Helper methods for managing users
     public boolean addUser(User user, Role role) {
         OrganizationMembership membership = new OrganizationMembership(user, this, role);
