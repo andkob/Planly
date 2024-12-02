@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.melon.app.controller.DTO.EventDTO;
 import com.melon.app.controller.DTO.OrganizationDTO;
 import com.melon.app.controller.DTO.OrganizationIdNameDTO;
+import com.melon.app.controller.DTO.OrganizationMemberDTO;
 import com.melon.app.entity.Organization;
+import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
 import com.melon.app.exception.CannotJoinOwnedOrgException;
@@ -141,7 +143,7 @@ public class OrganizationController {
             .map(EventDTO::new)  // Uses the new constructor
             .collect(Collectors.toList());
 
-    return ResponseEntity.ok(eventDTOs);
+        return ResponseEntity.ok(eventDTOs);
     }
 
     @GetMapping("/details/{orgId}")
@@ -149,5 +151,24 @@ public class OrganizationController {
         Organization org = orgService.findOrgById(orgId);
         OrganizationDTO orgDTO = new OrganizationDTO(org);
         return ResponseEntity.ok(orgDTO);
+    }
+
+    @GetMapping("/get/members")
+    public ResponseEntity<?> getOrganizationMembers(@RequestParam Long orgId) {
+        List<OrganizationMembership> members = orgService.getMembers(orgId);
+        List<OrganizationMemberDTO> memberDTO = members.stream()
+            .map(member -> {
+                OrganizationMemberDTO dto = new OrganizationMemberDTO();
+                User user = member.getUser();
+                dto.setUserId(user.getId());
+                dto.setUsername(user.getUsername());
+                dto.setEmail(user.getUsername());
+                dto.setRole(member.getRole());
+                dto.setCreatedAt(LocalDate.now().toString()); // TODO - implement JoinedAt timestamp
+                return dto;
+            })
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(memberDTO);
     }
 }

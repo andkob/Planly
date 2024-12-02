@@ -1,13 +1,17 @@
 package com.melon.app.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.melon.app.controller.DTO.OrganizationMemberDTO;
 import com.melon.app.entity.Organization;
+import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.Role;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
@@ -105,5 +109,13 @@ public class OrganizationService {
 
     public List<UpcomingEvent> getUpcomingEvents(Long orgId) {
         return eventRepo.findByOrganizationIdOrderByDateAscStartTimeAsc(orgId);
+    }
+
+    public List<User> getUsers(Long orgId) {
+        return userRepo.findUsersByOrganizationId(orgId);
+    }
+
+    public List<OrganizationMembership> getMembers(Long orgId) {
+        return orgRepo.findMembershipsByOrganizationId(orgId);
     }
 }

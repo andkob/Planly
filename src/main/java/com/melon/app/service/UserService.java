@@ -17,6 +17,8 @@ import com.melon.app.exception.IncorrectPasswordException;
 import com.melon.app.exception.UserNoExistException;
 import com.melon.app.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class UserService implements UserDetailsService {
     @Autowired
@@ -34,6 +36,7 @@ public class UserService implements UserDetailsService {
         return user.get();
     }
 
+    @Transactional
     public Optional<User> login(String email, String password) {
         Optional<User> user = userRepository.findByEmail(email);
         if (!user.isPresent()) {
