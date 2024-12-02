@@ -4,7 +4,6 @@ import {
   Users, 
   Calendar, 
   Settings, 
-  PlusCircle, 
   MessageCircle,
   ChevronLeft,
   UserPlus,
@@ -62,29 +61,6 @@ export default function OrganizationDashboard() {
 
   const removeToast = (id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
-  };
-
-  // TEMPORARRY LOCATION FOR THIS !!!!!!!!!!
-  const fetchMembers = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/org/get/members?orgId=${orgId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch member details');
-      }
-      const data = await response.json();
-      console.log(data);
-    } catch (err) {
-      console.log(err);
-    }
   };
 
   return (
@@ -176,7 +152,7 @@ export default function OrganizationDashboard() {
             <h3 className="text-lg font-medium">Members</h3>
           </div>
           <div className="p-6">
-            <OrganizationMembers orgId={orgId}/>
+            <OrganizationMembers orgId={orgId} addToast={addToast} />
           </div>
         </div>
 

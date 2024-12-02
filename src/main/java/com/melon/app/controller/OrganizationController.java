@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,8 @@ import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
 import com.melon.app.exception.CannotJoinOwnedOrgException;
+import com.melon.app.exception.CannotRemoveOwnerException;
+import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.service.OrganizationService;
 
 @RestController
@@ -59,6 +62,23 @@ public class OrganizationController {
         System.out.println("Joining org? -> " + success);
 
         return success ? ResponseEntity.ok("Organization joined successfully") : ResponseEntity.ok("Org not joined");
+    }
+
+    @DeleteMapping("/members")
+    public ResponseEntity<String> removeMember(@RequestParam Long orgId, @RequestParam Long userId) {
+         try {
+            String username = orgService.removeMember(orgId, userId);
+            return ResponseEntity.ok("Successfully removed "+ username);
+        } catch (CannotRemoveOwnerException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("Cannot remove the owner of the organization");
+        } catch (UserNotInOrganizationException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("User is not a member of this organization");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("An error occurred while removing the member");
+        }
     }
 
     @PostMapping("/post/new-org")

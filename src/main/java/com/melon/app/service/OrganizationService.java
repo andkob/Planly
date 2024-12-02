@@ -34,13 +34,15 @@ public class OrganizationService {
     @Autowired
     private UpcomingEventRepository eventRepo;
 
-    public void removeMember(Long orgId, Long userId) {
+    public String removeMember(Long orgId, Long userId) {
         Organization org = orgRepo.findById(orgId)
             .orElseThrow(() -> new OrganizationDoesNotExistException("Organization not found"));
         
         User user = userRepo.findById(userId)
             .orElseThrow(() -> new UserNotInOrganizationException("User not found"));
 
+        String username = user.getUsername();
+        
         // Find the membership
         Optional<OrganizationMembership> membershipOpt = org.getMemberships().stream()
             .filter(m -> m.getUser().getId().equals(userId))
@@ -59,6 +61,8 @@ public class OrganizationService {
         org.removeUser(user);
         orgRepo.save(org);
         userRepo.save(user);
+
+        return username;
     }
 
     @Transactional // keeps the Hibernate session open throughout the method execution
