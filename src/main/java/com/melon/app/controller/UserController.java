@@ -24,7 +24,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/get/first-name")
+    @GetMapping("/get/first-name") // TODO - endpoint names should follow RESTful guidelines
     public ResponseEntity<?> getFirstName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {

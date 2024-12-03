@@ -181,8 +181,8 @@ public class OrganizationController {
                 OrganizationMemberDTO dto = new OrganizationMemberDTO();
                 User user = member.getUser();
                 dto.setUserId(user.getId());
+                dto.setEmail(user.getEmail());
                 dto.setUsername(user.getUsername());
-                dto.setEmail(user.getUsername());
                 dto.setRole(member.getRole());
                 dto.setCreatedAt(LocalDate.now().toString()); // TODO - implement JoinedAt timestamp
                 return dto;
