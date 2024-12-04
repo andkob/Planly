@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.melon.app.entity.User;
 import com.melon.app.service.UserService;
 import com.melon.app.controller.DTO.OrganizationIdNameDTO;
-import com.melon.app.entity.Organization;;
+import com.melon.app.entity.Organization;
 
 @RestController
 @RequestMapping("/api/user")

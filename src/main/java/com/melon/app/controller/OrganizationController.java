@@ -27,7 +27,6 @@ import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
-import com.melon.app.exception.CannotJoinOwnedOrgException;
 import com.melon.app.exception.CannotRemoveOwnerException;
 import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.service.OrganizationService;
@@ -47,21 +46,11 @@ public class OrganizationController {
     @PostMapping("/join")
     public ResponseEntity<String> joinOrganization(@RequestParam String orgId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
 
         User user = (User) auth.getPrincipal();
         boolean success = false;
-        try {
-            success = orgService.joinOrganization(user, orgId);
-        } catch (CannotJoinOwnedOrgException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }
-
-        System.out.println("Joining org? -> " + success);
-
-        return success ? ResponseEntity.ok("Organization joined successfully") : ResponseEntity.ok("Org not joined");
+        success = orgService.joinOrganization(user, orgId);
+        return success ? ResponseEntity.ok("Organization joined successfully") : ResponseEntity.ok("Failed to join organization");
     }
 
     @DeleteMapping("/members")
@@ -83,11 +72,6 @@ public class OrganizationController {
 
     @PostMapping("/post/new-org")
     public ResponseEntity<String> createOrganization(@RequestParam String orgName) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
         orgService.createNewOrganization(orgName);
         return ResponseEntity.ok("Organization successfully created");
     }
@@ -100,7 +84,6 @@ public class OrganizationController {
         return ResponseEntity.ok(new OrganizationDTO(newOrg));
     }
 
-    // TODO no need to get all org data really
     @GetMapping("/get/owned/id-name")
     public ResponseEntity<List<OrganizationIdNameDTO>> getOwnedOrganizationsIdName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -115,33 +98,14 @@ public class OrganizationController {
     }
 
     @GetMapping("/get/org-name")
-    public ResponseEntity<?> findOrgsByName(@RequestParam String orgName) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-        
+    public ResponseEntity<?> findOrgsByName(@RequestParam String orgName) {     
         List<Organization> foundOrganizations = orgService.findOrgsByName(orgName);
         List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());
-
-        // TODO - response should say this stuff
-        if (orgDTOs.isEmpty()) {
-            System.out.println("No orgs with that name");
-        } else {
-            for (OrganizationIdNameDTO org : orgDTOs) {
-                System.out.println("Found: " + org.getName());
-            }
-        }
         return ResponseEntity.ok(orgDTOs);
     }
 
     @PostMapping("/post/new-event/{orgId}")
     public ResponseEntity<?> addEvent(@PathVariable Long orgId, @RequestBody EventDTO eventDTO) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
         UpcomingEvent event = new UpcomingEvent();
         event.setName(eventDTO.getName());
         event.setDate(LocalDate.parse(eventDTO.getDate()));
