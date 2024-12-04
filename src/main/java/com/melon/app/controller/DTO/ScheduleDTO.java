@@ -5,18 +5,18 @@ import java.util.stream.Collectors;
 
 import com.melon.app.entity.Schedule;
 
-public class ScheduleResponseDTO {
+public class ScheduleDTO {
     private Long id;
     private String name;
     private List<EntryDTO> entries;
 
-    public ScheduleResponseDTO(Long id, String name, List<EntryDTO> entries) {
+    public ScheduleDTO(Long id, String name, List<EntryDTO> entries) {
         this.id = id;
         this.name = name;
         this.entries = entries;
     }
 
-    public ScheduleResponseDTO(Schedule schedule) {
+    public ScheduleDTO(Schedule schedule) {
         this.id = schedule.getId();
         this.name = schedule.getName();
         this.entries = schedule.getEntries().stream()
