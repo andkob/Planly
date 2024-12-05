@@ -201,9 +201,9 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen bg-gray-100">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm p-4 flex items-center justify-between">
         <button 
           onClick={toggleSidebar} 
           className="p-2 hover:bg-gray-100 rounded-lg"
@@ -224,7 +224,7 @@ export default function UserDashboard() {
         </button>
       </div>
   
-      <div className="flex">
+      <div className="flex h-full">
         {/* Sidebar */}
         <div className='fixed'>
           <aside className={`
@@ -296,8 +296,8 @@ export default function UserDashboard() {
         </div>
   
         {/* Main Content */}
-        <div className="flex-1 lg:ml-64 overflow-auto">
-          <div className="p-4 lg:p-8">
+        <div className="flex-1 w-full lg:pl-64">
+          <div className="p-4 lg:p-8 pt-20 lg:pt-8">
             {/* Top Action Bar */}
             <nav className="bg-white shadow-sm mb-8 rounded-lg">
               <div className="p-4">
