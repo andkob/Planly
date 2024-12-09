@@ -62,6 +62,19 @@ export default function ScheduleEntryList({ entries, onEntryChange }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={entry.eventName || ""}
+                  onChange={(e) => handleEntryChange(index, "eventName", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter event name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Day
                 </label>
                 <input
@@ -94,19 +107,6 @@ export default function ScheduleEntryList({ entries, onEntryChange }) {
                   value={entry.eventEndTime || ""}
                   onChange={(e) => handleEntryChange(index, "eventEndTime", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={entry.eventName || ""}
-                  onChange={(e) => handleEntryChange(index, "eventName", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter event name"
                 />
               </div>
             </div>

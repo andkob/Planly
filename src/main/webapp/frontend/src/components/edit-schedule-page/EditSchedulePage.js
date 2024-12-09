@@ -44,6 +44,7 @@ export default function EditSchedule() {
     .then((response) => response.json())
     .then((data) => {
       setSchedules(data);
+      console.log(data);
       if (data.length > 0) setActiveScheduleId(data[0].id);
     })
     .catch((error) => {
@@ -57,7 +58,7 @@ export default function EditSchedule() {
         (schedule) => schedule.id === activeScheduleId
       );
       setScheduleEntries(selectedSchedule ? selectedSchedule.entries : []);
-      setOldScheduleEntries(scheduleEntries);
+      setOldScheduleEntries(selectedSchedule ? selectedSchedule.entries : []); // in case of discard
     }
   }, [activeScheduleId, schedules]);
 
@@ -133,7 +134,7 @@ export default function EditSchedule() {
 
           <div className="w-1/2 pl-4 overflow-y-auto">
             {schedules.length > 0 && scheduleEntries.length > 0 ? (
-              <div className="space-y-6">
+              <div className="space-y-6 mb-12">
                 <WeeklyScheduleGrid entries={scheduleEntries} />
                 <DayDistributionChart entries={scheduleEntries} />
               </div>
@@ -143,7 +144,7 @@ export default function EditSchedule() {
           </div>
         </div>
 
-        <div className="fixed bottom-4 right-4 space-x-2">
+        <div className="fixed bottom-4 right-4 space-x-2 z-50">
           <button
             onClick={handleDiscardChanges}
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md"
