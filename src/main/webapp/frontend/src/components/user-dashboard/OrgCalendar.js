@@ -94,9 +94,14 @@ const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents 
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     return events.filter(event => {
       const eventDate = new Date(event.start);
-      return eventDate.getDate() === day && 
-             eventDate.getMonth() === currentDate.getMonth() &&
-             eventDate.getFullYear() === currentDate.getFullYear();
+      const dateMatches = eventDate.getDate() === day && 
+                         eventDate.getMonth() === currentDate.getMonth() &&
+                         eventDate.getFullYear() === currentDate.getFullYear();
+      
+      // Only show events whose types are not in filteredEventTypes
+      const typeIsVisible = !filteredEventTypes.includes(event.type);
+      
+      return dateMatches && typeIsVisible;
     });
   };
 
