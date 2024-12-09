@@ -43,6 +43,24 @@ public class ScheduleService {
         return entries;
     }
 
+    private List<ScheduleDTO> mapScheduleToDTO(List<Schedule> schedules) {
+        return schedules.stream()
+            .map(schedule -> new ScheduleDTO(
+                schedule.getId(),
+                schedule.getName(),
+                schedule.getEntries().stream()
+                    .map(entry -> new EntryDTO(
+                        entry.getId(),
+                        entry.getEventDay(),
+                        entry.getEventStartTime(),
+                        entry.getEventEndTime(),
+                        entry.getEventName()
+                    ))
+                    .collect(Collectors.toList())
+            ))
+            .collect(Collectors.toList());
+    }
+
     public Schedule createSchedule(User user, ScheduleRequest scheduleRequest) throws ConflictingSchedulesException {
         // see if a schedule with that name exists
         if (scheduleRepo.findByUserAndScheduleName(user, scheduleRequest.getName()) == null) {
@@ -83,24 +101,14 @@ public class ScheduleService {
         return scheduleRepo.findByUser(user);
     }
 
+    public List<ScheduleDTO> getOrganizationMemberSchedules(Long orgId) {
+        List<Schedule> schedules = scheduleRepo.findMemberSchedulesByOrganizationId(orgId);
+        return mapScheduleToDTO(schedules);
+    }
+
     public List<ScheduleDTO> getUserScheduleEntries(User user) {
         List<Schedule> schedules = scheduleRepo.findByUser(user);
-
-        return schedules.stream()
-            .map(schedule -> new ScheduleDTO(
-                schedule.getId(),
-                schedule.getName(),
-                schedule.getEntries().stream()
-                    .map(entry -> new EntryDTO(
-                        entry.getId(),
-                        entry.getEventDay(),
-                        entry.getEventStartTime(),
-                        entry.getEventEndTime(),
-                        entry.getEventName()
-                    ))
-                    .collect(Collectors.toList())
-            ))
-            .collect(Collectors.toList());
+        return mapScheduleToDTO(schedules);
     }
 
     public void saveSchedule(ScheduleRequest scheduleRequest) {

@@ -48,11 +48,6 @@ export default function UserDashboard() {
   const openAddOrgModal = () => setShowAddOrgModal(true);
   const closeAddOrgModal = () => setShowAddOrgModal(false);
 
-  const addNewOrg = (newOrgId) => {
-    myOrganizations.push(newOrgId);
-    setMyOrganizations(myOrganizations);
-  };
-
   const startNewOrg = (newOrgData) => {
     setOwnedOrgs(prevOrgs => [...prevOrgs, {
         id: newOrgData.id,
@@ -94,6 +89,7 @@ export default function UserDashboard() {
         name: org.name
       }));
       setOwnedOrgs(organizations);
+      setSelectedOrgId(organizations[0].id); // set selected org to first one
     } catch (error) {
       console.error('Error fetching organizations:', error);
       addToast('error', error.message);

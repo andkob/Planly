@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.melon.app.controller.DTO.ScheduleRequest;
@@ -58,6 +59,12 @@ public class ScheduleController {
         User user = (User) auth.getPrincipal();
         List<ScheduleDTO> schedules = scheduleService.getUserScheduleEntries(user);
 
+        return ResponseEntity.ok(schedules);
+    }
+
+    @GetMapping("/members/schedules")
+    public ResponseEntity<?> getMemberScheduleEntriesByOrg(@RequestParam Long orgId) {
+        List<ScheduleDTO> schedules = scheduleService.getOrganizationMemberSchedules(orgId);
         return ResponseEntity.ok(schedules);
     }
 }
