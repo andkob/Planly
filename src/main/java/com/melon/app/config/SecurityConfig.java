@@ -30,7 +30,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable()) // TODO Disable CSRF protection (not recommended in production)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // Allow preflight CORS requests
-                .requestMatchers("/api/auth/user/login", "/api/auth/user/register").permitAll() // allow everyone to access these endpoints
+                .requestMatchers("/api/auth/sessions", "/api/auth/users").permitAll() // allow everyone to access these endpoints
                 .requestMatchers("/h2-console/*").permitAll()
                 .anyRequest().authenticated() // require authentication for any other requests
             )

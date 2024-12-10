@@ -20,13 +20,13 @@ const UserLogin = ({ setIsAuthenticated }) => {
     event.preventDefault();
 
     try {
-      const response = await fetch('/api/auth/user/login', {
+      const response = await fetch('/api/auth/sessions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          identifier: identifier, // Backend will need to handle this field
+        body: JSON.stringify({
+          identifier: identifier,
           password: password
         }),
         credentials: 'include'
