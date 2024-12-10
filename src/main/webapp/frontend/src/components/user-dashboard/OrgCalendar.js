@@ -48,7 +48,9 @@ const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents 
     MANDATORY: { label: 'Mandatory', color: 'bg-red-300 text-red-800' },
     SOCIAL: { label: 'Social', color: 'bg-blue-100 text-blue-800' },
     PHILANTHROPY: { label: 'Philanthropy', color: 'bg-purple-300 text-purple-800' },
-    OTHER: { label: 'Other', color: 'bg-gray-300 text-gray-800' }
+    OTHER: { label: 'Other', color: 'bg-gray-300 text-gray-800' },
+    MEETING: { label: 'Meeting', color: 'bg-yellow-100 text-yellow-800' },
+    DEADLINE: { label: 'Deadline', color: 'bg-red-300 text-red-800' }
   };
 
   const getEventColor = (type) => {

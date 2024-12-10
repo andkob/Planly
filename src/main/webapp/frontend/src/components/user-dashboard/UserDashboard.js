@@ -69,7 +69,7 @@ export default function UserDashboard() {
   const fetchOwnedOrganizationIdsNames = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/org/get/owned/id-name', {
+      const response = await fetch('/api/organizations/owned/id-name', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

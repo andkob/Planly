@@ -32,7 +32,8 @@ export default function OrganizationDashboard() {
   const fetchOrganizationDetails = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/org/details/${orgId}`, {
+      const response = await fetch(`/api/organizations/${orgId}/details`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
         },

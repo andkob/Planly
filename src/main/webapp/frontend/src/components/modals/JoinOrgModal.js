@@ -12,7 +12,7 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
     setError('');
     
     const token = localStorage.getItem("jwtToken");
-    fetch(`/api/org/get/org-name?orgName=${orgName}`, {
+    fetch(`/api/organizations?orgName=${orgName}`, {
       method: "GET",
       headers: {
         'content-type': 'application/json',
@@ -60,7 +60,7 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
     setLoading(true);
     const token = localStorage.getItem("jwtToken");
     
-    fetch(`/api/org/join?orgId=${orgId}`, {
+    fetch(`/api/organizations/${orgId}/members`, {
       method: "POST",
       headers: {
         'Authorization': `Bearer ${token}`

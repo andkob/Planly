@@ -63,7 +63,7 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
     };
 
     try {
-      const response = await fetch(`/api/org/post/new-event/${orgId}`, {
+      const response = await fetch(`/api/organizations/${orgId}/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
