@@ -21,8 +21,8 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    // Extract email (username) from token
-    public String extractEmail(String token) {
+    // Extract username from token
+    public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -51,9 +51,9 @@ public class JwtUtil {
     }
 
     // Generate token for user
-    public String generateToken(String email) {
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        String token = createToken(claims, email);
+        String token = createToken(claims, username);
         return token;
     }
 
@@ -70,8 +70,8 @@ public class JwtUtil {
     }
 
     // Validate token
-    public Boolean validateToken(String token, String email) {
-        final String extractedEmail = extractEmail(token);
-        return (extractedEmail.equals(email) && !isTokenExpired(token));
+    public Boolean validateToken(String token, String username) {
+        final String extractedEmail = extractUsername(token);
+        return (extractedEmail.equals(username) && !isTokenExpired(token));
     }
 }

@@ -27,15 +27,17 @@ import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
-import com.melon.app.exception.CannotJoinOwnedOrgException;
 import com.melon.app.exception.CannotRemoveOwnerException;
 import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.service.OrganizationService;
 
+/**
+ * REST controller for managing organizations and related entities.
+ */
 @RestController
-@RequestMapping("/api/org")
+@RequestMapping("/api/organizations")
 public class OrganizationController {
-    
+
     @Autowired
     private final OrganizationService orgService;
 
@@ -44,104 +46,90 @@ public class OrganizationController {
         this.orgService = organizationService;
     }
 
-    @PostMapping("/join")
-    public ResponseEntity<String> joinOrganization(@RequestParam String orgId) {
+    /**
+     * Allows a user to join an organization.
+     *
+     * @param orgId the ID of the organization to join.
+     * @return {@link ResponseEntity} indicating the success or failure of the operation.
+     */
+    @PostMapping("/{orgId}/members")
+    public ResponseEntity<String> joinOrganization(@PathVariable String orgId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
         User user = (User) auth.getPrincipal();
-        boolean success = false;
+        boolean success = orgService.joinOrganization(user, orgId);
+        return success ? ResponseEntity.ok("Organization joined successfully") : ResponseEntity.ok("Failed to join organization");
+    }
+
+    /**
+     * Removes a member from an organization.
+     *
+     * @param orgId  the ID of the organization.
+     * @param userId the ID of the user to be removed.
+     * @return {@link ResponseEntity} indicating the outcome of the operation.
+     */
+    @DeleteMapping("/{orgId}/members")
+    public ResponseEntity<String> removeMember(@PathVariable Long orgId, @RequestParam Long userId) {
         try {
-            success = orgService.joinOrganization(user, orgId);
-        } catch (CannotJoinOwnedOrgException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }
-
-        System.out.println("Joining org? -> " + success);
-
-        return success ? ResponseEntity.ok("Organization joined successfully") : ResponseEntity.ok("Org not joined");
-    }
-
-    @DeleteMapping("/members")
-    public ResponseEntity<String> removeMember(@RequestParam Long orgId, @RequestParam Long userId) {
-         try {
             String username = orgService.removeMember(orgId, userId);
-            return ResponseEntity.ok("Successfully removed "+ username);
+            return ResponseEntity.ok("Successfully removed " + username);
         } catch (CannotRemoveOwnerException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body("Cannot remove the owner of the organization");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot remove the owner of the organization");
         } catch (UserNotInOrganizationException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body("User is not a member of this organization");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User is not a member of this organization");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An error occurred while removing the member");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while removing the member");
         }
     }
 
-    @PostMapping("/post/new-org")
-    public ResponseEntity<String> createOrganization(@RequestParam String orgName) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
-        orgService.createNewOrganization(orgName);
-        return ResponseEntity.ok("Organization successfully created");
-    }
-
-    @PostMapping("/create")
-    public ResponseEntity<?> createOwnedOrganization(@RequestParam String orgName) {
+    /**
+     * Creates a new organization owned by the current user.
+     *
+     * @param orgName the name of the organization to be created.
+     * @return {@link ResponseEntity} with the created organization's details.
+     */
+    @PostMapping("/new")
+    public ResponseEntity<?> createNewOrganization(@RequestParam String orgName) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Organization newOrg = orgService.createNewOwnedOrganization(orgName, user);
-        System.out.println("Created new org: " + newOrg.toString());
+        Organization newOrg = orgService.createNewOrganization(orgName, user);
         return ResponseEntity.ok(new OrganizationDTO(newOrg));
     }
 
-    // TODO no need to get all org data really
-    @GetMapping("/get/owned/id-name")
+    /**
+     * Retrieves a list of organizations owned by the current user.
+     *
+     * @return {@link ResponseEntity} containing a list of owned organizations with their IDs and names.
+     */
+    @GetMapping("/owned/id-name")
     public ResponseEntity<List<OrganizationIdNameDTO>> getOwnedOrganizationsIdName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) auth.getPrincipal();
         List<Organization> ownedOrgs = orgService.findOrganizationsByOwner(user);
-        
-        List<OrganizationIdNameDTO> orgDTOs = ownedOrgs.stream()
-            .map(OrganizationIdNameDTO::new)
-            .collect(Collectors.toList());
-            
+        List<OrganizationIdNameDTO> orgDTOs = ownedOrgs.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());
         return ResponseEntity.ok(orgDTOs);
     }
 
-    @GetMapping("/get/org-name")
-    public ResponseEntity<?> findOrgsByName(@RequestParam String orgName) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-        
+    /**
+     * Searches for organizations by name.
+     *
+     * @param orgName the name of the organization to search for.
+     * @return {@link ResponseEntity} containing a list of matching organizations.
+     */
+    @GetMapping("{orgName}")
+    public ResponseEntity<?> findOrgsByName(@PathVariable String orgName) {
         List<Organization> foundOrganizations = orgService.findOrgsByName(orgName);
         List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());
-
-        // TODO - response should say this stuff
-        if (orgDTOs.isEmpty()) {
-            System.out.println("No orgs with that name");
-        } else {
-            for (OrganizationIdNameDTO org : orgDTOs) {
-                System.out.println("Found: " + org.getName());
-            }
-        }
         return ResponseEntity.ok(orgDTOs);
     }
 
-    @PostMapping("/post/new-event/{orgId}")
+    /**
+     * Adds a new event to an organization.
+     *
+     * @param orgId    the ID of the organization.
+     * @param eventDTO the details of the event to be added.
+     * @return {@link ResponseEntity} indicating the success of the operation.
+     */
+    @PostMapping("{orgId}/events")
     public ResponseEntity<?> addEvent(@PathVariable Long orgId, @RequestBody EventDTO eventDTO) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
         UpcomingEvent event = new UpcomingEvent();
         event.setName(eventDTO.getName());
         event.setDate(LocalDate.parse(eventDTO.getDate()));
@@ -149,46 +137,55 @@ public class OrganizationController {
         event.setType(eventDTO.getEventType());
         event.setLocation(eventDTO.getLocation());
         event.setDescription(eventDTO.getDescription());
-
-        System.out.println("Created: " + event.toString());
-
         orgService.addEventToOrganization(orgId, event);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/get/events/{orgId}")
+    /**
+     * Retrieves upcoming events for an organization.
+     *
+     * @param orgId the ID of the organization.
+     * @return {@link ResponseEntity} containing a list of events.
+     */
+    @GetMapping("{orgId}/events")
     public ResponseEntity<?> getEvents(@PathVariable Long orgId) {
         List<UpcomingEvent> events = orgService.getUpcomingEvents(orgId);
-        List<EventDTO> eventDTOs = events.stream()
-            .map(EventDTO::new)  // Uses the new constructor
-            .collect(Collectors.toList());
-
+        List<EventDTO> eventDTOs = events.stream().map(EventDTO::new).collect(Collectors.toList());
         return ResponseEntity.ok(eventDTOs);
     }
 
-    @GetMapping("/details/{orgId}")
+    /**
+     * Retrieves details of an organization by ID.
+     *
+     * @param orgId the ID of the organization.
+     * @return {@link ResponseEntity} containing the organization's details.
+     */
+    @GetMapping("/{orgId}/details")
     public ResponseEntity<?> getOrganizationDetails(@PathVariable Long orgId) {
         Organization org = orgService.findOrgById(orgId);
         OrganizationDTO orgDTO = new OrganizationDTO(org);
         return ResponseEntity.ok(orgDTO);
     }
 
-    @GetMapping("/get/members")
+    /**
+     * Retrieves members of an organization.
+     *
+     * @param orgId the ID of the organization.
+     * @return {@link ResponseEntity} containing a list of members.
+     */
+    @GetMapping("/{orgId}/members")
     public ResponseEntity<?> getOrganizationMembers(@RequestParam Long orgId) {
         List<OrganizationMembership> members = orgService.getMembers(orgId);
-        List<OrganizationMemberDTO> memberDTO = members.stream()
-            .map(member -> {
-                OrganizationMemberDTO dto = new OrganizationMemberDTO();
-                User user = member.getUser();
-                dto.setUserId(user.getId());
-                dto.setUsername(user.getUsername());
-                dto.setEmail(user.getUsername());
-                dto.setRole(member.getRole());
-                dto.setCreatedAt(LocalDate.now().toString()); // TODO - implement JoinedAt timestamp
-                return dto;
-            })
-            .collect(Collectors.toList());
-
+        List<OrganizationMemberDTO> memberDTO = members.stream().map(member -> {
+            OrganizationMemberDTO dto = new OrganizationMemberDTO();
+            User user = member.getUser();
+            dto.setUserId(user.getId());
+            dto.setEmail(user.getEmail());
+            dto.setUsername(user.getUsername());
+            dto.setRole(member.getRole());
+            dto.setCreatedAt(LocalDate.now().toString()); // TODO - implement JoinedAt timestamp
+            return dto;
+        }).collect(Collectors.toList());
         return ResponseEntity.ok(memberDTO);
     }
 }

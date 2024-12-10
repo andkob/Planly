@@ -23,6 +23,9 @@ public class User implements UserDetails {
     @Column(name="email", unique = true)
     private String email;
 
+    @Column(name="username", unique = true)
+    private String username;
+
     private String passwordHash;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -38,8 +41,9 @@ public class User implements UserDetails {
 
     public User() {}
 
-    public User(String email, String passwordHash) {
+    public User(String email, String username, String passwordHash) {
         this.email = email;
+        this.username = username;
         this.passwordHash = passwordHash;
         this.organizationMemberships = new HashSet<>();
         this.ownedOrganizations = new HashSet<>();
@@ -49,9 +53,10 @@ public class User implements UserDetails {
      * Constructor for testing purposes
      * @param email
      */
-    public User(Long id, String email) {
+    public User(Long id, String email, String username) {
         this.id = id;
         this.email = email;
+        this.username = username;
         this.organizationMemberships = new HashSet<>();
         this.ownedOrganizations = new HashSet<>();
     }
@@ -72,9 +77,13 @@ public class User implements UserDetails {
         return id;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
     @Override

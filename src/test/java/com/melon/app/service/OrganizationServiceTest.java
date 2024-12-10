@@ -59,9 +59,9 @@ public class OrganizationServiceTest {
     @BeforeEach
     void setUp() {
         // Create test users
-        testUser = new User(1L, "testuser");
-        ownerUser = new User(2L, "owner");
-        memberUser = new User(3L, "member");
+        testUser = new User(1L, "test@example.com", "testuser");
+        ownerUser = new User(2L, "owner@example.com", "owneruser");
+        memberUser = new User(3L, "member@example.com", "memberuser");
 
         // Create test org
         testOrg = new Organization(1L, "Test Org");
@@ -175,7 +175,7 @@ public class OrganizationServiceTest {
     @Test
     void removeMember_UserNotInOrganization_ThrowsException() {
         // Arrange
-        User nonMember = new User(99L, "nonmember");
+        User nonMember = new User(99L, "nonmember@example.com", "nonmemberuser");
 
         when(orgRepo.findById(1L)).thenReturn(Optional.of(testOrg));
         when(userRepo.findById(99L)).thenReturn(Optional.of(nonMember));
@@ -192,9 +192,10 @@ public class OrganizationServiceTest {
         // Arrange
         Organization newOrg = new Organization("New Org");
         when(orgRepo.save(any(Organization.class))).thenReturn(newOrg);
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser));
 
         // Act
-        Organization result = orgService.createNewOrganization("New Org");
+        Organization result = orgService.createNewOrganization("New Org", testUser);
 
         // Assert
         assertNotNull(result);
@@ -210,7 +211,7 @@ public class OrganizationServiceTest {
         when(orgRepo.save(any(Organization.class))).thenReturn(newOrg);
 
         // Act
-        Organization result = orgService.createNewOwnedOrganization("New Owned Org", testUser);
+        Organization result = orgService.createNewOrganization("New Owned Org", testUser);
 
         // Assert
         assertNotNull(result);

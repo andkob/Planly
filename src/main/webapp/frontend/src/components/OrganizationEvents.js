@@ -7,7 +7,9 @@ const EVENT_TYPES = [
   { id: 'MANDATORY', label: 'Mandatory', color: 'bg-red-300 text-red-800' },
   { id: 'SOCIAL', label: 'Social', color: 'bg-blue-100 text-blue-800' },
   { id: 'PHILANTHROPY', label: 'Philanthropy', color: 'bg-purple-100 text-purple-800' },
-  { id: 'OTHER', label: 'Other', color: 'bg-gray-100 text-gray-800' }
+  { id: 'OTHER', label: 'Other', color: 'bg-gray-100 text-gray-800' },
+  { id: 'MEETING', label: 'Meeting', color: 'bg-yellow-100 text-yellow-800' },
+  { id: 'DEADLINE', label: 'Deadline', color: 'bg-red-300 text-red-800' }
 ];
 
 export default function OrganizationEvents({ 
@@ -30,7 +32,7 @@ export default function OrganizationEvents({
 
       const token = localStorage.getItem('jwtToken');
       try {
-        const response = await fetch(`/api/org/get/events/${selectedOrgId}`, {
+        const response = await fetch(`/api/organizations/${selectedOrgId}/events`, {
           method: 'GET',
           headers: {
               'Content-Type': 'application/json',

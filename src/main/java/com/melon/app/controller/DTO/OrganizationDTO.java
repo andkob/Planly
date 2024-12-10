@@ -91,8 +91,8 @@ public class OrganizationDTO {
         UserSummaryDTO dto = new UserSummaryDTO();
         User user = member.getUser();
         dto.setId(user.getId());
+        dto.setEmail(user.getEmail());
         dto.setUsername(user.getUsername());
-        dto.setEmail(user.getUsername());
         dto.setRole(member.getRole());
         return dto;
     }

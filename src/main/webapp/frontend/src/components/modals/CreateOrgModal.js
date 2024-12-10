@@ -4,14 +4,12 @@ export default function CreateOrgModal({ showModal, closeModal, saveOrg, addToas
   const [orgName, setOrgName] = useState('');
   const [error, setError] = useState('');
 
-
-  // TODO - modify backend to associate this new org with the current user (also change the old one to deprecated (no owner))
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     
     const token = localStorage.getItem("jwtToken");
-    fetch(`/api/org/create?orgName=${orgName}`, {
+    fetch(`/api/organizations/new?orgName=${orgName}`, {
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
@@ -23,7 +21,7 @@ export default function CreateOrgModal({ showModal, closeModal, saveOrg, addToas
         if (!response.ok) {
             throw new Error('Failed to add organization');
         }
-        return response.json(); // Return the promise from response.json()
+        return response.json();
     })
     .then(data => {
         console.log('Received organization data:', data);

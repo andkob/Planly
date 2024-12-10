@@ -24,7 +24,7 @@ const OrganizationMembers = ({ orgId, addToast }) => {
   const fetchMembers = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/org/get/members?orgId=${orgId}`, {
+      const response = await fetch(`/api/organizations/${orgId}/members`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ const OrganizationMembers = ({ orgId, addToast }) => {
     const userId = confirmDialog.userId;
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/org/members?orgId=${orgId}&userId=${userId}`, {
+      const response = await fetch(`/api/organizations/${orgId}/members?userId=${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -4,7 +4,7 @@ import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut, Boxes, Menu,
 import AddScheduleModal from '../modals/AddScheduleModal';
 import UserSchedules from '../UserSchedules';
 import Hello from './Hello'
-import CalendarSection from './CalendarSection';
+import OrgCalendar from './OrgCalendar';
 import JoinOrgModal from '../modals/JoinOrgModal';
 import Toast from '../notification/Toast';
 import CreateOrgModal from '../modals/CreateOrgModal';
@@ -27,7 +27,8 @@ export default function UserDashboard() {
   const [schedules, setSchedules] = useState([]);
   const [isNewEvents, setIsNewEvents] = useState(false); // so OrganizationEvents knows when to refresh
   const [myOrganizations, setMyOrganizations] = useState([]); // List of joined organization IDs
-  const [selectedOrgId, setSelectedOrgId] = useState(-1); // Selected org ID (via dropdown) for viewing events (only this for now)
+  const [selectedOrgId, setSelectedOrgId] = useState(-1); // Selected org ID (via dropdown)
+                                                          // TODO - make a global dropdown since the calendar now relies on this too
   const [ownedOrgs, setOwnedOrgs] = useState([]); // List of organizations owned by this user
   const navigate = useNavigate();
 
@@ -46,11 +47,6 @@ export default function UserDashboard() {
   // TEMP - for testing purposes
   const openAddOrgModal = () => setShowAddOrgModal(true);
   const closeAddOrgModal = () => setShowAddOrgModal(false);
-
-  const addNewOrg = (newOrgId) => {
-    myOrganizations.push(newOrgId);
-    setMyOrganizations(myOrganizations);
-  };
 
   const startNewOrg = (newOrgData) => {
     setOwnedOrgs(prevOrgs => [...prevOrgs, {
@@ -73,7 +69,7 @@ export default function UserDashboard() {
   const fetchOwnedOrganizationIdsNames = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/org/get/owned/id-name', {
+      const response = await fetch('/api/organizations/owned/id-name', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -93,6 +89,7 @@ export default function UserDashboard() {
         name: org.name
       }));
       setOwnedOrgs(organizations);
+      setSelectedOrgId(organizations[0].id); // set selected org to first one
     } catch (error) {
       console.error('Error fetching organizations:', error);
       addToast('error', error.message);
@@ -102,7 +99,7 @@ export default function UserDashboard() {
   const fetchOrganizations = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/user/get/joined-orgs', {
+      const response = await fetch('/api/users/me/organizations', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +147,7 @@ export default function UserDashboard() {
   const fetchSchedules = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/schedules/get/user-entries', {
+      const response = await fetch('/api/schedules/entries/me', {
         method: "GET",
         headers: {
           'Content-type': 'application/json',
@@ -170,7 +167,7 @@ export default function UserDashboard() {
       // get the JWT token
       const token = localStorage.getItem('jwtToken');
 
-      const response = await fetch("/api/schedules/create", {
+      const response = await fetch("/api/schedules", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -200,9 +197,9 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen bg-gray-100">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm p-4 flex items-center justify-between">
         <button 
           onClick={toggleSidebar} 
           className="p-2 hover:bg-gray-100 rounded-lg"
@@ -223,7 +220,7 @@ export default function UserDashboard() {
         </button>
       </div>
   
-      <div className="flex">
+      <div className="flex h-full">
         {/* Sidebar */}
         <div className='fixed'>
           <aside className={`
@@ -295,8 +292,8 @@ export default function UserDashboard() {
         </div>
   
         {/* Main Content */}
-        <div className="flex-1 lg:ml-64 overflow-auto">
-          <div className="p-4 lg:p-8">
+        <div className="flex-1 w-full lg:pl-64">
+          <div className="p-4 lg:p-8 pt-20 lg:pt-8">
             {/* Top Action Bar */}
             <nav className="bg-white shadow-sm mb-8 rounded-lg">
               <div className="p-4">
@@ -312,35 +309,21 @@ export default function UserDashboard() {
                   `}>
                     <button
                       onClick={openStartOrgModal}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-indigo-200 hover:bg-indigo-300"
                     >
                       Start an Organization
                     </button>
                     <button
                       onClick={openJoinOrgModal}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-indigo-200 hover:bg-indigo-300"
                     >
                       Join an Organization
                     </button>
                     <button
                       onClick={openAddScheduleModal}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-indigo-200 hover:bg-indigo-300"
                     >
                       Add a Schedule
-                    </button>
-                    
-                    {/* Development/Testing Buttons */}
-                    <button
-                      onClick={openAddOrgModal}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-orange-700 hover:bg-gray-50"
-                    >
-                      Add an org (test)
-                    </button>
-                    <button
-                      onClick={openAddEventModal}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-yellow-300 hover:bg-gray-50"
-                    >
-                      Add event (org)
                     </button>
                   </div>
                 </div>
@@ -360,7 +343,12 @@ export default function UserDashboard() {
               />
   
               <div className="bg-white rounded-lg shadow">
-                <CalendarSection />
+                <OrgCalendar
+                  selectedOrgId={selectedOrgId}
+                  openAddEventModal={openAddEventModal}
+                  ownedOrgs={ownedOrgs}
+                  isNewEvents={isNewEvents}
+                />
               </div>
   
               <div className="bg-white rounded-lg shadow">

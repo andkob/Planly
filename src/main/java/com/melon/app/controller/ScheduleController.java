@@ -1,7 +1,6 @@
 package com.melon.app.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,19 +10,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.melon.app.controller.DTO.EntryDTO;
 import com.melon.app.controller.DTO.ScheduleRequest;
-import com.melon.app.controller.DTO.ScheduleResponseDTO;
+import com.melon.app.controller.DTO.ScheduleDTO;
 import com.melon.app.entity.Schedule;
 import com.melon.app.entity.User;
 import com.melon.app.service.ScheduleService;
 
-import jakarta.servlet.http.HttpSession;
 import java.util.List;
 
+/**
+ * Controller for handling schedule-related operations.
+ * Provides endpoints for creating, updating, and retrieving schedules.
+ */
 @RestController
 @RequestMapping("/api/schedules")
 public class ScheduleController {
@@ -34,84 +34,56 @@ public class ScheduleController {
     public ScheduleController(ScheduleService scheduleService) {
         this.scheduleService = scheduleService;
     }
-    
+
     /**
-     * REMOVE THIS
+     * Creates a new schedule for the authenticated user.
+     *
+     * @param scheduleRequest the schedule details
+     * @return a {@link ResponseEntity} containing the created schedule
      */
-    @PostMapping("/test/send-schedule-data")
-    public ResponseEntity<String> storeSchedule(@RequestBody ScheduleRequest scheduleRequest) {
-        scheduleService.saveSchedule(scheduleRequest);
-        return new ResponseEntity<>("Schedule saved successfully", HttpStatus.OK);
-    }
-
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<?> createSchedule(@RequestBody ScheduleRequest scheduleRequest) {
-        System.out.println("arrived at /schedules/create endpoint");
-
-        // Retrieve the current user's authentication from the SecurityContext
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
-        // Get the authenticated user
         User user = (User) auth.getPrincipal();
-
         Schedule schedule = scheduleService.createSchedule(user, scheduleRequest);
         return ResponseEntity.ok(schedule);
     }
 
-    @PutMapping("/update/{scheduleId}")
-    public ResponseEntity<?> updateSchedule(@PathVariable Long scheduleId, @RequestBody List<EntryDTO> updatedEntries) {
-        System.out.println("arrived at /schedules/update/{scheduleId} endpoint");
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
-        Schedule updatedSchedule = scheduleService.updateScheduleEntries(scheduleId, updatedEntries);
-        ScheduleResponseDTO res = new ScheduleResponseDTO(updatedSchedule);
-        return ResponseEntity.ok(res); // TODO change response type
+    /**
+     * Updates an existing schedule.
+     *
+     * @param scheduleId the ID of the schedule to update
+     * @param updatedSchedule the updated schedule details
+     * @return a {@link ResponseEntity} indicating the result of the update operation
+     */
+    @PutMapping("/{scheduleId}")
+    public ResponseEntity<?> updateSchedule(@PathVariable Long scheduleId, @RequestBody ScheduleDTO updatedSchedule) {
+        scheduleService.updateScheduleEntries(updatedSchedule);
+        return ResponseEntity.ok("Schedule Updated Successfully"); // TODO change response type
     }
 
-    // TODO old
-    @GetMapping("/get/schedules-all")
-    public ResponseEntity<?> getUserSchedules(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
-        List<Schedule> schedules = scheduleService.getUserSchedules(user);
-        return ResponseEntity.ok(schedules);
-    }
-
-    @GetMapping("/get/user-entries")
+    /**
+     * Retrieves schedule entries for the authenticated user.
+     *
+     * @return a {@link ResponseEntity} containing a list of the user's schedule entries
+     */
+    @GetMapping("/entries/me")
     public ResponseEntity<?> getUserScheduleEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
         User user = (User) auth.getPrincipal();
-        List<ScheduleResponseDTO> schedules = scheduleService.getUserScheduleEntries(user);
-
+        List<ScheduleDTO> schedules = scheduleService.getUserScheduleEntries(user);
         return ResponseEntity.ok(schedules);
     }
 
-    @GetMapping("/get/count/events-per-day")
-    public ResponseEntity<?> getScheduleEntryCountByUser(@RequestParam String scheduleName) {
-        System.out.println("arrived at /events-per-day endpoint");
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
-        }
-
-        User user = (User) auth.getPrincipal();
-        int[] res = scheduleService.getScheduleEntryCountByUser(user, scheduleName);
-        System.out.print("Returning Count: ");
-        for (int i : res) {System.out.print(i + ", ");}
-        System.out.println();
-        return ResponseEntity.ok(res);
+    /**
+     * Retrieves schedule entries for all members of an organization.
+     *
+     * @param orgId the ID of the organization
+     * @return a {@link ResponseEntity} containing a list of schedule entries for the organization's members
+     */
+    @GetMapping("/entries/organization/{orgId}")
+    public ResponseEntity<?> getMemberScheduleEntriesByOrg(@PathVariable Long orgId) {
+        List<ScheduleDTO> schedules = scheduleService.getOrganizationMemberSchedules(orgId);
+        return ResponseEntity.ok(schedules);
     }
 }

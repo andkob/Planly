@@ -1,17 +1,15 @@
 package com.melon.app.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.melon.app.controller.DTO.ScheduleRequest;
 import com.melon.app.controller.DTO.ScheduleRequest.DaySchedule;
-import com.melon.app.controller.DTO.ScheduleResponseDTO;
+import com.melon.app.controller.DTO.ScheduleDTO;
 import com.melon.app.controller.DTO.EntryDTO;
 import com.melon.app.entity.Schedule;
 import com.melon.app.entity.ScheduleEntry;
@@ -43,17 +41,22 @@ public class ScheduleService {
         return entries;
     }
 
-    private void mapEntriesFromEntryDTO(Schedule parentSchedule, List<EntryDTO> newEntries) {
-        List<ScheduleEntry> oldEntries = parentSchedule.getEntries();
-        Iterator<ScheduleEntry> iter = oldEntries.iterator();
-        for (EntryDTO newEntry : newEntries) {
-            ScheduleEntry oldEntry = iter.next();
-            oldEntry.setEventName(newEntry.getEventName());
-            oldEntry.setEventDay(newEntry.getEventDay());
-            oldEntry.setEventStartTime(newEntry.getEventStartTime());
-            oldEntry.setEventEndTime(newEntry.getEventEndTime());
-        }
-        // TODO - support deletion
+    private List<ScheduleDTO> mapScheduleToDTO(List<Schedule> schedules) {
+        return schedules.stream()
+            .map(schedule -> new ScheduleDTO(
+                schedule.getId(),
+                schedule.getName(),
+                schedule.getEntries().stream()
+                    .map(entry -> new EntryDTO(
+                        entry.getId(),
+                        entry.getEventDay(),
+                        entry.getEventStartTime(),
+                        entry.getEventEndTime(),
+                        entry.getEventName()
+                    ))
+                    .collect(Collectors.toList())
+            ))
+            .collect(Collectors.toList());
     }
 
     public Schedule createSchedule(User user, ScheduleRequest scheduleRequest) throws ConflictingSchedulesException {
@@ -70,40 +73,40 @@ public class ScheduleService {
         return scheduleRepo.save(schedule);
     }
 
-    public Schedule updateScheduleEntries(Long scheduleId, List<EntryDTO> updatedEntries) {
-        Optional<Schedule> scheduleToUpdate = scheduleRepo.findById(scheduleId);
-        if (scheduleToUpdate.isEmpty()) {
-            // idk
-            System.out.println("FUCK THERES NO SCHEDULE WTFF");
-        }
-        Schedule schedule = scheduleToUpdate.get();
-        mapEntriesFromEntryDTO(schedule, updatedEntries);
-
-        return scheduleRepo.save(schedule);
+    public void updateScheduleEntries(ScheduleDTO newSchedule) {
+        Schedule schedule = scheduleRepo.findById(newSchedule.getId())
+            .orElseThrow(() -> new RuntimeException("Schedule not found"));
+        
+        schedule.getEntries().clear();
+        
+        List<ScheduleEntry> entries = newSchedule.getEntries().stream()
+            .map(dto -> {
+                ScheduleEntry entry = new ScheduleEntry();
+                entry.setEventName(dto.getEventName());
+                entry.setEventDay(dto.getEventDay());
+                entry.setEventStartTime(dto.getEventStartTime());
+                entry.setEventEndTime(dto.getEventEndTime());
+                entry.setSchedule(schedule);
+                return entry;
+            })
+            .collect(Collectors.toList());
+        
+        schedule.getEntries().addAll(entries);
+        scheduleRepo.save(schedule);
     }
 
     public List<Schedule> getUserSchedules(User user) {
         return scheduleRepo.findByUser(user);
     }
 
-    public List<ScheduleResponseDTO> getUserScheduleEntries(User user) {
-        List<Schedule> schedules = scheduleRepo.findByUser(user);
+    public List<ScheduleDTO> getOrganizationMemberSchedules(Long orgId) {
+        List<Schedule> schedules = scheduleRepo.findMemberSchedulesByOrganizationId(orgId);
+        return mapScheduleToDTO(schedules);
+    }
 
-        return schedules.stream()
-            .map(schedule -> new ScheduleResponseDTO(
-                schedule.getId(),
-                schedule.getName(),
-                schedule.getEntries().stream()
-                    .map(entry -> new EntryDTO(
-                        entry.getId(),
-                        entry.getEventDay(),
-                        entry.getEventStartTime(),
-                        entry.getEventEndTime(),
-                        entry.getEventName()
-                    ))
-                    .collect(Collectors.toList())
-            ))
-            .collect(Collectors.toList());
+    public List<ScheduleDTO> getUserScheduleEntries(User user) {
+        List<Schedule> schedules = scheduleRepo.findByUser(user);
+        return mapScheduleToDTO(schedules);
     }
 
     public void saveSchedule(ScheduleRequest scheduleRequest) {
@@ -111,47 +114,5 @@ public class ScheduleService {
         scheduleRequest.getDays().forEach(day -> {
             System.out.println("Day: " + day.getDay() + ", Start: " + day.getStartTime() + ", End: " + day.getEndTime() + ", Event: " + day.getEventName());
         });
-    }
-
-    public int[] getScheduleEntryCountByUser(User user, String scheduleName) throws ConflictingSchedulesException {
-        List<Schedule> s = scheduleRepo.findByUserAndScheduleName(user, scheduleName);
-        if (s.size() > 1) {
-            throw new ConflictingSchedulesException("This case has not been thought about yet");
-        } else if (s.size() == 0) {
-            throw new ConflictingSchedulesException("Wrong exeption name here but there aint no schedule with that schedule name dawg: " + scheduleName);
-        }
-        //                       S  M  T  W  Th F  Sa
-        int[] entryCountByDay = {0, 0, 0, 0, 0, 0, 0};
-
-        Schedule schedule = s.get(0);
-        List<ScheduleEntry> entries = schedule.getEntries();
-        for (ScheduleEntry e : entries) {
-            String day = e.getEventDay();
-            switch (day) {
-                case "Sunday":
-                    entryCountByDay[0]++;
-                    break;
-                case "Monday":
-                    entryCountByDay[1]++;
-                    break;
-                case "Tuesday":
-                    entryCountByDay[2]++;
-                    break;
-                case "Wednesday":
-                    entryCountByDay[3]++;
-                    break;
-                case "Thursday":
-                    entryCountByDay[4]++;
-                    break;
-                case "Friday":
-                    entryCountByDay[5]++;
-                    break;
-                case "Saturday":
-                    entryCountByDay[6]++;
-                    break;
-            }
-        }
-        
-        return entryCountByDay;
     }
 }

@@ -14,6 +14,7 @@ import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
 import Toast from '../notification/Toast';
 import OrganizationMembers from './OrganizationMembers';
+import AvailabilityHeatmap from './AvailabilityHeatmap';
 
 export default function OrganizationDashboard() {
   const { orgId } = useParams();
@@ -31,7 +32,8 @@ export default function OrganizationDashboard() {
   const fetchOrganizationDetails = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/org/details/${orgId}`, {
+      const response = await fetch(`/api/organizations/${orgId}/details`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
         },
@@ -130,20 +132,19 @@ export default function OrganizationDashboard() {
 
         {/* Events Section */}
         <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-medium">Upcoming Events</h3>
-          </div>
-          <div className="p-6">
-            <OrganizationEvents
-              isNewEvents={isNewEvents}
-              setIsNewEvents={setIsNewEvents}
-              openJoinOrgModal={() => {}}
-              myOrganizations={[{ id: orgId, name: orgDetails?.name }]}
-              selectedOrgId={orgId}
-              setSelectedOrgId={() => {}}
-              showDropdown={false}
-            />
-          </div>
+          <OrganizationEvents
+            isNewEvents={isNewEvents}
+            setIsNewEvents={setIsNewEvents}
+            openJoinOrgModal={() => {}}
+            myOrganizations={[{ id: orgId, name: orgDetails?.name }]}
+            selectedOrgId={orgId}
+            setSelectedOrgId={() => {}}
+            showDropdown={false}
+          />
+        </div>
+
+        <div className='bg-white rounded-lg shadow mb-8'>
+          <AvailabilityHeatmap orgId={orgId} />
         </div>
 
         {/* Members Section */}
