@@ -105,13 +105,8 @@ public class OrganizationService {
         return true;
     }
 
-    public Organization createNewOrganization(String orgName) {
-        Organization newOrg = new Organization(orgName);
-        return orgRepo.save(newOrg);
-    }
-
     @Transactional
-    public Organization createNewOwnedOrganization(String orgName, User owner) {
+    public Organization createNewOrganization(String orgName, User owner) {
         owner = userRepo.findById(owner.getId()).get();
         Organization newOrg = new Organization(orgName, owner);
         newOrg.addUser(owner, Role.OWNER); // add creator as the org owner

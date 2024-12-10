@@ -192,9 +192,10 @@ public class OrganizationServiceTest {
         // Arrange
         Organization newOrg = new Organization("New Org");
         when(orgRepo.save(any(Organization.class))).thenReturn(newOrg);
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser));
 
         // Act
-        Organization result = orgService.createNewOrganization("New Org");
+        Organization result = orgService.createNewOrganization("New Org", testUser);
 
         // Assert
         assertNotNull(result);
@@ -210,7 +211,7 @@ public class OrganizationServiceTest {
         when(orgRepo.save(any(Organization.class))).thenReturn(newOrg);
 
         // Act
-        Organization result = orgService.createNewOwnedOrganization("New Owned Org", testUser);
+        Organization result = orgService.createNewOrganization("New Owned Org", testUser);
 
         // Assert
         assertNotNull(result);

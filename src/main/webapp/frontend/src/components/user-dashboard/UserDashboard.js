@@ -147,7 +147,7 @@ export default function UserDashboard() {
   const fetchSchedules = async () => {
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/schedules/get/user-entries', {
+      const response = await fetch('/api/schedules/entries/me', {
         method: "GET",
         headers: {
           'Content-type': 'application/json',

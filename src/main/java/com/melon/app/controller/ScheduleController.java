@@ -67,7 +67,7 @@ public class ScheduleController {
      *
      * @return a {@link ResponseEntity} containing a list of the user's schedule entries
      */
-    @GetMapping("/entries/current-user")
+    @GetMapping("/entries/me")
     public ResponseEntity<?> getUserScheduleEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) auth.getPrincipal();

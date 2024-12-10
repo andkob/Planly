@@ -33,7 +33,7 @@ export default function EditSchedule() {
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
   
-    fetch("/api/schedules/entries/current-user", {
+    fetch("/api/schedules/entries/me", {
       method: "GET",
       headers: {
         'Content-type': 'application/json',

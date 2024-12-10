@@ -88,9 +88,9 @@ public class OrganizationController {
      * @return {@link ResponseEntity} with the created organization's details.
      */
     @PostMapping("/new")
-    public ResponseEntity<?> createOwnedOrganization(@RequestParam String orgName) {
+    public ResponseEntity<?> createNewOrganization(@RequestParam String orgName) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Organization newOrg = orgService.createNewOwnedOrganization(orgName, user);
+        Organization newOrg = orgService.createNewOrganization(orgName, user);
         return ResponseEntity.ok(new OrganizationDTO(newOrg));
     }
 
