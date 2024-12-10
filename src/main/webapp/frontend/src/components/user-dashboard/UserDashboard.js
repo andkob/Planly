@@ -167,7 +167,7 @@ export default function UserDashboard() {
       // get the JWT token
       const token = localStorage.getItem('jwtToken');
 
-      const response = await fetch("/api/schedules/create", {
+      const response = await fetch("/api/schedules", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

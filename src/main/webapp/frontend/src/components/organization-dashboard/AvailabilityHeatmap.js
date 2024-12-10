@@ -9,7 +9,7 @@ export default function AvailabilityHeatmap({ orgId }) {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('jwtToken');
-        const response = await fetch(`/api/schedules/members/schedules?orgId=${orgId}`, {
+        const response = await fetch(`/api/schedules/entries/organization/${orgId}`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -66,7 +66,7 @@ export default function AvailabilityHeatmap({ orgId }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white rounded-lg p-6">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Member Availability</h2>
       </div>

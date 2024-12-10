@@ -33,7 +33,7 @@ export default function EditSchedule() {
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
   
-    fetch("/api/schedules/get/user-entries", {
+    fetch("/api/schedules/entries/current-user", {
       method: "GET",
       headers: {
         'Content-type': 'application/json',
@@ -69,7 +69,7 @@ export default function EditSchedule() {
     };
     const token = localStorage.getItem("jwtToken");
 
-    fetch(`/api/schedules/update/${activeScheduleId}`, {
+    fetch(`/api/schedules/${activeScheduleId}`, {
       method: "PUT",
       headers: {
         'Content-Type': 'application/json',
