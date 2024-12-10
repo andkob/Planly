@@ -15,7 +15,7 @@ export default function Hello() {
         }
 
         const token = localStorage.getItem("jwtToken");
-        fetch("/api/user/get/first-name", {
+        fetch("/api/users/me/first-name", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

@@ -73,7 +73,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User registerUser(String email, String username, String password) throws EmailAlreadyExistsException {
+    public User registerUser(String email, String username, String password) {
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Email is already in use.");
         }
