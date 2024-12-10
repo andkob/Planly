@@ -1,44 +1,29 @@
 # Planly
 
-Planly is a sophisticated web application built to streamline schedule coordination and event management within organizations. The platform serves as a centralized hub where organization members can share their availability, plan events, and manage group activities efficiently. With features like availability visualization and real-time schedule management, Planly simplifies the complexity of group coordination.
+Planly is a sophisticated web application engineered to streamline schedule coordination and event management within organizations. The platform serves as a centralized hub where organization members can share their availability, plan events, and manage group activities efficiently. With features like availability visualization and real-time schedule management, Planly simplifies the complexity of group coordination.
 
-## 🌟 Core Features
+### Key Features
+- Interactive visuals for easy event planning
+- Real-time event management and coordination
+- Organization-wide calendar integration
+- Role-based access control and member management
+- Secure authentication and data protection
+- Intuitive, responsive user interface built with React
+- Robust backend architecture using Spring Boot
 
-### Organization Management
-- Create and manage organizations with role-based permissions
-- Join existing organizations through invitation or search
-- View organization member directories and manage memberships
-- Organization-specific dashboards with activity overview
-- Member availability heatmap showing overlapping free times
+## Personal Note:
+What began as a practical solution to address scheduling challenges within my fraternity transformed into an invaluable learning experience in modern web application development. This project embodies the journey from identifying a real-world problem to implementing a comprehensive technical solution.
+The evolution of Planly from a simple coordination tool to a full-featured platform reflects both my growth as a developer and my understanding of organizational dynamics. Through building this application, I've gained hands-on experience with:
+- Full-stack development practices
+- Security implementation and user authentication
+- Database design and relationships
+- RESTful API architecture
+- Modern frontend frameworks and UI/UX principles
 
-<img src="img/availabilityExample.png" alt="AvailabilityExample" width="600" />
-
-### Schedule Management
-- Create and edit personal schedules with customizable time slots
-- Visual schedule comparison across organization members
-- Schedule entries exportable for external use *(Coming soon)*
-
-<img src="img/scheduleExample.png" alt="ScheduleExample" width="600" />
-
-### Event Management
-- Create and manage organization events with detailed information
-- Event calendar with different view options
-- Event categorization and type management
-- Upcoming events dashboard for quick overview
-<p>
-<img src="img/eventsExample.png" alt="EventsExample" width="600" />
-</p>
-<p>
-<img src="img/calendarExample.png" alt="CalendarExample" width="600" />
-</p>
+This project stands as a testament to how personal challenges can inspire technical solutions that benefit broader communities. What started as a way to solve our fraternity's disorganization has grown into a robust platform that could help any organization better manage their collective time and activities.
 
 
-### User Experience
-- Responsive design supporting desktop and mobile views
-- Real-time notifications and toasts for user feedback
-- Intuitive navigation with sidebar menu
-- Dark/light theme support *(Coming soon)*
-
+*Transforming group chaos into coordinated harmony, one schedule at a time.*
 
 ## 🔧 Technical Implementation
 
@@ -155,6 +140,44 @@ erDiagram
 - GET `api/users/me/first-name`: Get first name of the current user
 - GET `api/users/me/organizations`: Get organizations the current user is a member of
 
+
+## 🌟 Core Features
+
+### Organization Management
+- Create and manage organizations with role-based permissions
+- Join existing organizations through invitation or search
+- View organization member directories and manage memberships
+- Organization-specific dashboards with activity overview
+- Member availability heatmap showing overlapping free times
+
+<img src="img/availabilityExample.png" alt="AvailabilityExample" width="600" />
+
+### Event Management
+- Create and manage organization events with detailed information
+- Event calendar with different view options
+- Event categorization and type management
+- Upcoming events dashboard for quick overview
+<p>
+<img src="img/eventsExample.png" alt="EventsExample" width="600" />
+</p>
+<p>
+<img src="img/calendarExample.png" alt="CalendarExample" width="600" />
+</p>
+
+### Schedule Management
+- Create and edit personal schedules with customizable time slots
+- Visual schedule comparison across organization members
+- Schedule entries exportable for external use *(Coming soon)*
+
+<img src="img/scheduleExample.png" alt="ScheduleExample" width="600" />
+
+### User Experience
+- Responsive design supporting desktop and mobile views
+- Real-time notifications and toasts for user feedback
+- Intuitive navigation with sidebar menu
+- Dark/light theme support *(Coming soon)*
+
+
 ### Security Features
 - CORS configuration for secure cross-origin requests
 - CSRF protection
@@ -164,7 +187,7 @@ erDiagram
 - Protected API endpoints
 
 ## 🚧 Getting Started
-***Note:** This project is currently in development. Please follow the instructions below only if you are interested in building on it or trying out the existing features.*
+***Note:** This project is currently in development (many security vulnerabilities have not yet been addressed). Please follow the instructions below only if you are interested in building on it or trying out the existing features.*
 
 ### Prerequisites
 - Java JDK 21
@@ -210,7 +233,6 @@ npm start
 - Google Calendar synchronization
 - Real-time chat functionality
 - Enhanced event management tools
-- Advanced availability visualization
 - Mobile application
 
 ## License
