@@ -114,7 +114,7 @@ export default function AvailabilityHeatmap({ orgId }) {
 
       {/* Legend */}
       <div className="mt-6 flex items-center gap-4">
-        <span className="text-sm text-gray-600">Less overlap</span>
+        <span className="text-sm text-gray-600">Available</span>
         <div className="flex gap-1">
           {[0.1, 0.3, 0.5, 0.7, 0.9].map((opacity) => (
             <div
@@ -124,7 +124,7 @@ export default function AvailabilityHeatmap({ orgId }) {
             />
           ))}
         </div>
-        <span className="text-sm text-gray-600">More overlap</span>
+        <span className="text-sm text-gray-600">Less available</span>
       </div>
     </div>
   );
