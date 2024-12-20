@@ -15,7 +15,7 @@ const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents 
 
     try {
       const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/org/get/events/${selectedOrgId}`, {
+      const response = await fetch(`/api/organizations/${selectedOrgId}/events`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

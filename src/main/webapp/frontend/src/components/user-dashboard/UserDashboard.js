@@ -10,7 +10,6 @@ import Toast from '../notification/Toast';
 import CreateOrgModal from '../modals/CreateOrgModal';
 
 // temp
-import AddOrgModal from '../modals/AddOrgModal';
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
 
@@ -21,7 +20,6 @@ export default function UserDashboard() {
   const [toastCounter, setToastCounter] = useState(0);
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showJoinOrgModal, setShowJoinOrgModal] = useState(false);
-  const [showAddOrgModal, setShowAddOrgModal] = useState(false); // TODO - TEMp
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showStartOrgModal, setShowStartOrgModal] = useState(false);
   const [schedules, setSchedules] = useState([]);
@@ -43,10 +41,6 @@ export default function UserDashboard() {
   const closeAddEventModal = () => setShowAddEventModal(false);
   const openStartOrgModal = () => setShowStartOrgModal(true);
   const closeStartOrgModal = () => setShowStartOrgModal(false);
-
-  // TEMP - for testing purposes
-  const openAddOrgModal = () => setShowAddOrgModal(true);
-  const closeAddOrgModal = () => setShowAddOrgModal(false);
 
   const startNewOrg = (newOrgData) => {
     setOwnedOrgs(prevOrgs => [...prevOrgs, {
@@ -371,12 +365,6 @@ export default function UserDashboard() {
           closeModal={closeStartOrgModal}
           saveOrg={startNewOrg}
           addToast={addToast}
-        />
-      )}
-      {showAddOrgModal && (
-        <AddOrgModal
-          showModal={showAddOrgModal}
-          closeModal={closeAddOrgModal}
         />
       )}
       {showAddEventModal && (
