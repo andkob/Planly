@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+
+const MAX_EMAIL_LENGTH = 254;
+const MAX_USERNAME_LENGTH = 50;
+const MAX_PASSWORD_LENGTH = 128;
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -18,25 +22,46 @@ export default function Register() {
     const newErrors = {};
     
     // Email validation
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (formData.email.length > MAX_EMAIL_LENGTH) {
+      newErrors.email = `Email must not exceed ${MAX_EMAIL_LENGTH} characters`;
+    } else if (!formData.email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$/)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
+    // Username validation
+    if (!formData.username) {
+      newErrors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    } else if (formData.username.length > MAX_USERNAME_LENGTH) {
+      newErrors.username = `Username must not exceed ${MAX_USERNAME_LENGTH} characters`;
+    } else if (!formData.username.match(/^[a-zA-Z0-9._-]{3,50}$/)) {
+      newErrors.username = 'Username can only contain letters, numbers, dots, underscores, or hyphens';
+    }
+
     // Password validation
-    if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
-    } else if (!formData.password.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)) {
-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else if (formData.password.length > MAX_PASSWORD_LENGTH) {
+      newErrors.password = `Password must not exceed ${MAX_PASSWORD_LENGTH} characters`;
+    } else {
+      const hasUpper = /[A-Z]/.test(formData.password);
+      const hasLower = /[a-z]/.test(formData.password);
+      const hasNumber = /\d/.test(formData.password);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password);
+      
+      if (!hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+        newErrors.password = 'Password must contain uppercase, lowercase, number, and special character';
+      }
     }
 
     // Confirm password
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    // Username validation
-    if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters long';
     }
 
     setErrors(newErrors);
@@ -49,6 +74,13 @@ export default function Register() {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -63,21 +95,28 @@ export default function Register() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: formData.email,
-          username: formData.username,
+          email: formData.email.trim(),
+          username: formData.username.trim(),
           password: formData.password
         }),
         credentials: 'include'
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         navigate('/login');
       } else {
-        const error = await response.text();
-        setErrors(prev => ({ ...prev, submit: error }));
+        setErrors(prev => ({ 
+          ...prev, 
+          submit: data.error || 'Registration failed. Please try again.' 
+        }));
       }
     } catch (error) {
-      setErrors(prev => ({ ...prev, submit: 'Registration failed. Please try again.' }));
+      setErrors(prev => ({ 
+        ...prev, 
+        submit: 'An unexpected error occurred. Please try again.' 
+      }));
     } finally {
       setIsSubmitting(false);
     }
@@ -90,13 +129,17 @@ export default function Register() {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {errors.submit && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
               {errors.submit}
             </div>
           )}
 
           <div>
-            <label className="block text-gray-600 text-sm font-medium mb-2">Email</label>
+            <label className="block text-gray-600 text-sm font-medium mb-2">
+              Email
+              <span className="text-red-500 ml-1">*</span>
+            </label>
             <input
               type="email"
               name="email"
@@ -107,11 +150,19 @@ export default function Register() {
               }`}
               required
             />
-            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.email}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-gray-600 text-sm font-medium mb-2">Username</label>
+            <label className="block text-gray-600 text-sm font-medium mb-2">
+              Username
+              <span className="text-red-500 ml-1">*</span>
+            </label>
             <input
               type="text"
               name="username"
@@ -122,11 +173,19 @@ export default function Register() {
               }`}
               required
             />
-            {errors.username && <p className="mt-1 text-sm text-red-500">{errors.username}</p>}
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.username}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-gray-600 text-sm font-medium mb-2">Password</label>
+            <label className="block text-gray-600 text-sm font-medium mb-2">
+              Password
+              <span className="text-red-500 ml-1">*</span>
+            </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -141,16 +200,24 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-gray-500"
+                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-gray-600 text-sm font-medium mb-2">Confirm Password</label>
+            <label className="block text-gray-600 text-sm font-medium mb-2">
+              Confirm Password
+              <span className="text-red-500 ml-1">*</span>
+            </label>
             <input
               type="password"
               name="confirmPassword"
@@ -161,7 +228,12 @@ export default function Register() {
               }`}
               required
             />
-            {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
+            {errors.confirmPassword && (
+              <p className="mt-1 text-sm text-red-500 flex items-center">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                {errors.confirmPassword}
+              </p>
+            )}
           </div>
 
           <button

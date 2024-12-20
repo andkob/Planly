@@ -6,22 +6,30 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.melon.app.controller.DTO.Auth.LoginRequest;
+import com.melon.app.controller.DTO.Auth.RegistrationRequest;
 import com.melon.app.entity.User;
+import com.melon.app.exception.EmailAlreadyExistsException;
+import com.melon.app.exception.IncorrectPasswordException;
+import com.melon.app.exception.UserNoExistException;
+import com.melon.app.exception.UsernameAlreadyExistsException;
 import com.melon.app.security.JwtUtil;
 import com.melon.app.service.UserService;
+
+import jakarta.validation.Valid;
 
 /**
  * Controller for handling authentication-related operations, such as login and user registration.
  */
 @RestController
 @RequestMapping("/api/auth")
-public class AuthController {
+public class AuthController extends BaseController {
 
     @Autowired
     private UserService userService;
@@ -31,78 +39,87 @@ public class AuthController {
 
     /**
      * Handles user login by verifying credentials and generating a JWT token on successful authentication.
-     *
-     * @param loginData a map containing "identifier" (email or username) and "password" keys.
-     * @return a {@link ResponseEntity} containing a JWT token if authentication is successful, or an error message otherwise.
      */
     @PostMapping("/sessions")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginData) {
-        Optional<User> user = userService.loginWithIdentifier(loginData.get("identifier"), loginData.get("password"));
+    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest loginReqest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return handleValidationErrors(bindingResult);
+        }
 
-        if (user.isPresent()) {
-            String jwt = jwtUtil.generateToken(user.get().getUsername()); // Generate JWT on successful login
-            return ResponseEntity.ok(Map.of("token", jwt));
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
+        String sanitizedIdentifier = sanitizeInput(loginReqest.getIdentifier());
+
+        if (!isValidLength(sanitizedIdentifier, 3, MAX_USERNAME_LENGTH)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid identifier length");
+        }
+
+        try {
+            Optional<User> user = userService.loginWithIdentifier(sanitizedIdentifier, loginReqest.getPassword());
+            
+            if (user.isPresent()) {
+                String jwt = jwtUtil.generateToken(user.get().getUsername());
+                logSecurityEvent("Login", "Successful login for user: " + sanitizedIdentifier);
+                return ResponseEntity.ok(Map.of("token", jwt));
+            } else {
+                logSecurityEvent("Login", "Failed login attempt for user: " + sanitizedIdentifier);
+                return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+            }
+        } catch (UserNoExistException | IncorrectPasswordException e) {
+            logSecurityEvent("Login", "Failed login attempt for: " + sanitizedIdentifier);
+            return createErrorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (Exception e) {
+            logError("Login error", e);
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during authentication");
         }
     }
 
     /**
      * Handles user registration by validating input data and creating a new user.
-     *
-     * @param userData a map containing "email", "username", and "password" keys.
-     * @return a {@link ResponseEntity} containing a success message if registration is successful, or an error message otherwise.
      */
     @PostMapping("/users")
-    public ResponseEntity<Map<String, String>> register(@RequestBody Map<String, String> userData) {
-        String email = userData.get("email");
-        String username = userData.get("username");
-        String p = userData.get("password");
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegistrationRequest registrationRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return handleValidationErrors(bindingResult);
+        }
 
-        // Validate input data
-        if (!isValidPassword(p))
-            return ResponseEntity.badRequest().body(Map.of("error", "Password must be at least 8 characters with uppercase, lowercase, and numbers"));
-        if (!isValidEmail(email))
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid email format"));
-        if (!isValidUsername(username))
-            return ResponseEntity.badRequest().body(Map.of("error", "Username must be at least 3 characters"));
+        String sanitizedEmail = sanitizeInput(registrationRequest.getEmail());
+        String sanitizedUsername = sanitizeInput(registrationRequest.getUsername());
 
-        userService.registerUser(email, username, p);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Registration successful"));
-    }
+        // length checks before expensive validations
+        if (!isValidLength(sanitizedEmail, 5, MAX_EMAIL_LENGTH)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid email length");
+        }
+        if (!isValidLength(sanitizedUsername, 3, MAX_USERNAME_LENGTH)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid username length");
+        }
+        if (!isValidLength(registrationRequest.getPassword(), 8, MAX_PASSWORD_LENGTH)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid password length");
+        }
 
-    /**
-     * Validates the email format.
-     *
-     * @param email the email to validate.
-     * @return true if the email is valid, false otherwise.
-     */
-    private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
-    }
+        // input validation
+        if (!isValidEmail(sanitizedEmail)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid email format");
+        }
+        if (!isValidUsername(sanitizedUsername)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid username format");
+        }
+        if (!isValidPassword(registrationRequest.getPassword())) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Password must be 8-128 characters with uppercase, lowercase, number, and special character");
+        }
 
-    /**
-     * Validates the password according to the criteria: minimum 8 characters, at least one uppercase letter,
-     * one lowercase letter, and one number.
-     *
-     * @param p the password to validate.
-     * @return true if the password is valid, false otherwise.
-     */
-    private boolean isValidPassword(String p) {
-        return p != null && 
-               p.length() >= 8 && 
-               p.matches(".*[A-Z].*") && 
-               p.matches(".*[a-z].*") && 
-               p.matches(".*\\d.*");
-    }
-
-    /**
-     * Validates the username by checking its length.
-     *
-     * @param username the username to validate.
-     * @return true if the username is at least 3 characters long, false otherwise.
-     */
-    private boolean isValidUsername(String username) {
-        return username != null && username.length() >= 3;
+        try {
+            userService.registerUser(sanitizedEmail, sanitizedUsername, registrationRequest.getPassword());
+            logSecurityEvent("Registration", "Successful registration for user: " + sanitizedUsername);
+            return createSuccessResponse("Registration successful");
+        } catch (EmailAlreadyExistsException e) {
+            logSecurityEvent("Registration", "Duplicate email registration attempt for: " + sanitizedEmail);
+            return createErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+        } catch (UsernameAlreadyExistsException e) {
+            logSecurityEvent("Registration", "Duplicate username registration attempt for: " + sanitizedUsername);
+            return createErrorResponse(HttpStatus.CONFLICT, e.getMessage());
+        } catch (Exception e) {
+            logError("Registration error", e);
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during registration");
+        }
     }
 }
