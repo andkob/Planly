@@ -11,7 +11,7 @@ const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents 
 
   // Fetch events from the API
   const fetchEvents = async () => {
-    if (!selectedOrgId) return;
+    if (selectedOrgId === -1) return;
 
     try {
       const token = localStorage.getItem('jwtToken');

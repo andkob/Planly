@@ -41,7 +41,7 @@ public class OrganizationController extends BaseController {
     public OrganizationController(OrganizationService organizationService) {
         this.orgService = organizationService;
     }
-
+    
     @PostMapping("/{orgId}/members")
     public ResponseEntity<Map<String, String>> joinOrganization(@PathVariable String orgId) {
         try {

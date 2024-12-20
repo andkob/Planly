@@ -124,7 +124,7 @@ export default function AvailabilityHeatmap({ orgId }) {
             />
           ))}
         </div>
-        <span className="text-sm text-gray-600">Less available</span>
+        <span className="text-sm text-gray-600">Not Available</span>
       </div>
     </div>
   );

@@ -1,9 +1,15 @@
 package com.melon.app.controller;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,19 +20,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.melon.app.controller.DTO.ScheduleRequest;
 import com.melon.app.controller.DTO.ScheduleDTO;
-import com.melon.app.entity.Schedule;
 import com.melon.app.entity.User;
 import com.melon.app.service.ScheduleService;
 
-import java.util.List;
+import jakarta.validation.Valid;
 
-/**
- * Controller for handling schedule-related operations.
- * Provides endpoints for creating, updating, and retrieving schedules.
- */
 @RestController
 @RequestMapping("/api/schedules")
-public class ScheduleController {
+@Validated
+public class ScheduleController extends BaseController {
 
     private final ScheduleService scheduleService;
 
@@ -35,55 +37,152 @@ public class ScheduleController {
         this.scheduleService = scheduleService;
     }
 
-    /**
-     * Creates a new schedule for the authenticated user.
-     *
-     * @param scheduleRequest the schedule details
-     * @return a {@link ResponseEntity} containing the created schedule
-     */
     @PostMapping
-    public ResponseEntity<?> createSchedule(@RequestBody ScheduleRequest scheduleRequest) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
-        Schedule schedule = scheduleService.createSchedule(user, scheduleRequest);
-        return ResponseEntity.ok(schedule);
+    public ResponseEntity<Map<String, String>> createSchedule(
+            @Valid @RequestBody ScheduleRequest scheduleRequest,
+            BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return handleValidationErrors(bindingResult);
+            }
+
+            // Sanitize and validate schedule name
+            String sanitizedName = sanitizeInput(scheduleRequest.getName());
+            if (!isValidName(sanitizedName)) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid schedule name format");
+            }
+            scheduleRequest.setName(sanitizedName);
+
+            // Validate entries
+            if (scheduleRequest.getDays() != null) {
+                for (var entry : scheduleRequest.getDays()) {
+                    String sanitizedEventName = sanitizeInput(entry.getEventName());
+                    if (!isValidSafeString(sanitizedEventName)) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event name format");
+                    }
+                    entry.setEventName(sanitizedEventName);
+
+                    if (!isValidTimeFormat(entry.getStartTime()) || 
+                        !isValidTimeFormat(entry.getEndTime())) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid time format");
+                    }
+
+                    if (!isValidDayFormat(entry.getDay())) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid day format");
+                    }
+                }
+            }
+
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User user = (User) auth.getPrincipal();
+            
+            scheduleService.createSchedule(user, scheduleRequest);
+            
+            logSecurityEvent("CREATE_SCHEDULE", 
+                String.format("User ID: %d, Schedule Name: %s", user.getId(), sanitizedName));
+            
+            return createSuccessResponse("Schedule created successfully");
+            
+        } catch (Exception e) {
+            logError("Error creating schedule", e);
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "An error occurred while creating the schedule");
+        }
     }
 
-    /**
-     * Updates an existing schedule.
-     *
-     * @param scheduleId the ID of the schedule to update
-     * @param updatedSchedule the updated schedule details
-     * @return a {@link ResponseEntity} indicating the result of the update operation
-     */
     @PutMapping("/{scheduleId}")
-    public ResponseEntity<?> updateSchedule(@PathVariable Long scheduleId, @RequestBody ScheduleDTO updatedSchedule) {
-        scheduleService.updateScheduleEntries(updatedSchedule);
-        return ResponseEntity.ok("Schedule Updated Successfully"); // TODO change response type
+    public ResponseEntity<Map<String, String>> updateSchedule(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody ScheduleDTO updatedSchedule,
+            BindingResult bindingResult) {
+        try {
+            if (bindingResult.hasErrors()) {
+                return handleValidationErrors(bindingResult);
+            }
+
+            if (!isValidId(scheduleId)) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid schedule ID");
+            }
+
+            String sanitizedName = sanitizeInput(updatedSchedule.getName());
+            if (!isValidName(sanitizedName)) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid schedule name format");
+            }
+            updatedSchedule.setName(sanitizedName);
+
+            if (updatedSchedule.getEntries() != null) {
+                for (var entry : updatedSchedule.getEntries()) {
+                    String sanitizedEventName = sanitizeInput(entry.getEventName());
+                    if (!isValidSafeString(sanitizedEventName)) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event name format");
+                    }
+                    entry.setEventName(sanitizedEventName);
+
+                    if (!isValidTimeFormat(entry.getEventStartTime()) || 
+                        !isValidTimeFormat(entry.getEventEndTime())) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid time format");
+                    }
+
+                    if (!isValidDayFormat(entry.getEventDay())) {
+                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid day format");
+                    }
+                }
+            }
+
+            scheduleService.updateScheduleEntries(updatedSchedule);
+            
+            logSecurityEvent("UPDATE_SCHEDULE", 
+                String.format("Schedule ID: %d", scheduleId));
+            
+            return createSuccessResponse("Schedule updated successfully");
+            
+        } catch (Exception e) {
+            logError("Error updating schedule", e);
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "An error occurred while updating the schedule");
+        }
     }
 
-    /**
-     * Retrieves schedule entries for the authenticated user.
-     *
-     * @return a {@link ResponseEntity} containing a list of the user's schedule entries
-     */
     @GetMapping("/entries/me")
     public ResponseEntity<?> getUserScheduleEntries() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
-        List<ScheduleDTO> schedules = scheduleService.getUserScheduleEntries(user);
-        return ResponseEntity.ok(schedules);
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User user = (User) auth.getPrincipal();
+            List<ScheduleDTO> schedules = scheduleService.getUserScheduleEntries(user);
+            
+            return ResponseEntity.ok(schedules);
+            
+        } catch (Exception e) {
+            logError("Error retrieving user schedule entries", e);
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "An error occurred while retrieving schedule entries");
+        }
     }
 
-    /**
-     * Retrieves schedule entries for all members of an organization.
-     *
-     * @param orgId the ID of the organization
-     * @return a {@link ResponseEntity} containing a list of schedule entries for the organization's members
-     */
     @GetMapping("/entries/organization/{orgId}")
     public ResponseEntity<?> getMemberScheduleEntriesByOrg(@PathVariable Long orgId) {
-        List<ScheduleDTO> schedules = scheduleService.getOrganizationMemberSchedules(orgId);
-        return ResponseEntity.ok(schedules);
+        try {
+            if (!isValidId(orgId)) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
+            }
+
+            List<ScheduleDTO> schedules = scheduleService.getOrganizationMemberSchedules(orgId);
+            return ResponseEntity.ok(schedules);
+            
+        } catch (Exception e) {
+            logError("Error retrieving organization schedule entries", e);
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
+                "An error occurred while retrieving organization schedule entries");
+        }
+    }
+
+    // Helper methods for validation
+    private boolean isValidTimeFormat(String time) {
+        return time != null && time.matches("^([01]?[0-9]|2[0-3]):[0-5][0-9]$");
+    }
+
+    private boolean isValidDayFormat(String day) {
+        return day != null && 
+               day.matches("^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)$");
     }
 }

@@ -27,6 +27,8 @@ export default function OrganizationEvents({
 
   useEffect(() => {
     const fetchEvents = async () => {
+      if (selectedOrgId === -1) return;
+      
       setLoading(true);
       setError('');
 

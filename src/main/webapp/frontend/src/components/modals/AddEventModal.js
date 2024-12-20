@@ -73,12 +73,13 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
         credentials: 'include'
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to create event');
+        throw new Error(data.error || 'Failed to create event');
       }
 
-      addToast('success', 'Event created successfully!');
+      addToast('success', data.message || 'Event created successfully!');
       setIsNewEvents(true);
       closeModal();
     } catch (err) {
