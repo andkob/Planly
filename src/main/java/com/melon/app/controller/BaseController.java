@@ -26,6 +26,34 @@ public abstract class BaseController {
     protected static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s-]{1,100}$");
 
     // Input validation methods
+     /**
+     * Validates if a string can be parsed into a valid ID.
+     * 
+     * @param id The ID string to validate
+     * @return true if the ID is valid, false otherwise
+     */
+    protected boolean isValidId(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            long numericId = Long.parseLong(id.trim());
+            return isValidId(numericId);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Validates if a numeric ID is valid.
+     * 
+     * @param id The numeric ID to validate
+     * @return true if the ID is valid, false otherwise
+     */
+    protected boolean isValidId(Long id) {
+        return id != null && id > 0 && id <= Long.MAX_VALUE;
+    }
+
     protected boolean isValidEmail(String email) {
         return email != null && 
                email.length() <= MAX_EMAIL_LENGTH && 

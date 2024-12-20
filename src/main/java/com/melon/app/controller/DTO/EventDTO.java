@@ -5,13 +5,38 @@ import java.time.format.DateTimeFormatter;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.UpcomingEvent.EventType;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
 public class EventDTO {
+    @NotBlank(message = "Event name is required")
+    @Size(max = 100, message = "Event name must not exceed 100 characters")
     private String name;
+
+    @NotNull(message = "Date is required")
+    @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}", message = "Invalid date format")
     private String date;
+
+    @NotNull(message = "Start time is required")
+    @Pattern(regexp = "\\d{2}:\\d{2}(:\\d{2})?", message = "Invalid time format")
     private String startTime;
-    private String type;
+
+    @NotBlank(message = "Location is required")
+    @Size(max = 200, message = "Location must not exceed 200 characters")
     private String location;
+
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
+
+    private String type;
     
     public EventDTO(String name, String date, String startTime, String type, String location, String description) {
         this.name = name;
@@ -33,19 +58,6 @@ public class EventDTO {
             this.description = event.getDescription();
         }
     }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public String getDate() { return date; }
-    public void setDate(String date) { this.date = date; }
-    public String getStartTime() { return startTime; }
-    public void setStartTime(String startTime) { this.startTime = startTime; }
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
 
     // Helper method to convert string type to enum
     public EventType getEventType() {
