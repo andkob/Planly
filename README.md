@@ -13,15 +13,9 @@ Planly is a sophisticated web application engineered to streamline schedule coor
 
 ## Personal Note:
 What began as a practical solution to address scheduling challenges within my fraternity transformed into an invaluable learning experience in modern web application development. This project embodies the journey from identifying a real-world problem to implementing a comprehensive technical solution.
-The evolution of Planly from a simple coordination tool to a full-featured platform reflects both my growth as a developer and my understanding of organizational dynamics. Through building this application, I've gained hands-on experience with:
-- Full-stack development practices
-- Security implementation and user authentication
-- Database design and relationships
-- RESTful API architecture
-- Modern frontend frameworks and UI/UX principles
+The evolution of Planly from a simple coordination tool to a full-featured platform reflects both my growth as a developer and my understanding of organizational dynamics.
 
 This project stands as a testament to how personal challenges can inspire technical solutions that benefit broader communities. What started as a way to solve our fraternity's disorganization has grown into a robust platform that could help any organization better manage their collective time and activities.
-
 
 *Transforming group chaos into coordinated harmony, one schedule at a time.*
 
