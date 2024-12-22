@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, Search, AlertCircle } from 'lucide-react';
-import CallServer from '../util/CallServer';
+import { fetchOrganizationEvents } from '../util/EndpointManager';
 
 
 const EVENT_TYPES = [
@@ -27,32 +27,8 @@ export default function OrganizationEvents({
   const[error, setError] = useState('');
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      if (selectedOrgId === -1) return;
-      
-      setLoading(true);
-      setError('');
-
-      try {
-        const response = await CallServer(`/api/organizations/${selectedOrgId}/events`, 'GET');
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || 'Failed to fetch events');
-        }
-        const data = await response.json();
-        setEvents(data);
-      } catch (err) {
-        console.error('Error fetching events:', err);
-        setError(err.message || 'Failed to load events');
-      } finally {
-        setIsNewEvents(false); 
-        setLoading(false);
-      }
-    };
-
-    if (selectedOrgId !== -1 || selectedOrgId !== undefined) {
-      fetchEvents();
+    if (selectedOrgId !== -1 && selectedOrgId !== undefined) {
+      fetchOrganizationEvents(selectedOrgId, setLoading, setError, setEvents, setIsNewEvents);
     }
   }, [selectedOrgId, isNewEvents]);
 

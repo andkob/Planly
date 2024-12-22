@@ -10,6 +10,7 @@ export default async function CallServer(endpoint, method, data=null) {
       break;
     default:
       // unsupported operation
+      console.error("Error calling server: Unsupported HTTP method: " + method);
       return;
   }
 

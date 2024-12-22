@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Users, X } from 'lucide-react';
-import CallServer from '../../util/CallServer';
+import { postEvent } from '../../util/EndpointManager';
 
 const EVENT_TYPES = [
   { id: 'BROTHERHOOD', label: 'Brotherhood', color: 'bg-green-100 text-green-800' },
@@ -52,7 +52,6 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
       return;
     }
 
-    setLoading(true);
     const eventData = {
       name: formData.name,
       date: formData.date,
@@ -61,24 +60,7 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
       location: formData.location,
       description: formData.description
     };
-
-    try {
-      const response = await CallServer(`/api/organizations/${orgId}/events`, 'POST', eventData);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create event');
-      }
-
-      addToast('success', data.message || 'Event created successfully!');
-      setIsNewEvents(true);
-      closeModal();
-    } catch (err) {
-      console.error('Error:', err);
-      addToast('error', err.message || 'Failed to create event');
-    } finally {
-      setLoading(false);
-    }
+    postEvent(orgId, eventData, addToast, setIsNewEvents, setLoading, closeModal);
   };
 
   return (

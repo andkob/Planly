@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import CallServer from '../../util/CallServer';
+import { userRegister } from '../../util/EndpointManager';
 
 const MAX_EMAIL_LENGTH = 254;
 const MAX_USERNAME_LENGTH = 50;
@@ -89,33 +89,12 @@ export default function Register() {
     
     if (!validateForm()) return;
     
-    setIsSubmitting(true);
-    
-    try {
-      const registrationData = {
-        email: formData.email.trim(),
-        username: formData.username.trim(),
-        password: formData.password
-      }
-      const response = await CallServer('/api/auth/users', 'POST', registrationData);
-      const data = await response.json();
-
-      if (response.ok) {
-        navigate('/login');
-      } else {
-        setErrors(prev => ({ 
-          ...prev, 
-          submit: data.error || 'Registration failed. Please try again.' 
-        }));
-      }
-    } catch (error) {
-      setErrors(prev => ({ 
-        ...prev, 
-        submit: 'An unexpected error occurred. Please try again.' 
-      }));
-    } finally {
-      setIsSubmitting(false);
+    const registrationData = {
+      email: formData.email.trim(),
+      username: formData.username.trim(),
+      password: formData.password
     }
+    userRegister(registrationData, setIsSubmitting, setErrors, navigate);
   };
 
   return (

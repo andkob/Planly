@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CallServer from '../../util/CallServer';
+import { fetchOrganizationMemberScheduleEntries } from '../../util/EndpointManager';
 
 export default function AvailabilityHeatmap({ orgId }) {
   const [scheduleData, setScheduleData] = useState([]);
@@ -7,22 +7,7 @@ export default function AvailabilityHeatmap({ orgId }) {
   const hours = Array.from({ length: 14 }, (_, i) => i + 8); // 8 AM to 9 PM
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await CallServer(`/api/schedules/entries/organization/${orgId}`, 'GET');
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "An unexpected error occurred");
-        }
-
-        setScheduleData(data);
-      } catch (error) {
-        console.error('Error fetching schedule data:', error);
-      }
-    };
-
-    fetchData();
+    fetchOrganizationMemberScheduleEntries(orgId, setScheduleData);
   }, [orgId]);
 
   const getOverlapCount = (day, hour) => {

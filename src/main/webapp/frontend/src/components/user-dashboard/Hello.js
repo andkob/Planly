@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import CallServer from "../../util/CallServer";
+import { fetchUserFirstName } from "../../util/EndpointManager";
 
 export default function Hello() {
     const [keyword, setKeyword] = useState('morn- wait who are you?'); // default msg idk
@@ -15,20 +15,7 @@ export default function Hello() {
             setKeyword('Evening');
         }
 
-        CallServer('/api/users/me/first-name', 'GET')
-        .then((response) =>  {
-            if (!response.ok) {
-                throw new Error("Failed to fetch user name");
-            }
-            return response.text();
-        })
-        .then((firstName) => {
-            setName(firstName);
-        })
-        .catch((error) => {
-            console.error("Error fetching user first name:", error);
-        });
-
+        fetchUserFirstName(setName);
     }, []);
 
     if (keyword && name) {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import CallServer from "../../util/CallServer";
+import { createOrganization } from "../../util/EndpointManager";
 
 export default function CreateOrgModal({ showModal, closeModal, saveOrg, addToast }) {
   const [orgName, setOrgName] = useState('');
@@ -7,26 +7,7 @@ export default function CreateOrgModal({ showModal, closeModal, saveOrg, addToas
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-
-    CallServer(`/api/organizations/new?orgName=${orgName}`, 'POST')
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to add organization');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Received organization data:', data);
-        saveOrg(data);
-        closeModal();
-        addToast('success', `Successfully created ${data.name}`);
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        setError(err.message);
-        addToast('error', 'Failed to create organization');
-    });
+    createOrganization(orgName, saveOrg, closeModal, addToast, setError);
 };
 
   return (

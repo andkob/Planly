@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
+import { userLogin } from '../../util/EndpointManager';
 
 const UserLogin = ({ setIsAuthenticated }) => {
   const [formData, setFormData] = useState({
@@ -63,34 +64,7 @@ const UserLogin = ({ setIsAuthenticated }) => {
     if (!validateForm()) {
       return;
     }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch('/api/auth/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('jwtToken', data.token);
-        setMessage('Login successful');
-        setIsAuthenticated(true);
-        navigate('/dashboard');
-      } else {
-        setMessage(data.error || 'Login failed. Please check your credentials.');
-      }
-    } catch (error) {
-      setMessage('An unexpected error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    userLogin(formData, setMessage, setIsAuthenticated, setIsSubmitting, navigate);
   };
 
   return (

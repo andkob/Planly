@@ -8,11 +8,9 @@ import OrgCalendar from './OrgCalendar';
 import JoinOrgModal from '../modals/JoinOrgModal';
 import Toast from '../notification/Toast';
 import CreateOrgModal from '../modals/CreateOrgModal';
-
-// temp
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
-import CallServer from '../../util/CallServer';
+import { fetchIdsAndNames, fetchUserOrganizations, fetchUserSchedules, postNewSchedule } from '../../util/EndpointManager';
 
 export default function UserDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -62,44 +60,11 @@ export default function UserDashboard() {
   }, [isSidebarOpen]);
 
   const fetchOwnedOrganizationIdsNames = async () => {
-    try {
-      const response = await CallServer('/api/organizations/owned/id-name', 'GET');
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch joined organizations');
-      }
-
-      const organizations = data.map(org => ({
-        id: org.id,
-        name: org.name
-      }));
-      setOwnedOrgs(organizations);
-      setSelectedOrgId(organizations[0].id); // set selected org to first one
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-      addToast('error', error.message);
-    }
+    fetchIdsAndNames(setOwnedOrgs, setSelectedOrgId, addToast);
   }
 
   const fetchOrganizations = async () => {
-    try {
-      const response = await CallServer('/api/users/me/organizations', 'GET');
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch joined organizations');
-      }
-
-      const organizations = data.map(org => ({
-        id: org.id,
-        name: org.name
-      }));
-      setMyOrganizations(organizations);
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-      addToast('error', error.message);
-    }
+    fetchUserOrganizations(setMyOrganizations, addToast);
   };
 
   useEffect(() => {
@@ -122,30 +87,7 @@ export default function UserDashboard() {
   };
 
   const fetchSchedules = async () => {
-    try {
-      const response = await CallServer('/api/schedules/entries/me', 'GET');
-      const data = await response.json();
-      setSchedules(data);
-    } catch (error) {
-        console.error("Error fetching schedules: ", error);
-    }
-  };
-
-  const postSchedule = async (scheduleData) => {
-    try {
-      const response = await CallServer('/api/schedules', 'POST', scheduleData);
-
-      if (response.ok) {
-        console.log('Schedule saved successfully');
-        closeAddScheduleModal();
-        fetchSchedules(); // update list
-      } else {
-        alert('Error saving schedule');
-      }
-
-    } catch (error) {
-      console.error("Error: " + error);
-    }
+    fetchUserSchedules(setSchedules);
   };
 
   const handleLogout = () => {
@@ -350,7 +292,8 @@ export default function UserDashboard() {
         <AddScheduleModal
           showModal={showCreateScheduleModal}
           closeModal={closeAddScheduleModal} 
-          postSchedule={postSchedule}
+          setSchedules={setSchedules}
+          addToast={addToast}
         />
       )}
   

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserCircle, Mail, MoreVertical, UserCog, UserMinus } from 'lucide-react';
 import ConfirmDialog from './menus/ConfirmDialog';
-import CallServer from '../../util/CallServer';
+import { fetchOrganizationMembers, removeOrganizationMember } from '../../util/EndpointManager';
 
 const OrganizationMembers = ({ orgId, addToast }) => {
   const [members, setMembers] = useState([]);
@@ -23,19 +23,7 @@ const OrganizationMembers = ({ orgId, addToast }) => {
   }, [orgId]);
 
   const fetchMembers = async () => {
-    try {
-      const response = await CallServer(`/api/organizations/${orgId}/members`, 'GET');
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch member details');
-      }
-      setMembers(data);
-      setLoading(false);
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-    }
+    fetchOrganizationMembers(orgId, setMembers, setLoading, setError);
   };
 
   const handleChangeRole = (userId) => {
@@ -51,20 +39,7 @@ const OrganizationMembers = ({ orgId, addToast }) => {
 
   const handleRemoveMember = async () => {
     const userId = confirmDialog.userId;
-    try {
-      const response = await CallServer(`/api/organizations/${orgId}/members?userId=${userId}`, 'DELETE');
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-
-      fetchMembers(); // refresh list
-      setConfirmDialog({ isOpen: false, userId: null, username: '' });
-      addToast('success', data.message);
-    } catch (error) {
-      addToast('error', error.message || 'Failed to remove member');
-    }
+    removeOrganizationMember(orgId, userId, fetchMembers, setConfirmDialog, addToast);
   };
 
   const getRoleBadgeColor = (role) => {

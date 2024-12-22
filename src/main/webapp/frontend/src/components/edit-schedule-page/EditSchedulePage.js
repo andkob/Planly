@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import DayDistributionChart from "../charts/DayDistributionChart";
 import Toast from '../notification/Toast';
 import WeeklyScheduleGrid from "../charts/WeeklyScheduleGrid";
-import CallServer from "../../util/CallServer";
+import { fetchUserSchedules, updateUserScheduleEntries } from "../../util/EndpointManager";
 
 export default function EditSchedule() {
   const [schedules, setSchedules] = useState([]);
@@ -32,16 +32,12 @@ export default function EditSchedule() {
   };
 
   useEffect(() => {
-    CallServer('/api/schedules/entries/me', 'GET')
-    .then((response) => response.json())
-    .then((data) => {
-      setSchedules(data);
-      console.log(data);
+    const fetchScheduleData = async () => {
+      const data = await fetchUserSchedules(setSchedules);
       if (data.length > 0) setActiveScheduleId(data[0].id);
-    })
-    .catch((error) => {
-      console.error("Error fetching schedules while editing", error);
-    });
+    }
+
+    fetchScheduleData();
   }, []);
 
   useEffect(() => {
@@ -59,25 +55,9 @@ export default function EditSchedule() {
       ...schedules.find(s => s.id === activeScheduleId),
       entries: scheduleEntries
     };
-    CallServer(`/api/schedules/${activeScheduleId}`, 'PUT', scheduleToUpdate)
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to save changes.');
-      return response.text();
-    })
-    .then((responseText) => {
-      // Update local state with the modified schedule entries
-      setSchedules(schedules.map(s => 
-        s.id === activeScheduleId 
-          ? {...s, entries: scheduleEntries}
-          : s
-      ));
-      setOldScheduleEntries(scheduleEntries);
-      addToast('success', responseText);
-    })
-    .catch((error) => {
-      console.error("Error updating schedule", error);
-      addToast('error', 'Failed to save changes. An unexpected error occurred.')
-    });
+    
+    updateUserScheduleEntries(activeScheduleId, scheduleToUpdate, schedules, scheduleEntries, setSchedules, setOldScheduleEntries, addToast);
+
   };
 
   const handleDiscardChanges = () => setScheduleEntries(oldScheduleEntries);
