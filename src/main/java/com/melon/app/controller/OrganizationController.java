@@ -2,7 +2,9 @@ package com.melon.app.controller;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,14 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import com.melon.app.controller.DTO.EventDTO;
 import com.melon.app.controller.DTO.OrganizationDTO;
@@ -27,165 +24,215 @@ import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
-import com.melon.app.exception.CannotRemoveOwnerException;
-import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.service.OrganizationService;
 
-/**
- * REST controller for managing organizations and related entities.
- */
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/organizations")
-public class OrganizationController {
-
-    @Autowired
+@Validated
+public class OrganizationController extends BaseController {
+    
     private final OrganizationService orgService;
 
     @Autowired
     public OrganizationController(OrganizationService organizationService) {
         this.orgService = organizationService;
     }
-
-    /**
-     * Allows a user to join an organization.
-     *
-     * @param orgId the ID of the organization to join.
-     * @return {@link ResponseEntity} indicating the success or failure of the operation.
-     */
+    
     @PostMapping("/{orgId}/members")
-    public ResponseEntity<String> joinOrganization(@PathVariable String orgId) {
+    public ResponseEntity<Map<String, String>> joinOrganization(@PathVariable String orgId) {
+        // Validate organization ID
+        if (!isValidId(orgId)) {
+            logSecurityEvent("JOIN_ORG_INVALID_ID", "Invalid organization ID: " + orgId);
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID format");
+        }
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) auth.getPrincipal();
+        
+        logSecurityEvent("JOIN_ORG_ATTEMPT", 
+            String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
+        
         boolean success = orgService.joinOrganization(user, orgId);
-        return success ? ResponseEntity.ok("Organization joined successfully") : ResponseEntity.ok("Failed to join organization");
-    }
-
-    /**
-     * Removes a member from an organization.
-     *
-     * @param orgId  the ID of the organization.
-     * @param userId the ID of the user to be removed.
-     * @return {@link ResponseEntity} indicating the outcome of the operation.
-     */
-    @DeleteMapping("/{orgId}/members")
-    public ResponseEntity<String> removeMember(@PathVariable Long orgId, @RequestParam Long userId) {
-        try {
-            String username = orgService.removeMember(orgId, userId);
-            return ResponseEntity.ok("Successfully removed " + username);
-        } catch (CannotRemoveOwnerException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot remove the owner of the organization");
-        } catch (UserNotInOrganizationException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User is not a member of this organization");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while removing the member");
+        
+        if (success) {
+            logSecurityEvent("JOIN_ORG_SUCCESS", 
+                String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
+            return createSuccessResponse("Organization joined successfully");
+        } else {
+            logSecurityEvent("JOIN_ORG_FAILURE", 
+                String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Failed to join organization");
         }
     }
 
-    /**
-     * Creates a new organization owned by the current user.
-     *
-     * @param orgName the name of the organization to be created.
-     * @return {@link ResponseEntity} with the created organization's details.
-     */
+    @DeleteMapping("/{orgId}/members")
+    public ResponseEntity<Map<String, String>> removeMember(
+            @PathVariable Long orgId,
+            @RequestParam Long userId) {
+        if (!isValidId(orgId) || !isValidId(userId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid organization or user ID");
+        }
+
+        String username = orgService.removeMember(orgId, userId);
+        logSecurityEvent("REMOVE_MEMBER", 
+            String.format("Org ID: %d, User ID: %d", orgId, userId));
+        
+        return createSuccessResponse("Successfully removed " + sanitizeInput(username));
+    }
+
     @PostMapping("/new")
     public ResponseEntity<?> createNewOrganization(@RequestParam String orgName) {
+        String sanitizedName = sanitizeInput(orgName);
+        
+        if (!isValidName(sanitizedName)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid organization name format");
+        }
+
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Organization newOrg = orgService.createNewOrganization(orgName, user);
+        Organization newOrg = orgService.createNewOrganization(sanitizedName, user);
+        
+        logSecurityEvent("CREATE_ORG", 
+            String.format("User ID: %d, Org Name: %s", user.getId(), sanitizedName));
+        
         return ResponseEntity.ok(new OrganizationDTO(newOrg));
     }
 
-    /**
-     * Retrieves a list of organizations owned by the current user.
-     *
-     * @return {@link ResponseEntity} containing a list of owned organizations with their IDs and names.
-     */
     @GetMapping("/owned/id-name")
     public ResponseEntity<List<OrganizationIdNameDTO>> getOwnedOrganizationsIdName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) auth.getPrincipal();
+
         List<Organization> ownedOrgs = orgService.findOrganizationsByOwner(user);
-        List<OrganizationIdNameDTO> orgDTOs = ownedOrgs.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());
+        List<OrganizationIdNameDTO> orgDTOs = ownedOrgs.stream()
+            .map(OrganizationIdNameDTO::new)
+            .collect(Collectors.toList());
+        
         return ResponseEntity.ok(orgDTOs);
     }
 
-    /**
-     * Searches for organizations by name.
-     *
-     * @param orgName the name of the organization to search for.
-     * @return {@link ResponseEntity} containing a list of matching organizations.
-     */
-    @GetMapping("{orgName}")
+    @GetMapping("/{orgName}")
     public ResponseEntity<?> findOrgsByName(@PathVariable String orgName) {
-        List<Organization> foundOrganizations = orgService.findOrgsByName(orgName);
-        List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());
+        String sanitizedName = sanitizeInput(orgName);
+        
+        if (!isValidSafeString(sanitizedName)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid organization name format");
+        }
+
+        List<Organization> foundOrganizations = orgService.findOrgsByName(sanitizedName);
+        List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream()
+            .map(OrganizationIdNameDTO::new)
+            .collect(Collectors.toList());
         return ResponseEntity.ok(orgDTOs);
     }
 
-    /**
-     * Adds a new event to an organization.
-     *
-     * @param orgId    the ID of the organization.
-     * @param eventDTO the details of the event to be added.
-     * @return {@link ResponseEntity} indicating the success of the operation.
-     */
-    @PostMapping("{orgId}/events")
-    public ResponseEntity<?> addEvent(@PathVariable Long orgId, @RequestBody EventDTO eventDTO) {
+    @PostMapping("/{orgId}/events")
+    public ResponseEntity<?> addEvent(
+            @PathVariable Long orgId,
+            @Valid @RequestBody EventDTO eventDTO,
+            BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return handleValidationErrors(bindingResult);
+        }
+
+        if (!isValidId(orgId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
+        }
+
+        String sanitizedName = sanitizeInput(eventDTO.getName());
+        String sanitizedLocation = sanitizeInput(eventDTO.getLocation());
+        String sanitizedDescription = sanitizeInput(eventDTO.getDescription());
+
+        // Validate event data lengths
+        if (!isValidLength(sanitizedName, 1, MAX_NAME_LENGTH) ||
+            !isValidLength(sanitizedLocation, 1, MAX_STRING_LENGTH) ||
+            (sanitizedDescription != null && !isValidLength(sanitizedDescription, 0, MAX_STRING_LENGTH))) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event data length");
+        }
+
+        // Validate safe string content
+        if (!isValidSafeString(sanitizedName) || 
+            !isValidSafeString(sanitizedLocation) ||
+            (sanitizedDescription != null && !sanitizedDescription.isEmpty() && !isValidSafeString(sanitizedDescription))) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event data format");
+        }
+
         UpcomingEvent event = new UpcomingEvent();
-        event.setName(eventDTO.getName());
-        event.setDate(LocalDate.parse(eventDTO.getDate()));
-        event.setStartTime(LocalTime.parse(eventDTO.getStartTime()));
+        event.setName(sanitizedName);
+        event.setLocation(sanitizedLocation);
+        event.setDescription(sanitizedDescription);
+
+        try {
+            event.setDate(LocalDate.parse(eventDTO.getDate()));
+            event.setStartTime(LocalTime.parse(eventDTO.getStartTime()));
+            
+            // Validate date is not in past
+            if (event.getDate().isBefore(LocalDate.now())) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                    "Event date cannot be in the past");
+            }
+        } catch (DateTimeParseException e) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid date or time format");
+        }
+
         event.setType(eventDTO.getEventType());
-        event.setLocation(eventDTO.getLocation());
-        event.setDescription(eventDTO.getDescription());
+        
         orgService.addEventToOrganization(orgId, event);
-        return ResponseEntity.ok().build();
+        
+        logSecurityEvent("CREATE_EVENT", 
+            String.format("Org ID: %d, Event: %s", orgId, sanitizedName));
+            
+        return createSuccessResponse("Event added successfully");
     }
 
-    /**
-     * Retrieves upcoming events for an organization.
-     *
-     * @param orgId the ID of the organization.
-     * @return {@link ResponseEntity} containing a list of events.
-     */
-    @GetMapping("{orgId}/events")
+    @GetMapping("/{orgId}/events")
     public ResponseEntity<?> getEvents(@PathVariable Long orgId) {
+        if (!isValidId(orgId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
+        }
+        
         List<UpcomingEvent> events = orgService.getUpcomingEvents(orgId);
-        List<EventDTO> eventDTOs = events.stream().map(EventDTO::new).collect(Collectors.toList());
+        List<EventDTO> eventDTOs = events.stream()
+            .map(EventDTO::new)
+            .collect(Collectors.toList());
         return ResponseEntity.ok(eventDTOs);
     }
 
-    /**
-     * Retrieves details of an organization by ID.
-     *
-     * @param orgId the ID of the organization.
-     * @return {@link ResponseEntity} containing the organization's details.
-     */
     @GetMapping("/{orgId}/details")
     public ResponseEntity<?> getOrganizationDetails(@PathVariable Long orgId) {
+        if (!isValidId(orgId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
+        }
+        
         Organization org = orgService.findOrgById(orgId);
         OrganizationDTO orgDTO = new OrganizationDTO(org);
         return ResponseEntity.ok(orgDTO);
     }
 
-    /**
-     * Retrieves members of an organization.
-     *
-     * @param orgId the ID of the organization.
-     * @return {@link ResponseEntity} containing a list of members.
-     */
     @GetMapping("/{orgId}/members")
-    public ResponseEntity<?> getOrganizationMembers(@RequestParam Long orgId) {
+    public ResponseEntity<?> getOrganizationMembers(@PathVariable Long orgId) {
+        if (!isValidId(orgId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
+        }
+        
         List<OrganizationMembership> members = orgService.getMembers(orgId);
-        List<OrganizationMemberDTO> memberDTO = members.stream().map(member -> {
-            OrganizationMemberDTO dto = new OrganizationMemberDTO();
-            User user = member.getUser();
-            dto.setUserId(user.getId());
-            dto.setEmail(user.getEmail());
-            dto.setUsername(user.getUsername());
-            dto.setRole(member.getRole());
-            dto.setCreatedAt(LocalDate.now().toString()); // TODO - implement JoinedAt timestamp
-            return dto;
-        }).collect(Collectors.toList());
+        List<OrganizationMemberDTO> memberDTO = members.stream()
+            .map(member -> {
+                OrganizationMemberDTO dto = new OrganizationMemberDTO();
+                User user = member.getUser();
+                dto.setUserId(user.getId());
+                dto.setEmail(user.getEmail());
+                dto.setUsername(user.getUsername());
+                dto.setRole(member.getRole());
+                dto.setCreatedAt(LocalDate.now().toString());
+                return dto;
+            })
+            .collect(Collectors.toList());
         return ResponseEntity.ok(memberDTO);
     }
 }

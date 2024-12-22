@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Users, X } from 'lucide-react';
+import { postEvent } from '../../util/EndpointManager';
 
 const EVENT_TYPES = [
   { id: 'BROTHERHOOD', label: 'Brotherhood', color: 'bg-green-100 text-green-800' },
@@ -51,8 +52,6 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
       return;
     }
 
-    setLoading(true);
-    const token = localStorage.getItem("jwtToken");
     const eventData = {
       name: formData.name,
       date: formData.date,
@@ -61,32 +60,7 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
       location: formData.location,
       description: formData.description
     };
-
-    try {
-      const response = await fetch(`/api/organizations/${orgId}/events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(eventData),
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to create event');
-      }
-
-      addToast('success', 'Event created successfully!');
-      setIsNewEvents(true);
-      closeModal();
-    } catch (err) {
-      console.error('Error:', err);
-      addToast('error', err.message || 'Failed to create event');
-    } finally {
-      setLoading(false);
-    }
+    postEvent(orgId, eventData, addToast, setIsNewEvents, setLoading, closeModal);
   };
 
   return (

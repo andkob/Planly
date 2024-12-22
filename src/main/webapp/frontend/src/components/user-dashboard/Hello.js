@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { fetchUserFirstName } from "../../util/EndpointManager";
 
 export default function Hello() {
     const [keyword, setKeyword] = useState('morn- wait who are you?'); // default msg idk
@@ -14,28 +15,7 @@ export default function Hello() {
             setKeyword('Evening');
         }
 
-        const token = localStorage.getItem("jwtToken");
-        fetch("/api/users/me/first-name", {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': `Bearer ${token}`,
-            },
-            credentials: "include",
-        })
-        .then((response) =>  {
-            if (!response.ok) {
-                throw new Error("Failed to fetch user name");
-            }
-            return response.text();
-        })
-        .then((firstName) => {
-            setName(firstName);
-        })
-        .catch((error) => {
-            console.error("Error fetching user first name:", error);
-        });
-
+        fetchUserFirstName(setName);
     }, []);
 
     if (keyword && name) {

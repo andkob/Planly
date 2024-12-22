@@ -15,6 +15,7 @@ import OrganizationEvents from '../OrganizationEvents';
 import Toast from '../notification/Toast';
 import OrganizationMembers from './OrganizationMembers';
 import AvailabilityHeatmap from './AvailabilityHeatmap';
+import { fetchOrganizationDetails } from '../../util/EndpointManager';
 
 export default function OrganizationDashboard() {
   const { orgId } = useParams();
@@ -26,30 +27,8 @@ export default function OrganizationDashboard() {
   const [toastCounter, setToastCounter] = useState(0);
 
   useEffect(() => {
-    fetchOrganizationDetails();
+    fetchOrganizationDetails(orgId, setOrgDetails, addToast);
   }, [orgId]);
-
-  const fetchOrganizationDetails = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/organizations/${orgId}/details`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch organization details');
-      }
-
-      const data = await response.json();
-      setOrgDetails(data);
-    } catch (error) {
-      addToast('error', error.message);
-    }
-  };
 
   const addToast = (type, message) => {
     const newToast = {

@@ -47,6 +47,7 @@ public class Organization {
     public Organization(String organizationName, User owner) {
         this.organizationName = organizationName;
         this.owner = owner;
+        // addUser(owner, Role.OWNER); // TODO - this should happen here idk why im doing it independently in OrgService
     }
 
     /**

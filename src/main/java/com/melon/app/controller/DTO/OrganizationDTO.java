@@ -100,7 +100,7 @@ public class OrganizationDTO {
     private static ScheduleSummaryDTO convertToScheduleSummary(Schedule schedule) {
         ScheduleSummaryDTO dto = new ScheduleSummaryDTO();
         dto.setId(schedule.getId());
-        dto.setTitle(schedule.getName());
+        dto.setTitle(schedule.getScheduleName());
         // dto.setDescription(schedule.getDescription());
         return dto;
     }

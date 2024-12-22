@@ -17,7 +17,6 @@ The evolution of Planly from a simple coordination tool to a full-featured platf
 
 This project stands as a testament to how personal challenges can inspire technical solutions that benefit broader communities. What started as a way to solve our fraternity's disorganization has grown into a robust platform that could help any organization better manage their collective time and activities.
 
-
 *Transforming group chaos into coordinated harmony, one schedule at a time.*
 
 ## 🔧 Technical Implementation

@@ -37,24 +37,6 @@ public class UserService implements UserDetailsService {
         return user.get();
     }
 
-    /**
-     * @deprecated
-     * Allows log in only with email
-     * @param email
-     * @param password
-     * @return
-     */
-    @Transactional
-    public Optional<User> login(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
-        if (!user.isPresent()) {
-            throw new UserNoExistException("User " + email + " does not exist");
-        } else if (!passwordEncoder.matches(password, user.get().getPassword())) {
-            throw new IncorrectPasswordException("Incorrect password");
-        }
-        return user;
-    }
-
     @Transactional
     public Optional<User> loginWithIdentifier(String identifier, String password) {
         Optional<User> user = userRepository.findByEmail(identifier);

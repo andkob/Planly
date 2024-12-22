@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserCircle, Mail, MoreVertical, UserCog, UserMinus } from 'lucide-react';
 import ConfirmDialog from './menus/ConfirmDialog';
+import { fetchOrganizationMembers, removeOrganizationMember } from '../../util/EndpointManager';
 
 const OrganizationMembers = ({ orgId, addToast }) => {
   const [members, setMembers] = useState([]);
@@ -22,27 +23,7 @@ const OrganizationMembers = ({ orgId, addToast }) => {
   }, [orgId]);
 
   const fetchMembers = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/organizations/${orgId}/members`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch member details');
-      }
-      const data = await response.json();
-      setMembers(data);
-      setLoading(false);
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-    }
+    fetchOrganizationMembers(orgId, setMembers, setLoading, setError);
   };
 
   const handleChangeRole = (userId) => {
@@ -58,27 +39,7 @@ const OrganizationMembers = ({ orgId, addToast }) => {
 
   const handleRemoveMember = async () => {
     const userId = confirmDialog.userId;
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/organizations/${orgId}/members?userId=${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-      const message = await response.text();
-
-      if (!response.ok) {
-        throw new Error(message);
-      }
-
-      fetchMembers(); // refresh list
-      setConfirmDialog({ isOpen: false, userId: null, username: '' });
-      addToast('success', message);
-    } catch (error) {
-      addToast('error', error.message || 'Failed to remove member');
-    }
+    removeOrganizationMember(orgId, userId, fetchMembers, setConfirmDialog, addToast);
   };
 
   const getRoleBadgeColor = (role) => {
