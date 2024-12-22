@@ -5,6 +5,11 @@ import java.util.stream.Collectors;
 
 import com.melon.app.entity.Schedule;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class ScheduleDTO {
     private Long id;
     private String name;
@@ -18,7 +23,7 @@ public class ScheduleDTO {
 
     public ScheduleDTO(Schedule schedule) {
         this.id = schedule.getId();
-        this.name = schedule.getName();
+        this.name = schedule.getScheduleName();
         this.entries = schedule.getEntries().stream()
             .map(entry -> new EntryDTO(
                 entry.getId(),
@@ -29,11 +34,4 @@ public class ScheduleDTO {
             ))
             .collect(Collectors.toList());
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public List<EntryDTO> getEntries() { return entries; }
-    public void setEntries(List<EntryDTO> entries) { this.entries = entries; }
 }

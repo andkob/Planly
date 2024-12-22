@@ -5,7 +5,7 @@ import Register from './components/login/Register';
 import UserDashboard from './components/user-dashboard/UserDashboard';
 import EditSchedule from './components/edit-schedule-page/EditSchedulePage';
 import OrganizationDashboard from './components/organization-dashboard/OrganizationDashboard';
-import { validateToken } from './auth/JwtAuth';
+import { validateToken } from './util/JwtAuth';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

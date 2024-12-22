@@ -22,7 +22,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Fetch organizations for a specific user
     @Query("SELECT m.organization FROM OrganizationMembership m WHERE m.user.id = :userId")
-    Set<Organization> findOrganizationsByUserId(Long userId);
+    Set<Organization> findOrganizationsByUserId(@Param("userId") Long userId);
     
     // Fetch users who belong to a specific organization
     @Query("SELECT m.user FROM OrganizationMembership m WHERE m.organization.id = :orgId")

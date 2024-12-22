@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, Search, AlertCircle } from 'lucide-react';
+import { fetchOrganizationEvents } from '../util/EndpointManager';
 
 
 const EVENT_TYPES = [
@@ -26,38 +27,8 @@ export default function OrganizationEvents({
   const[error, setError] = useState('');
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      setError('');
-
-      const token = localStorage.getItem('jwtToken');
-      try {
-        const response = await fetch(`/api/organizations/${selectedOrgId}/events`, {
-          method: 'GET',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || 'Failed to fetch events');
-        }
-        const data = await response.json();
-        setEvents(data);
-      } catch (err) {
-        console.error('Error fetching events:', err);
-        setError(err.message || 'Failed to load events');
-      } finally {
-        setIsNewEvents(false); 
-        setLoading(false);
-      }
-    };
-
-    if (selectedOrgId !== -1 || selectedOrgId !== undefined) {
-      fetchEvents();
+    if (selectedOrgId !== -1 && selectedOrgId !== undefined) {
+      fetchOrganizationEvents(selectedOrgId, setLoading, setError, setEvents, setIsNewEvents);
     }
   }, [selectedOrgId, isNewEvents]);
 

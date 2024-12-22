@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchOrganizationMemberScheduleEntries } from '../../util/EndpointManager';
 
 export default function AvailabilityHeatmap({ orgId }) {
   const [scheduleData, setScheduleData] = useState([]);
@@ -6,27 +7,7 @@ export default function AvailabilityHeatmap({ orgId }) {
   const hours = Array.from({ length: 14 }, (_, i) => i + 8); // 8 AM to 9 PM
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('jwtToken');
-        const response = await fetch(`/api/schedules/entries/organization/${orgId}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!response.ok) {
-          throw new Error("An unexpected error occurred");
-        }
-
-        const data = await response.json();
-        setScheduleData(data);
-      } catch (error) {
-        console.error('Error fetching schedule data:', error);
-      }
-    };
-
-    fetchData();
+    fetchOrganizationMemberScheduleEntries(orgId, setScheduleData);
   }, [orgId]);
 
   const getOverlapCount = (day, hour) => {
@@ -124,7 +105,7 @@ export default function AvailabilityHeatmap({ orgId }) {
             />
           ))}
         </div>
-        <span className="text-sm text-gray-600">Less available</span>
+        <span className="text-sm text-gray-600">Not Available</span>
       </div>
     </div>
   );

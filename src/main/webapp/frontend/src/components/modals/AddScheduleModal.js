@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { postNewSchedule } from '../../util/EndpointManager';
 
 const daysOfWeek = [
   'Sunday',
@@ -10,25 +11,45 @@ const daysOfWeek = [
   'Saturday',
 ];
 
-const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
+const AddScheduleModal = ({ showModal, closeModal, setSchedules, addToast }) => {
   const [scheduleName, setScheduleName] = useState('');
-  const [days, setDays] = useState([{ day: '', startTime: '', endTime: '', eventName: '' }]);
+  const [entries, setEntries] = useState([{
+    eventDay: '',
+    eventStartTime: '',
+    eventEndTime: '',
+    eventName: ''
+  }]);
 
-  const handleDayChange = (index, field, value) => {
-    const updatedDays = [...days];
-    updatedDays[index][field] = value;
-    setDays(updatedDays);
+  const handleEntryChange = (index, field, value) => {
+    const updatedEntries = [...entries];
+    updatedEntries[index][field] = value;
+    setEntries(updatedEntries);
   };
 
-  const addEvent = () => {
-    setDays([...days, { day: '', startTime: '', endTime: '', eventName: '' }]);
+  const addEntry = () => {
+    setEntries([...entries, {
+      eventDay: '',
+      eventStartTime: '',
+      eventEndTime: '',
+      eventName: ''
+    }]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const scheduleData = { name: scheduleName, days };
-    postSchedule(scheduleData)
-    closeModal();
+    
+    // Format data to match ScheduleDTO
+    const scheduleData = {
+      name: scheduleName,
+      entries: entries.map(entry => ({
+        eventDay: entry.eventDay,
+        eventStartTime: entry.eventStartTime,
+        eventEndTime: entry.eventEndTime,
+        eventName: entry.eventName
+      }))
+    };
+    
+    postNewSchedule(scheduleData, setSchedules, closeModal, addToast);
   };
 
   return (
@@ -48,11 +69,11 @@ const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
                 required
               />
             </div>
-            {days.map((day, index) => (
+            {entries.map((entry, index) => (
               <div key={index} className="mb-4 flex space-x-2">
                 <select
-                  value={day.day}
-                  onChange={(e) => handleDayChange(index, 'day', e.target.value)}
+                  value={entry.eventDay}
+                  onChange={(e) => handleEntryChange(index, 'eventDay', e.target.value)}
                   className="block w-1/3 border border-gray-300 rounded-md p-2"
                   required
                 >
@@ -67,9 +88,9 @@ const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
                   </span>
                   <input
                     type="time"
-                    value={day.startTime}
-                    onChange={(e) => handleDayChange(index, 'startTime', e.target.value)}
-                    className="block border border-gray-300 rounded-md p-2 pl-8" // Add padding-left for the emoji
+                    value={entry.eventStartTime}
+                    onChange={(e) => handleEntryChange(index, 'eventStartTime', e.target.value)}
+                    className="block w-full border border-gray-300 rounded-md p-2 pl-8"
                     required
                   />
                 </div>
@@ -80,9 +101,9 @@ const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
                   </span>
                   <input
                     type="time"
-                    value={day.endTime}
-                    onChange={(e) => handleDayChange(index, 'endTime', e.target.value)}
-                    className="block border border-gray-300 rounded-md p-2 pl-8" // Add padding-left for the emoji
+                    value={entry.eventEndTime}
+                    onChange={(e) => handleEntryChange(index, 'eventEndTime', e.target.value)}
+                    className="block w-full border border-gray-300 rounded-md p-2 pl-8"
                     required
                   />
                 </div>
@@ -90,15 +111,16 @@ const AddScheduleModal = ({ showModal, closeModal, postSchedule }) => {
                 <input
                   type="text"
                   placeholder="Event Name"
-                  value={day.eventName}
-                  onChange={(e) => handleDayChange(index, 'eventName', e.target.value)}
+                  value={entry.eventName}
+                  onChange={(e) => handleEntryChange(index, 'eventName', e.target.value)}
                   className="block w-1/3 border border-gray-300 rounded-md p-2"
+                  required
                 />
               </div>
             ))}
             <button
               type="button"
-              onClick={addEvent}
+              onClick={addEntry}
               className="mb-4 text-blue-500 hover:underline"
             >
               Add Event

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { joinOrganization, searchOrganizations } from "../../util/EndpointManager";
 
 export default function JoinOrgModal({ showModal, closeModal, addToast }) {
   const [orgName, setOrgName] = useState('');
@@ -8,88 +9,11 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    
-    const token = localStorage.getItem("jwtToken");
-    fetch(`/api/organizations?orgName=${orgName}`, {
-      method: "GET",
-      headers: {
-        'content-type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      credentials: 'include'
-    })
-      .then(async response => {
-        if (!response.ok) {
-          const errorText = await response.text();
-          if (response.status === 409) { // CONFLICT
-            addToast('info', errorText);
-            return;
-          }
-          addToast('error', 'Failed to fetch organizations');
-          throw new Error(errorText || 'Failed to fetch organizations');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data !== null) {
-          if (!Array.isArray(data)) {
-            throw new Error('Invalid response format');
-          }
-          setMatchingOrganizations(data);
-          if (data.length === 0) {
-            addToast('info', 'No matching organizations found');
-          } else {
-            addToast('success', `Found ${data.length} matching organization(s)`);
-          }
-        }
-      })
-      .catch(err => {
-        console.error(err.message);
-        setError('An unexpected error occurred. Please try again.');
-        addToast('error', 'Oops! Encountered an unexpected error.');
-        setMatchingOrganizations([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    searchOrganizations(orgName, setLoading, setError, addToast, setMatchingOrganizations);
   };
 
   const handleJoinOrg = (orgId, orgName) => {
-    setLoading(true);
-    const token = localStorage.getItem("jwtToken");
-    
-    fetch(`/api/organizations/${orgId}/members`, {
-      method: "POST",
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      credentials: 'include'
-    })
-      .then(async response => {
-        const responseText = await response.text();
-        if (!response.ok) {
-          if (response.status === 409) { // Conflict
-            addToast('info', responseText);
-          } else {
-            console.error(responseText);
-            addToast('error', responseText || 'Failed to join organization');
-            setError(responseText);
-          }
-          return;
-        }
-        addToast('success', `Successfully joined ${orgName}`);
-        closeModal();
-      })
-      .catch(err => {
-        console.error('Error:', err);
-        setError('An unexpected error occurred. Please try again.');
-        addToast('error', 'An unexpected error occurred. Please try again.');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    joinOrganization(orgId, orgName, setLoading, addToast, setError, closeModal);
   };
 
   return (

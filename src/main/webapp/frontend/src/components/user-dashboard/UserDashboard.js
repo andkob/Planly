@@ -8,11 +8,9 @@ import OrgCalendar from './OrgCalendar';
 import JoinOrgModal from '../modals/JoinOrgModal';
 import Toast from '../notification/Toast';
 import CreateOrgModal from '../modals/CreateOrgModal';
-
-// temp
-import AddOrgModal from '../modals/AddOrgModal';
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
+import { fetchIdsAndNames, fetchUserOrganizations, fetchUserSchedules, postNewSchedule } from '../../util/EndpointManager';
 
 export default function UserDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -21,7 +19,6 @@ export default function UserDashboard() {
   const [toastCounter, setToastCounter] = useState(0);
   const [showCreateScheduleModal, setShowAddScheduleModal] = useState(false);
   const [showJoinOrgModal, setShowJoinOrgModal] = useState(false);
-  const [showAddOrgModal, setShowAddOrgModal] = useState(false); // TODO - TEMp
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showStartOrgModal, setShowStartOrgModal] = useState(false);
   const [schedules, setSchedules] = useState([]);
@@ -44,10 +41,6 @@ export default function UserDashboard() {
   const openStartOrgModal = () => setShowStartOrgModal(true);
   const closeStartOrgModal = () => setShowStartOrgModal(false);
 
-  // TEMP - for testing purposes
-  const openAddOrgModal = () => setShowAddOrgModal(true);
-  const closeAddOrgModal = () => setShowAddOrgModal(false);
-
   const startNewOrg = (newOrgData) => {
     setOwnedOrgs(prevOrgs => [...prevOrgs, {
         id: newOrgData.id,
@@ -67,62 +60,11 @@ export default function UserDashboard() {
   }, [isSidebarOpen]);
 
   const fetchOwnedOrganizationIdsNames = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/organizations/owned/id-name', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to fetch joined organizations');
-      }
-      const data = await response.json();
-
-      const organizations = data.map(org => ({
-        id: org.id,
-        name: org.name
-      }));
-      setOwnedOrgs(organizations);
-      setSelectedOrgId(organizations[0].id); // set selected org to first one
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-      addToast('error', error.message);
-    }
+    fetchIdsAndNames(setOwnedOrgs, setSelectedOrgId, addToast);
   }
 
   const fetchOrganizations = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/users/me/organizations', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to fetch joined organizations');
-      }
-      const data = await response.json();
-
-      const organizations = data.map(org => ({
-        id: org.id,
-        name: org.name
-      }));
-      setMyOrganizations(organizations);
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-      addToast('error', error.message);
-    }
+    fetchUserOrganizations(setMyOrganizations, addToast);
   };
 
   useEffect(() => {
@@ -145,50 +87,7 @@ export default function UserDashboard() {
   };
 
   const fetchSchedules = async () => {
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/schedules/entries/me', {
-        method: "GET",
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      }); 
-      const data = await response.json();
-      setSchedules(data);
-    } catch (error) {
-        console.error("Error fetching schedules: ", error);
-    }
-  };
-
-  const postSchedule = async (scheduleData) => {
-    try {
-      // get the JWT token
-      const token = localStorage.getItem('jwtToken');
-
-      const response = await fetch("/api/schedules", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(scheduleData),
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        console.log('Schedule saved successfully');
-        closeAddScheduleModal();
-        fetchSchedules(); // update list
-      } else {
-        alert('Error saving schedule');
-      }
-
-    } catch (error) {
-      console.error("Error: " + error);
-    }
+    fetchUserSchedules(setSchedules);
   };
 
   const handleLogout = () => {
@@ -373,12 +272,6 @@ export default function UserDashboard() {
           addToast={addToast}
         />
       )}
-      {showAddOrgModal && (
-        <AddOrgModal
-          showModal={showAddOrgModal}
-          closeModal={closeAddOrgModal}
-        />
-      )}
       {showAddEventModal && (
         <AddEventModal
           showModal={showAddEventModal}
@@ -399,7 +292,8 @@ export default function UserDashboard() {
         <AddScheduleModal
           showModal={showCreateScheduleModal}
           closeModal={closeAddScheduleModal} 
-          postSchedule={postSchedule}
+          setSchedules={setSchedules}
+          addToast={addToast}
         />
       )}
   
