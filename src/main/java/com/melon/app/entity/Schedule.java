@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * A schedule is an individual's schedule. An organization can specify
@@ -19,6 +21,8 @@ import jakarta.persistence.OneToMany;
  * Users can also have personal schedules they can add to organizations.
  */
 @Entity
+@Getter
+@Setter
 public class Schedule {
     
     @Id
@@ -40,43 +44,19 @@ public class Schedule {
 
     public Schedule() {}
 
+    public Schedule(String scheduleName) {
+        this.scheduleName = scheduleName;
+    }
+
     public Schedule(String scheduleName, User owner) {
         this.scheduleName = scheduleName;
         this.user = owner;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return scheduleName;
-    }
-
-    public void setName(String scheduleName) {
-        this.scheduleName = scheduleName;
-    }
-
-    public User getUser() {
-        return user;
-    }
-    
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setEntries(List<ScheduleEntry> entries) {
-        this.entries = entries;
-        for (ScheduleEntry entry : entries) {
-            entry.setSchedule(this);
-        }
-    }
-
-    public List<ScheduleEntry> getEntries() {
-        return entries;
-    }
-
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
-    }
+    // public void setEntries(List<ScheduleEntry> entries) {
+    //     this.entries = entries;
+    //     for (ScheduleEntry entry : entries) {
+    //         entry.setSchedule(this);
+    //     }
+    // }
 }

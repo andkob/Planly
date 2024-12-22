@@ -1,11 +1,11 @@
 package com.melon.app.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,7 +24,7 @@ import com.melon.app.entity.Organization;
  */
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public class UserController extends BaseController {
 
     @Autowired
     private UserService userService;
@@ -36,14 +36,10 @@ public class UserController {
      *         or an empty response if the user is not authenticated.
      */
     @GetMapping("/me/first-name")
-    public ResponseEntity<?> getFirstName() {
+    public ResponseEntity<Map<String, String>> getFirstName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            User user = (User) auth.getPrincipal();
-            return ResponseEntity.ok(user.getUsername()); // TODO change to name when names are added
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        User user = (User) auth.getPrincipal();
+        return createSuccessResponse(user.getUsername()); // TODO change to name when names are added
     }
 
     /**

@@ -7,8 +7,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 public class ScheduleEntry {
 
     @Id
@@ -24,43 +28,13 @@ public class ScheduleEntry {
     private String eventEndTime;
     private String eventName;
 
-    public Long getId() {
-        return id;
-    }
+    public ScheduleEntry() {}
 
-    public void setSchedule(Schedule schedule) {
-        this.schedule = schedule;
-    }
-
-    public String getEventDay() {
-        return eventDay;
-    }
-
-    public void setEventDay(String day) {
-        this.eventDay = day;
-    }
-
-    public String getEventStartTime() {
-        return eventStartTime;
-    }
-
-    public void setEventStartTime(String eventStartTime) {
+    public ScheduleEntry(Schedule parent, String eventDay, String eventStartTime, String eventEndTime, String eventName) {
+        this.schedule = parent;
+        this.eventDay = eventDay;
         this.eventStartTime = eventStartTime;
-    }
-
-    public String getEventEndTime() {
-        return eventEndTime;
-    }
-
-    public void setEventEndTime(String eventEndTime) {
         this.eventEndTime = eventEndTime;
-    }
-
-    public String getEventName() {
-        return eventName;
-    }
-
-    public void setEventName(String eventName) {
         this.eventName = eventName;
     }
 

@@ -1,5 +1,6 @@
 package com.melon.app.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.melon.app.controller.DTO.ScheduleRequest;
+import com.melon.app.controller.DTO.EntryDTO;
 import com.melon.app.controller.DTO.ScheduleDTO;
+import com.melon.app.entity.Schedule;
 import com.melon.app.entity.User;
 import com.melon.app.service.ScheduleService;
 
@@ -37,57 +39,36 @@ public class ScheduleController extends BaseController {
         this.scheduleService = scheduleService;
     }
 
+    /**
+     * TODO - This is I think a good example of how to better handle responses that return data, not just a message.
+     */
     @PostMapping
-    public ResponseEntity<Map<String, String>> createSchedule(
-            @Valid @RequestBody ScheduleRequest scheduleRequest,
+    public ResponseEntity<?> createSchedule(
+            @Valid @RequestBody ScheduleDTO scheduleDTO,
             BindingResult bindingResult) {
-        try {
-            if (bindingResult.hasErrors()) {
-                return handleValidationErrors(bindingResult);
-            }
-
-            // Sanitize and validate schedule name
-            String sanitizedName = sanitizeInput(scheduleRequest.getName());
-            if (!isValidName(sanitizedName)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid schedule name format");
-            }
-            scheduleRequest.setName(sanitizedName);
-
-            // Validate entries
-            if (scheduleRequest.getDays() != null) {
-                for (var entry : scheduleRequest.getDays()) {
-                    String sanitizedEventName = sanitizeInput(entry.getEventName());
-                    if (!isValidSafeString(sanitizedEventName)) {
-                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event name format");
-                    }
-                    entry.setEventName(sanitizedEventName);
-
-                    if (!isValidTimeFormat(entry.getStartTime()) || 
-                        !isValidTimeFormat(entry.getEndTime())) {
-                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid time format");
-                    }
-
-                    if (!isValidDayFormat(entry.getDay())) {
-                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid day format");
-                    }
-                }
-            }
-
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = (User) auth.getPrincipal();
-            
-            scheduleService.createSchedule(user, scheduleRequest);
-            
-            logSecurityEvent("CREATE_SCHEDULE", 
-                String.format("User ID: %d, Schedule Name: %s", user.getId(), sanitizedName));
-            
-            return createSuccessResponse("Schedule created successfully");
-            
-        } catch (Exception e) {
-            logError("Error creating schedule", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while creating the schedule");
+        if (bindingResult.hasErrors()) {
+            return handleValidationErrors(bindingResult);
         }
+
+        // Validate
+        ErrorResponse err = new ErrorResponse();
+        if (!isValidScheduleData(scheduleDTO, err) && err.hasErrors())
+            return err.content; // Returns error RE
+
+        // Create
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) auth.getPrincipal();
+        Schedule createdSchedule = scheduleService.createSchedule(user, scheduleDTO);
+
+        logSecurityEvent("CREATE_SCHEDULE", 
+            String.format("User ID: %d, Schedule Name: %s", user.getId(), scheduleDTO.getName()));
+
+        // Return both the success message and the created schedule
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Schedule created successfully");
+        response.put("schedule", new ScheduleDTO(createdSchedule));
+        
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{scheduleId}")
@@ -95,85 +76,44 @@ public class ScheduleController extends BaseController {
             @PathVariable Long scheduleId,
             @Valid @RequestBody ScheduleDTO updatedSchedule,
             BindingResult bindingResult) {
-        try {
-            if (bindingResult.hasErrors()) {
-                return handleValidationErrors(bindingResult);
-            }
-
-            if (!isValidId(scheduleId)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid schedule ID");
-            }
-
-            String sanitizedName = sanitizeInput(updatedSchedule.getName());
-            if (!isValidName(sanitizedName)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid schedule name format");
-            }
-            updatedSchedule.setName(sanitizedName);
-
-            if (updatedSchedule.getEntries() != null) {
-                for (var entry : updatedSchedule.getEntries()) {
-                    String sanitizedEventName = sanitizeInput(entry.getEventName());
-                    if (!isValidSafeString(sanitizedEventName)) {
-                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event name format");
-                    }
-                    entry.setEventName(sanitizedEventName);
-
-                    if (!isValidTimeFormat(entry.getEventStartTime()) || 
-                        !isValidTimeFormat(entry.getEventEndTime())) {
-                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid time format");
-                    }
-
-                    if (!isValidDayFormat(entry.getEventDay())) {
-                        return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid day format");
-                    }
-                }
-            }
-
-            scheduleService.updateScheduleEntries(updatedSchedule);
-            
-            logSecurityEvent("UPDATE_SCHEDULE", 
-                String.format("Schedule ID: %d", scheduleId));
-            
-            return createSuccessResponse("Schedule updated successfully");
-            
-        } catch (Exception e) {
-            logError("Error updating schedule", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while updating the schedule");
+        if (bindingResult.hasErrors()) {
+            return handleValidationErrors(bindingResult);
         }
+
+        // Validate
+        if (!isValidId(scheduleId)) 
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid schedule ID");
+
+        ErrorResponse err = new ErrorResponse();
+        if (!isValidScheduleData(updatedSchedule, err) && err.hasErrors())
+            return err.content;
+
+        // Update
+        scheduleService.updateScheduleEntries(updatedSchedule);
+        
+        logSecurityEvent("UPDATE_SCHEDULE", 
+            String.format("Schedule ID: %d", scheduleId));
+        
+        return createSuccessResponse("Schedule updated successfully");
     }
 
     @GetMapping("/entries/me")
     public ResponseEntity<?> getUserScheduleEntries() {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = (User) auth.getPrincipal();
-            List<ScheduleDTO> schedules = scheduleService.getUserScheduleEntries(user);
-            
-            return ResponseEntity.ok(schedules);
-            
-        } catch (Exception e) {
-            logError("Error retrieving user schedule entries", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while retrieving schedule entries");
-        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) auth.getPrincipal();
+        List<ScheduleDTO> schedules = scheduleService.getUserScheduleEntries(user);
+        
+        return ResponseEntity.ok(schedules);
     }
 
     @GetMapping("/entries/organization/{orgId}")
     public ResponseEntity<?> getMemberScheduleEntriesByOrg(@PathVariable Long orgId) {
-        try {
-            if (!isValidId(orgId)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
-            }
-
-            List<ScheduleDTO> schedules = scheduleService.getOrganizationMemberSchedules(orgId);
-            return ResponseEntity.ok(schedules);
-            
-        } catch (Exception e) {
-            logError("Error retrieving organization schedule entries", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while retrieving organization schedule entries");
+        if (!isValidId(orgId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
         }
+
+        List<ScheduleDTO> schedules = scheduleService.getOrganizationMemberSchedules(orgId);
+        return ResponseEntity.ok(schedules);
     }
 
     // Helper methods for validation
@@ -183,6 +123,58 @@ public class ScheduleController extends BaseController {
 
     private boolean isValidDayFormat(String day) {
         return day != null && 
-               day.matches("^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)$");
+               day.toUpperCase().matches("^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)$");
+    }
+
+    /**
+     * Losing out on some efficiency here since we loop through the DTO w/o
+     * mapping the entries to an actual ScheduleEntry, but for the sake of clarity
+     * I'm leaving it this way (for now).
+     */
+    private boolean isValidScheduleData(ScheduleDTO scheduleDTO, ErrorResponse errorResponse) {
+        String errorMessage = null;
+        boolean isValid = true;
+
+        // Sanitize and validate schedule name
+        String sanitizedName = sanitizeInput(scheduleDTO.getName());
+        if (!isValidName(sanitizedName)) {
+            isValid = false;
+            errorMessage = "Invalid schedule name format";
+        }
+        scheduleDTO.setName(sanitizedName);
+
+        if (isValid && scheduleDTO.getEntries() != null) {
+            List<EntryDTO> entries = scheduleDTO.getEntries();
+            for (EntryDTO entry : entries) {
+                String sanitizedEventName = sanitizeInput(entry.getEventName());
+                if (!isValidSafeString(sanitizedEventName)) {
+                    isValid = false;
+                    errorMessage = "Invalid event name format";
+                    break;
+                } else if (!isValidDayFormat(entry.getEventDay())) {
+                    isValid = false;
+                    errorMessage = "Invalid day format";
+                    break;
+                } else if (!isValidTimeFormat(entry.getEventStartTime()) || !isValidTimeFormat(entry.getEventEndTime())) {
+                    isValid = false;
+                    errorMessage = "Invalid time format";
+                    break;
+                } else {
+                    // All good
+                    entry.setEventName(sanitizedEventName);
+                }
+            }
+            
+            // confirm
+            if (isValid) return true;
+        }
+        errorResponse.content = createErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
+        return false;
+    }
+
+    private class ErrorResponse {
+        private ResponseEntity<Map<String, String>> content;
+
+        public boolean hasErrors() { return content != null; }
     }
 }

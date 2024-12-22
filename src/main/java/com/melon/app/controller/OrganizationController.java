@@ -24,8 +24,6 @@ import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.UpcomingEvent;
 import com.melon.app.entity.User;
-import com.melon.app.exception.CannotRemoveOwnerException;
-import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.service.OrganizationService;
 
 import jakarta.validation.Valid;
@@ -44,34 +42,28 @@ public class OrganizationController extends BaseController {
     
     @PostMapping("/{orgId}/members")
     public ResponseEntity<Map<String, String>> joinOrganization(@PathVariable String orgId) {
-        try {
-            // Validate organization ID
-            if (!isValidId(orgId)) {
-                logSecurityEvent("JOIN_ORG_INVALID_ID", "Invalid organization ID: " + orgId);
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID format");
-            }
+        // Validate organization ID
+        if (!isValidId(orgId)) {
+            logSecurityEvent("JOIN_ORG_INVALID_ID", "Invalid organization ID: " + orgId);
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID format");
+        }
 
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            User user = (User) auth.getPrincipal();
-            
-            logSecurityEvent("JOIN_ORG_ATTEMPT", 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) auth.getPrincipal();
+        
+        logSecurityEvent("JOIN_ORG_ATTEMPT", 
+            String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
+        
+        boolean success = orgService.joinOrganization(user, orgId);
+        
+        if (success) {
+            logSecurityEvent("JOIN_ORG_SUCCESS", 
                 String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
-            
-            boolean success = orgService.joinOrganization(user, orgId);
-            
-            if (success) {
-                logSecurityEvent("JOIN_ORG_SUCCESS", 
-                    String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
-                return createSuccessResponse("Organization joined successfully");
-            } else {
-                logSecurityEvent("JOIN_ORG_FAILURE", 
-                    String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Failed to join organization");
-            }
-        } catch (Exception e) {
-            logError("Error joining organization", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while joining the organization");
+            return createSuccessResponse("Organization joined successfully");
+        } else {
+            logSecurityEvent("JOIN_ORG_FAILURE", 
+                String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Failed to join organization");
         }
     }
 
@@ -79,85 +71,63 @@ public class OrganizationController extends BaseController {
     public ResponseEntity<Map<String, String>> removeMember(
             @PathVariable Long orgId,
             @RequestParam Long userId) {
-        try {
-            if (!isValidId(orgId) || !isValidId(userId)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, 
-                    "Invalid organization or user ID");
-            }
-
-            String username = orgService.removeMember(orgId, userId);
-            logSecurityEvent("REMOVE_MEMBER", 
-                String.format("Org ID: %d, User ID: %d", orgId, userId));
-            
-            return createSuccessResponse("Successfully removed " + sanitizeInput(username));
-        } catch (CannotRemoveOwnerException e) {
-            return createErrorResponse(HttpStatus.FORBIDDEN, 
-                "Cannot remove the owner of the organization");
-        } catch (UserNotInOrganizationException e) {
-            return createErrorResponse(HttpStatus.NOT_FOUND, 
-                "User is not a member of this organization");
-        } catch (Exception e) {
-            logError("Error removing member", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while removing the member");
+        if (!isValidId(orgId) || !isValidId(userId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid organization or user ID");
         }
+
+        String username = orgService.removeMember(orgId, userId);
+        logSecurityEvent("REMOVE_MEMBER", 
+            String.format("Org ID: %d, User ID: %d", orgId, userId));
+        
+        return createSuccessResponse("Successfully removed " + sanitizeInput(username));
     }
 
     @PostMapping("/new")
     public ResponseEntity<?> createNewOrganization(@RequestParam String orgName) {
-        try {
-            String sanitizedName = sanitizeInput(orgName);
-            
-            if (!isValidName(sanitizedName)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, 
-                    "Invalid organization name format");
-            }
-
-            User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Organization newOrg = orgService.createNewOrganization(sanitizedName, user);
-            
-            logSecurityEvent("CREATE_ORG", 
-                String.format("User ID: %d, Org Name: %s", user.getId(), sanitizedName));
-            
-            return ResponseEntity.ok(new OrganizationDTO(newOrg));
-        } catch (Exception e) {
-            logError("Error creating organization", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while creating the organization");
+        String sanitizedName = sanitizeInput(orgName);
+        
+        if (!isValidName(sanitizedName)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid organization name format");
         }
+
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Organization newOrg = orgService.createNewOrganization(sanitizedName, user);
+        
+        logSecurityEvent("CREATE_ORG", 
+            String.format("User ID: %d, Org Name: %s", user.getId(), sanitizedName));
+        
+        return ResponseEntity.ok(new OrganizationDTO(newOrg));
     }
 
     @GetMapping("/owned/id-name")
     public ResponseEntity<List<OrganizationIdNameDTO>> getOwnedOrganizationsIdName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) auth.getPrincipal();
+
         List<Organization> ownedOrgs = orgService.findOrganizationsByOwner(user);
         List<OrganizationIdNameDTO> orgDTOs = ownedOrgs.stream()
             .map(OrganizationIdNameDTO::new)
             .collect(Collectors.toList());
+        
         return ResponseEntity.ok(orgDTOs);
     }
 
     @GetMapping("/{orgName}")
     public ResponseEntity<?> findOrgsByName(@PathVariable String orgName) {
-        try {
-            String sanitizedName = sanitizeInput(orgName);
-            
-            if (!isValidSafeString(sanitizedName)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, 
-                    "Invalid organization name format");
-            }
-
-            List<Organization> foundOrganizations = orgService.findOrgsByName(sanitizedName);
-            List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream()
-                .map(OrganizationIdNameDTO::new)
-                .collect(Collectors.toList());
-            return ResponseEntity.ok(orgDTOs);
-        } catch (Exception e) {
-            logError("Error finding organizations", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while searching for organizations");
+        String sanitizedName = sanitizeInput(orgName);
+        
+        if (!isValidSafeString(sanitizedName)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid organization name format");
         }
+
+        List<Organization> foundOrganizations = orgService.findOrgsByName(sanitizedName);
+        List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream()
+            .map(OrganizationIdNameDTO::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(orgDTOs);
     }
 
     @PostMapping("/{orgId}/events")
@@ -165,65 +135,59 @@ public class OrganizationController extends BaseController {
             @PathVariable Long orgId,
             @Valid @RequestBody EventDTO eventDTO,
             BindingResult bindingResult) {
-        try {
-            if (bindingResult.hasErrors()) {
-                return handleValidationErrors(bindingResult);
-            }
-
-            if (!isValidId(orgId)) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
-            }
-
-            String sanitizedName = sanitizeInput(eventDTO.getName());
-            String sanitizedLocation = sanitizeInput(eventDTO.getLocation());
-            String sanitizedDescription = sanitizeInput(eventDTO.getDescription());
-
-            // Validate event data lengths
-            if (!isValidLength(sanitizedName, 1, MAX_NAME_LENGTH) ||
-                !isValidLength(sanitizedLocation, 1, MAX_STRING_LENGTH) ||
-                (sanitizedDescription != null && !isValidLength(sanitizedDescription, 0, MAX_STRING_LENGTH))) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event data length");
-            }
-
-            // Validate safe string content
-            if (!isValidSafeString(sanitizedName) || 
-                !isValidSafeString(sanitizedLocation) ||
-                (sanitizedDescription != null && !sanitizedDescription.isEmpty() && !isValidSafeString(sanitizedDescription))) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event data format");
-            }
-
-            UpcomingEvent event = new UpcomingEvent();
-            event.setName(sanitizedName);
-            event.setLocation(sanitizedLocation);
-            event.setDescription(sanitizedDescription);
-
-            try {
-                event.setDate(LocalDate.parse(eventDTO.getDate()));
-                event.setStartTime(LocalTime.parse(eventDTO.getStartTime()));
-                
-                // Validate date is not in past
-                if (event.getDate().isBefore(LocalDate.now())) {
-                    return createErrorResponse(HttpStatus.BAD_REQUEST, 
-                        "Event date cannot be in the past");
-                }
-            } catch (DateTimeParseException e) {
-                return createErrorResponse(HttpStatus.BAD_REQUEST, 
-                    "Invalid date or time format");
-            }
-
-            event.setType(eventDTO.getEventType());
-            
-            orgService.addEventToOrganization(orgId, event);
-            
-            logSecurityEvent("CREATE_EVENT", 
-                String.format("Org ID: %d, Event: %s", orgId, sanitizedName));
-                
-            return createSuccessResponse("Event added successfully");
-        } catch (Exception e) {
-            logError("Error adding event", e);
-            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
-                "An error occurred while adding the event");
+        if (bindingResult.hasErrors()) {
+            return handleValidationErrors(bindingResult);
         }
+
+        if (!isValidId(orgId)) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid organization ID");
+        }
+
+        String sanitizedName = sanitizeInput(eventDTO.getName());
+        String sanitizedLocation = sanitizeInput(eventDTO.getLocation());
+        String sanitizedDescription = sanitizeInput(eventDTO.getDescription());
+
+        // Validate event data lengths
+        if (!isValidLength(sanitizedName, 1, MAX_NAME_LENGTH) ||
+            !isValidLength(sanitizedLocation, 1, MAX_STRING_LENGTH) ||
+            (sanitizedDescription != null && !isValidLength(sanitizedDescription, 0, MAX_STRING_LENGTH))) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event data length");
+        }
+
+        // Validate safe string content
+        if (!isValidSafeString(sanitizedName) || 
+            !isValidSafeString(sanitizedLocation) ||
+            (sanitizedDescription != null && !sanitizedDescription.isEmpty() && !isValidSafeString(sanitizedDescription))) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid event data format");
+        }
+
+        UpcomingEvent event = new UpcomingEvent();
+        event.setName(sanitizedName);
+        event.setLocation(sanitizedLocation);
+        event.setDescription(sanitizedDescription);
+
+        try {
+            event.setDate(LocalDate.parse(eventDTO.getDate()));
+            event.setStartTime(LocalTime.parse(eventDTO.getStartTime()));
+            
+            // Validate date is not in past
+            if (event.getDate().isBefore(LocalDate.now())) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                    "Event date cannot be in the past");
+            }
+        } catch (DateTimeParseException e) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, 
+                "Invalid date or time format");
+        }
+
+        event.setType(eventDTO.getEventType());
+        
+        orgService.addEventToOrganization(orgId, event);
+        
+        logSecurityEvent("CREATE_EVENT", 
+            String.format("Org ID: %d, Event: %s", orgId, sanitizedName));
+            
+        return createSuccessResponse("Event added successfully");
     }
 
     @GetMapping("/{orgId}/events")

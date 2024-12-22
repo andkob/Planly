@@ -23,7 +23,7 @@ public class ScheduleDTO {
 
     public ScheduleDTO(Schedule schedule) {
         this.id = schedule.getId();
-        this.name = schedule.getName();
+        this.name = schedule.getScheduleName();
         this.entries = schedule.getEntries().stream()
             .map(entry -> new EntryDTO(
                 entry.getId(),
