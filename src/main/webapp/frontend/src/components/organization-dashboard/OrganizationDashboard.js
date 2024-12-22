@@ -15,6 +15,7 @@ import OrganizationEvents from '../OrganizationEvents';
 import Toast from '../notification/Toast';
 import OrganizationMembers from './OrganizationMembers';
 import AvailabilityHeatmap from './AvailabilityHeatmap';
+import CallServer from '../../util/CallServer';
 
 export default function OrganizationDashboard() {
   const { orgId } = useParams();
@@ -31,15 +32,8 @@ export default function OrganizationDashboard() {
 
   const fetchOrganizationDetails = async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/organizations/${orgId}/details`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
+      const response = CallServer(`/api/organizations/${orgId}/details`, 'GET');
+      
       if (!response.ok) {
         throw new Error('Failed to fetch organization details');
       }

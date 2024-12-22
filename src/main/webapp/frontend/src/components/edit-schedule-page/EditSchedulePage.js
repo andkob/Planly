@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import DayDistributionChart from "../charts/DayDistributionChart";
 import Toast from '../notification/Toast';
 import WeeklyScheduleGrid from "../charts/WeeklyScheduleGrid";
+import CallServer from "../../util/CallServer";
 
 export default function EditSchedule() {
   const [schedules, setSchedules] = useState([]);
@@ -31,16 +32,7 @@ export default function EditSchedule() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("jwtToken");
-  
-    fetch("/api/schedules/entries/me", {
-      method: "GET",
-      headers: {
-        'Content-type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      credentials: 'include'
-    })
+    CallServer('/api/schedules/entries/me', 'GET')
     .then((response) => response.json())
     .then((data) => {
       setSchedules(data);
@@ -67,17 +59,7 @@ export default function EditSchedule() {
       ...schedules.find(s => s.id === activeScheduleId),
       entries: scheduleEntries
     };
-    const token = localStorage.getItem("jwtToken");
-
-    fetch(`/api/schedules/${activeScheduleId}`, {
-      method: "PUT",
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(scheduleToUpdate),
-      credentials: 'include',
-    })
+    CallServer(`/api/schedules/${activeScheduleId}`, 'PUT', scheduleToUpdate)
     .then(response => {
       if (!response.ok) throw new Error('Failed to save changes.');
       return response.text();

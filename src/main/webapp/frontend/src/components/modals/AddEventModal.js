@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Users, X } from 'lucide-react';
+import CallServer from '../../util/CallServer';
 
 const EVENT_TYPES = [
   { id: 'BROTHERHOOD', label: 'Brotherhood', color: 'bg-green-100 text-green-800' },
@@ -52,7 +53,6 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
     }
 
     setLoading(true);
-    const token = localStorage.getItem("jwtToken");
     const eventData = {
       name: formData.name,
       date: formData.date,
@@ -63,16 +63,7 @@ export default function AddEventModal({ showModal, closeModal, orgId, addToast, 
     };
 
     try {
-      const response = await fetch(`/api/organizations/${orgId}/events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(eventData),
-        credentials: 'include'
-      });
-
+      const response = await CallServer(`/api/organizations/${orgId}/events`, 'POST', eventData);
       const data = await response.json();
 
       if (!response.ok) {

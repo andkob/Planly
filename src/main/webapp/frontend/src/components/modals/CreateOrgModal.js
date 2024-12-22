@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import CallServer from "../../util/CallServer";
 
 export default function CreateOrgModal({ showModal, closeModal, saveOrg, addToast }) {
   const [orgName, setOrgName] = useState('');
@@ -7,16 +8,8 @@ export default function CreateOrgModal({ showModal, closeModal, saveOrg, addToas
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    
-    const token = localStorage.getItem("jwtToken");
-    fetch(`/api/organizations/new?orgName=${orgName}`, {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-    })
+
+    CallServer(`/api/organizations/new?orgName=${orgName}`, 'POST')
     .then(response => {
         if (!response.ok) {
             throw new Error('Failed to add organization');

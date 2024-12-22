@@ -12,6 +12,7 @@ import CreateOrgModal from '../modals/CreateOrgModal';
 // temp
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
+import CallServer from '../../util/CallServer';
 
 export default function UserDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -62,21 +63,12 @@ export default function UserDashboard() {
 
   const fetchOwnedOrganizationIdsNames = async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/organizations/owned/id-name', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
+      const response = await CallServer('/api/organizations/owned/id-name', 'GET');
+      const data = await response.json();
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to fetch joined organizations');
+        throw new Error(data.error || 'Failed to fetch joined organizations');
       }
-      const data = await response.json();
 
       const organizations = data.map(org => ({
         id: org.id,
@@ -92,21 +84,12 @@ export default function UserDashboard() {
 
   const fetchOrganizations = async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/users/me/organizations', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
+      const response = await CallServer('/api/users/me/organizations', 'GET');
+      const data = await response.json();
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to fetch joined organizations');
+        throw new Error(data.error || 'Failed to fetch joined organizations');
       }
-      const data = await response.json();
 
       const organizations = data.map(org => ({
         id: org.id,
@@ -140,15 +123,7 @@ export default function UserDashboard() {
 
   const fetchSchedules = async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/schedules/entries/me', {
-        method: "GET",
-        headers: {
-          'Content-type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      }); 
+      const response = await CallServer('/api/schedules/entries/me', 'GET');
       const data = await response.json();
       setSchedules(data);
     } catch (error) {
@@ -158,19 +133,7 @@ export default function UserDashboard() {
 
   const postSchedule = async (scheduleData) => {
     try {
-      // get the JWT token
-      const token = localStorage.getItem('jwtToken');
-
-      const response = await fetch("/api/schedules", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(scheduleData),
-        credentials: 'include'
-      });
+      const response = await CallServer('/api/schedules', 'POST', scheduleData);
 
       if (response.ok) {
         console.log('Schedule saved successfully');

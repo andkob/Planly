@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar, Search, AlertCircle } from 'lucide-react';
+import CallServer from '../util/CallServer';
 
 
 const EVENT_TYPES = [
@@ -32,16 +33,8 @@ export default function OrganizationEvents({
       setLoading(true);
       setError('');
 
-      const token = localStorage.getItem('jwtToken');
       try {
-        const response = await fetch(`/api/organizations/${selectedOrgId}/events`, {
-          method: 'GET',
-          headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include'
-        });
+        const response = await CallServer(`/api/organizations/${selectedOrgId}/events`, 'GET');
 
         if (!response.ok) {
           const errorText = await response.text();

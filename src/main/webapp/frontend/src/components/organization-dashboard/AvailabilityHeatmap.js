@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import CallServer from '../../util/CallServer';
 
 export default function AvailabilityHeatmap({ orgId }) {
   const [scheduleData, setScheduleData] = useState([]);
@@ -8,18 +9,13 @@ export default function AvailabilityHeatmap({ orgId }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('jwtToken');
-        const response = await fetch(`/api/schedules/entries/organization/${orgId}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await CallServer(`/api/schedules/entries/organization/${orgId}`, 'GET');
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error("An unexpected error occurred");
+          throw new Error(data.error || "An unexpected error occurred");
         }
 
-        const data = await response.json();
         setScheduleData(data);
       } catch (error) {
         console.error('Error fetching schedule data:', error);

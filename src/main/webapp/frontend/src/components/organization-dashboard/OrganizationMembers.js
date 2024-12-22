@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserCircle, Mail, MoreVertical, UserCog, UserMinus } from 'lucide-react';
 import ConfirmDialog from './menus/ConfirmDialog';
+import CallServer from '../../util/CallServer';
 
 const OrganizationMembers = ({ orgId, addToast }) => {
   const [members, setMembers] = useState([]);
@@ -23,20 +24,12 @@ const OrganizationMembers = ({ orgId, addToast }) => {
 
   const fetchMembers = async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/organizations/${orgId}/members`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
+      const response = await CallServer(`/api/organizations/${orgId}/members`, 'GET');
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error('Failed to fetch member details');
+        throw new Error(data.error || 'Failed to fetch member details');
       }
-      const data = await response.json();
       setMembers(data);
       setLoading(false);
     } catch (err) {
@@ -59,23 +52,16 @@ const OrganizationMembers = ({ orgId, addToast }) => {
   const handleRemoveMember = async () => {
     const userId = confirmDialog.userId;
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/organizations/${orgId}/members?userId=${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-      const message = await response.text();
+      const response = await CallServer(`/api/organizations/${orgId}/members?userId=${userId}`, 'DELETE');
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(message);
+        throw new Error(data.error);
       }
 
       fetchMembers(); // refresh list
       setConfirmDialog({ isOpen: false, userId: null, username: '' });
-      addToast('success', message);
+      addToast('success', data.message);
     } catch (error) {
       addToast('error', error.message || 'Failed to remove member');
     }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import CallServer from '../../util/CallServer';
 
 const MAX_EMAIL_LENGTH = 254;
 const MAX_USERNAME_LENGTH = 50;
@@ -91,17 +92,12 @@ export default function Register() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/auth/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email.trim(),
-          username: formData.username.trim(),
-          password: formData.password
-        }),
-        credentials: 'include'
-      });
-
+      const registrationData = {
+        email: formData.email.trim(),
+        username: formData.username.trim(),
+        password: formData.password
+      }
+      const response = await CallServer('/api/auth/users', 'POST', registrationData);
       const data = await response.json();
 
       if (response.ok) {
