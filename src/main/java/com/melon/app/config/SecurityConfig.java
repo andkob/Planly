@@ -15,6 +15,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import com.google.common.util.concurrent.RateLimiter;
 import com.melon.app.security.JwtAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -63,5 +64,10 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RateLimiter authRateLimiter() {
+        return RateLimiter.create(10.0); // 10 requests per second
     }
 }
