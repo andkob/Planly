@@ -59,15 +59,15 @@ export async function userRegister(registrationData, setIsSubmitting, setErrors,
     if (response.ok) {
       navigate('/login');
     } else {
-      setErrors(prev => ({ 
-        ...prev, 
-        submit: data.error || 'Registration failed. Please try again.' 
+      setErrors(prev => ({
+        ...prev,
+        submit: data.error || 'Registration failed. Please try again.'
       }));
     }
   } catch (error) {
-    setErrors(prev => ({ 
-      ...prev, 
-      submit: 'An unexpected error occurred. Please try again.' 
+    setErrors(prev => ({
+      ...prev,
+      submit: 'An unexpected error occurred. Please try again.'
     }));
   } finally {
     setIsSubmitting(false);
@@ -112,45 +112,45 @@ export async function createOrganization(orgName, saveOrg, closeModal, addToast,
 export async function searchOrganizations(orgName, setLoading, setError, addToast, setMatchingOrganizations) {
   setLoading(true);
   setError('');
-  
+
   CallServer(`/api/organizations/${orgName}`, 'GET')
-  .then(async response => {
-    if (!response.ok) {
-      const errorText = await response.json().message;
-      if (response.status === 409) { // CONFLICT
-        addToast('info', errorText);
-        return;
+    .then(async response => {
+      if (!response.ok) {
+        const errorText = await response.json().message;
+        if (response.status === 409) { // CONFLICT
+          addToast('info', errorText);
+          return;
+        }
+        addToast('error', 'Failed to fetch organizations');
+        throw new Error(errorText || 'Failed to fetch organizations');
       }
-      addToast('error', 'Failed to fetch organizations');
-      throw new Error(errorText || 'Failed to fetch organizations');
-    }
-    return response.json();
-  })
-  .then(data => {
-    const organizations = data.content;
-    if (organizations !== null) {
-      if (!Array.isArray(organizations)) {
-        throw new Error('Invalid response format');
-      }
+      return response.json();
+    })
+    .then(data => {
+      const organizations = data.content;
+      if (organizations !== null) {
+        if (!Array.isArray(organizations)) {
+          throw new Error('Invalid response format');
+        }
 
-      setMatchingOrganizations(organizations);
+        setMatchingOrganizations(organizations);
 
-      if (organizations.length === 0) {
-        addToast('info', 'No matching organizations found');
-      } else {
-        addToast('success', `Found ${organizations.length} matching organization(s)`);
+        if (organizations.length === 0) {
+          addToast('info', 'No matching organizations found');
+        } else {
+          addToast('success', `Found ${organizations.length} matching organization(s)`);
+        }
       }
-    }
-  })
-  .catch(err => {
-    console.error(err.message);
-    setError('An unexpected error occurred. Please try again.');
-    addToast('error', 'Oops! Encountered an unexpected error.');
-    setMatchingOrganizations([]);
-  })
-  .finally(() => {
-    setLoading(false);
-  });
+    })
+    .catch(err => {
+      console.error(err.message);
+      setError('An unexpected error occurred. Please try again.');
+      addToast('error', 'Oops! Encountered an unexpected error.');
+      setMatchingOrganizations([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
 }
 
 /**
@@ -164,31 +164,31 @@ export async function searchOrganizations(orgName, setLoading, setError, addToas
  */
 export async function joinOrganization(orgId, orgName, setLoading, addToast, setError, closeModal) {
   setLoading(true);
-        
+
   CallServer(`/api/organizations/${orgId}/members`, 'POST')
-  .then(async response => {
-    const data = await response.json();
-    if (!response.ok) {
-      if (response.status === 409) { // Conflict
-        addToast('info', data.error);
-      } else {
-        console.error(data.error);
-        addToast('error', data.error || 'Failed to join organization');
-        setError(data.error);
+    .then(async response => {
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) { // Conflict
+          addToast('info', data.error);
+        } else {
+          console.error(data.error);
+          addToast('error', data.error || 'Failed to join organization');
+          setError(data.error);
+        }
+        return;
       }
-      return;
-    }
-    addToast('success', `Successfully joined ${orgName}`);
-    closeModal();
-  })
-  .catch(err => {
-    console.error('Error:', err);
-    setError('An unexpected error occurred. Please try again.');
-    addToast('error', 'An unexpected error occurred. Please try again.');
-  })
-  .finally(() => {
-    setLoading(false);
-  });
+      addToast('success', `Successfully joined ${orgName}`);
+      closeModal();
+    })
+    .catch(err => {
+      console.error('Error:', err);
+      setError('An unexpected error occurred. Please try again.');
+      addToast('error', 'An unexpected error occurred. Please try again.');
+    })
+    .finally(() => {
+      setLoading(false);
+    });
 }
 
 /**
@@ -322,7 +322,7 @@ export async function fetchOrganizationEvents(orgId, setLoading, setError, setEv
     console.error('Error fetching events:', err);
     setError(err.message || 'Failed to load events');
   } finally {
-    setIsNewEvents(false); 
+    setIsNewEvents(false);
     setLoading(false);
   }
 }
@@ -337,7 +337,7 @@ export async function fetchOrganizationDetails(orgId, setOrgDetails, addToast) {
   try {
     const response = await CallServer(`/api/organizations/${orgId}/details`, 'GET');
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error || 'Failed to fetch organization details');
     }
@@ -365,7 +365,7 @@ export async function postNewSchedule(scheduleData, setSchedules, closeAddSchedu
 
     // Update list
     setSchedules(currentSchedules => [...currentSchedules, data.content]);
-    
+
     closeAddScheduleModal();
     addToast('success', data.message);
   } catch (error) {
@@ -386,7 +386,7 @@ export async function fetchUserSchedules(setSchedules) {
     setSchedules(data.content);
     return data;
   } catch (error) {
-      console.error("Error fetching schedules: ", error);
+    console.error("Error fetching schedules: ", error);
   }
 }
 
@@ -401,19 +401,19 @@ export async function fetchUserSchedules(setSchedules) {
  * @param {*} addToast 
  */
 export async function updateUserScheduleEntries(scheduleId, scheduleToUpdate, schedules, scheduleEntries, setSchedules, setOldScheduleEntries, addToast) {
-    CallServer(`/api/schedules/${scheduleId}`, 'PUT', scheduleToUpdate)
+  CallServer(`/api/schedules/${scheduleId}`, 'PUT', scheduleToUpdate)
     .then(response => {
       const data = response.json();
-      if (!response.ok) 
+      if (!response.ok)
         throw new Error(data.error || 'Failed to save changes.');
 
       return data.message;
     })
     .then((message) => {
       // Update local state with the modified schedule entries
-      setSchedules(schedules.map(s => 
-        s.id === scheduleId 
-          ? {...s, entries: scheduleEntries}
+      setSchedules(schedules.map(s =>
+        s.id === scheduleId
+          ? { ...s, entries: scheduleEntries }
           : s
       ));
       setOldScheduleEntries(scheduleEntries);
@@ -469,7 +469,7 @@ export async function fetchUserFirstName(setName) {
  * @param {*} setMyOrganizations 
  * @param {*} addToast 
  */
-export async function fetchUserOrganizations(setMyOrganizations, addToast) {
+export async function fetchUserOrganizations(setMyOrganizations, addToast = null) {
   try {
     const response = await CallServer('/api/users/me/organizations', 'GET');
     const data = await response.json();
@@ -485,6 +485,215 @@ export async function fetchUserOrganizations(setMyOrganizations, addToast) {
     setMyOrganizations(organizations);
   } catch (error) {
     console.error('Error fetching organizations:', error);
-    addToast('error', error.message);
+    if (addToast) addToast('error', error.message);
   }
 }
+
+// =======================
+// Chat Endpoint Functions
+// =======================
+
+// ChatEndpoints.js
+
+// ChatEndpoints.js
+
+/**
+ * Fetches all chat rooms for the given organization
+ * @param {number} orgId - The organization ID
+ * @returns {Promise<{error?: string, content?: Array}>} Response containing chat rooms or error
+ */
+export const fetchChatRooms = async (orgId) => {
+  try {
+    const response = await CallServer(
+      `/api/chat/rooms/organization/${orgId}`,
+      'GET'
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to fetch chat rooms' };
+    }
+
+    return data.content;
+  } catch (error) {
+    console.error('Error fetching chat rooms:', error);
+    return { error: 'Failed to fetch chat rooms' };
+  }
+};
+
+/**
+ * Creates a new chat room
+ * @param {string} name - Chat room name
+ * @param {number} organizationId - Organization ID
+ * @param {string} type - Chat room type (GROUP/ANNOUNCEMENT)
+ * @returns {Promise<{error?: string, message?: string, content?: Object}>} Response containing created room or error
+ */
+export const createChatRoom = async (name, organizationId, type) => {
+  try {
+    const response = await CallServer(
+      '/api/chat/rooms',
+      'POST',
+      { name, organizationId, type }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to create chat room' };
+    }
+
+    return data; // Contains both message and content
+  } catch (error) {
+    console.error('Error creating chat room:', error);
+    return { error: 'Failed to create chat room' };
+  }
+};
+
+/**
+ * Fetches messages for a specific chat room
+ * @param {number} roomId - Chat room ID
+ * @returns {Promise<{error?: string, content?: Array}>} Response containing messages or error
+ */
+export const fetchMessages = async (roomId) => {
+  try {
+    const response = await CallServer(
+      `/api/chat/rooms/${roomId}/messages`,
+      'GET'
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to fetch messages' };
+    }
+
+    return { content: data.content };
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    return { error: 'Failed to fetch messages' };
+  }
+};
+
+/**
+ * Sends a new message to a chat room
+ * @param {number} roomId - Chat room ID
+ * @param {string} content - Message content
+ * @returns {Promise<{error?: string, message?: string, content?: Object}>} Response containing sent message or error
+ */
+export const sendMessage = async (roomId, content) => {
+  try {
+    const response = await CallServer(
+      `/api/chat/rooms/${roomId}/messages`,
+      'POST',
+      { content }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to send message' };
+    }
+
+    return data; // Contains both message and content
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return { error: 'Failed to send message' };
+  }
+};
+
+/**
+ * Adds members to a chat room based on organization role
+ * @param {number} roomId - Chat room ID
+ * @param {number} organizationId - Organization ID
+ * @param {string} minimumRole - Minimum role required
+ * @returns {Promise<{error?: string, message?: string}>} Response containing success message or error
+ */
+export const addChatMembers = async (roomId, organizationId, minimumRole) => {
+  try {
+    const response = await CallServer(
+      `/api/chat/rooms/${roomId}/members`,
+      'POST',
+      { organizationId, minimumRole }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to add members' };
+    }
+
+    return data; // Contains message
+  } catch (error) {
+    console.error('Error adding chat members:', error);
+    return { error: 'Failed to add members' };
+  }
+};
+
+/**
+ * Removes a member from a chat room
+ * @param {number} roomId - Chat room ID
+ * @param {number} userId - User ID to remove
+ * @returns {Promise<{error?: string, message?: string}>} Response containing success message or error
+ */
+export const removeChatMember = async (roomId, userId) => {
+  try {
+    const response = await CallServer(
+      `/api/chat/rooms/${roomId}/members/${userId}`,
+      'DELETE'
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to remove member' };
+    }
+
+    return data; // Contains message
+  } catch (error) {
+    console.error('Error removing chat member:', error);
+    return { error: 'Failed to remove member' };
+  }
+};
+
+/**
+ * Marks all messages in a chat room as read
+ * @param {number} roomId - Chat room ID
+ * @returns {Promise<{error?: string, message?: string}>} Response containing success message or error
+ */
+export const markChatAsRead = async (roomId) => {
+  try {
+    const response = await CallServer(
+      `/api/chat/rooms/${roomId}/mark-read`,
+      'POST'
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to mark as read' };
+    }
+
+    return data; // Contains message
+  } catch (error) {
+    console.error('Error marking chat as read:', error);
+    return { error: 'Failed to mark as read' };
+  }
+};
+
+/**
+ * Gets the count of unread messages in a chat room
+ * @param {number} roomId - Chat room ID
+ * @returns {Promise<{error?: string, content?: number}>} Response containing unread count or error
+ */
+export const getUnreadCount = async (roomId) => {
+  try {
+    const response = await CallServer(
+      `/api/chat/rooms/${roomId}/unread-count`,
+      'GET'
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to get unread count' };
+    }
+
+    return { content: data.unreadCount };
+  } catch (error) {
+    console.error('Error getting unread count:', error);
+    return { error: 'Failed to get unread count' };
+  }
+};

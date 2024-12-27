@@ -160,7 +160,7 @@ export default function UserDashboard() {
                 <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
                   <Calendar className="h-5 w-5 mr-3" /> Organization Calendar
                 </a>
-                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                <a href="chat" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
                   <MessageCircle className="h-5 w-5 mr-3" /> Chat
                 </a>
                 

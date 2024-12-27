@@ -6,6 +6,7 @@ import UserDashboard from './components/user-dashboard/UserDashboard';
 import EditSchedule from './components/edit-schedule-page/EditSchedulePage';
 import OrganizationDashboard from './components/organization-dashboard/OrganizationDashboard';
 import { validateToken } from './util/JwtAuth';
+import ChatPage from './components/chat-page/ChatPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -82,6 +83,14 @@ function App() {
       element: (
         <ProtectedRoute>
           <EditSchedule />
+        </ProtectedRoute>
+      )
+    },
+    {
+      path: '/chat',
+      element: (
+        <ProtectedRoute>
+          <ChatPage />
         </ProtectedRoute>
       )
     },
