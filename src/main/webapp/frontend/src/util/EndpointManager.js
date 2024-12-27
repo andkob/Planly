@@ -116,7 +116,7 @@ export async function searchOrganizations(orgName, setLoading, setError, addToas
   CallServer(`/api/organizations/${orgName}`, 'GET')
   .then(async response => {
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText = await response.json().message;
       if (response.status === 409) { // CONFLICT
         addToast('info', errorText);
         return;
@@ -127,15 +127,18 @@ export async function searchOrganizations(orgName, setLoading, setError, addToas
     return response.json();
   })
   .then(data => {
-    if (data !== null) {
-      if (!Array.isArray(data)) {
+    const organizations = data.content;
+    if (organizations !== null) {
+      if (!Array.isArray(organizations)) {
         throw new Error('Invalid response format');
       }
-      setMatchingOrganizations(data);
-      if (data.length === 0) {
+
+      setMatchingOrganizations(organizations);
+
+      if (organizations.length === 0) {
         addToast('info', 'No matching organizations found');
       } else {
-        addToast('success', `Found ${data.length} matching organization(s)`);
+        addToast('success', `Found ${organizations.length} matching organization(s)`);
       }
     }
   })
@@ -258,7 +261,7 @@ export async function fetchOrganizationMembers(orgId, setMembers, setLoading, se
     if (!response.ok) {
       throw new Error(data.error || 'Failed to fetch member details');
     }
-    setMembers(data);
+    setMembers(data.content);
     setLoading(false);
   } catch (err) {
     setError(err.message);
@@ -278,10 +281,10 @@ export async function fetchIdsAndNames(setOwnedOrgs, setSelectedOrgId, addToast)
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error('Failed to fetch joined organizations');
+      throw new Error(data.error || 'Failed to fetch joined organizations');
     }
 
-    const organizations = data.map(org => ({
+    const organizations = data.content.map(org => ({
       id: org.id,
       name: org.name
     }));
@@ -310,12 +313,11 @@ export async function fetchOrganizationEvents(orgId, setLoading, setError, setEv
   try {
     const response = await CallServer(`/api/organizations/${orgId}/events`, 'GET');
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Failed to fetch events');
-    }
     const data = await response.json();
-    setEvents(data);
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch events');
+    }
+    setEvents(data.content);
   } catch (err) {
     console.error('Error fetching events:', err);
     setError(err.message || 'Failed to load events');
@@ -334,13 +336,13 @@ export async function fetchOrganizationEvents(orgId, setLoading, setError, setEv
 export async function fetchOrganizationDetails(orgId, setOrgDetails, addToast) {
   try {
     const response = await CallServer(`/api/organizations/${orgId}/details`, 'GET');
+    const data = await response.json();
     
     if (!response.ok) {
-      throw new Error('Failed to fetch organization details');
+      throw new Error(data.error || 'Failed to fetch organization details');
     }
 
-    const data = await response.json();
-    setOrgDetails(data);
+    setOrgDetails(data.content);
   } catch (error) {
     addToast('error', error.message);
   }
@@ -362,7 +364,7 @@ export async function postNewSchedule(scheduleData, setSchedules, closeAddSchedu
     }
 
     // Update list
-    setSchedules(currentSchedules => [...currentSchedules, data.schedule]);
+    setSchedules(currentSchedules => [...currentSchedules, data.content]);
     
     closeAddScheduleModal();
     addToast('success', data.message);
@@ -381,7 +383,7 @@ export async function fetchUserSchedules(setSchedules) {
   try {
     const response = await CallServer('/api/schedules/entries/me', 'GET');
     const data = await response.json();
-    setSchedules(data);
+    setSchedules(data.content);
     return data;
   } catch (error) {
       console.error("Error fetching schedules: ", error);
@@ -476,7 +478,7 @@ export async function fetchUserOrganizations(setMyOrganizations, addToast) {
       throw new Error(data.error || 'Failed to fetch joined organizations');
     }
 
-    const organizations = data.map(org => ({
+    const organizations = data.content.map(org => ({
       id: org.id,
       name: org.name
     }));

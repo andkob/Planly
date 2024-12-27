@@ -102,7 +102,7 @@ public class OrganizationController extends BaseController {
     }
 
     @GetMapping("/owned/id-name")
-    public ResponseEntity<List<OrganizationIdNameDTO>> getOwnedOrganizationsIdName() {
+    public ResponseEntity<Map<String, Object>> getOwnedOrganizationsIdName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) auth.getPrincipal();
 
@@ -111,7 +111,7 @@ public class OrganizationController extends BaseController {
             .map(OrganizationIdNameDTO::new)
             .collect(Collectors.toList());
         
-        return ResponseEntity.ok(orgDTOs);
+        return createSuccessResponseWithPayload("Successfully fetched owned organization IDs", orgDTOs);
     }
 
     @GetMapping("/{orgName}")
@@ -127,7 +127,7 @@ public class OrganizationController extends BaseController {
         List<OrganizationIdNameDTO> orgDTOs = foundOrganizations.stream()
             .map(OrganizationIdNameDTO::new)
             .collect(Collectors.toList());
-        return ResponseEntity.ok(orgDTOs);
+        return createSuccessResponseWithPayload("Successfully executed search", orgDTOs);
     }
 
     @PostMapping("/{orgId}/events")
@@ -200,7 +200,7 @@ public class OrganizationController extends BaseController {
         List<EventDTO> eventDTOs = events.stream()
             .map(EventDTO::new)
             .collect(Collectors.toList());
-        return ResponseEntity.ok(eventDTOs);
+        return createSuccessResponseWithPayload("Successfully fetched organization events", eventDTOs);
     }
 
     @GetMapping("/{orgId}/details")
@@ -211,7 +211,7 @@ public class OrganizationController extends BaseController {
         
         Organization org = orgService.findOrgById(orgId);
         OrganizationDTO orgDTO = new OrganizationDTO(org);
-        return ResponseEntity.ok(orgDTO);
+        return createSuccessResponseWithPayload("Successfully fetched organization details", orgDTO);
     }
 
     @GetMapping("/{orgId}/members")
@@ -221,7 +221,7 @@ public class OrganizationController extends BaseController {
         }
         
         List<OrganizationMembership> members = orgService.getMembers(orgId);
-        List<OrganizationMemberDTO> memberDTO = members.stream()
+        List<OrganizationMemberDTO> membersDTO = members.stream()
             .map(member -> {
                 OrganizationMemberDTO dto = new OrganizationMemberDTO();
                 User user = member.getUser();
@@ -233,6 +233,6 @@ public class OrganizationController extends BaseController {
                 return dto;
             })
             .collect(Collectors.toList());
-        return ResponseEntity.ok(memberDTO);
+        return createSuccessResponseWithPayload("Successfully fetched organization members", membersDTO);
     }
 }

@@ -53,6 +53,6 @@ public class UserController extends BaseController {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Set<Organization> orgs = userService.getOrganizations(user);
         List<OrganizationIdNameDTO> orgIdNameDTOs = orgs.stream().map(OrganizationIdNameDTO::new).collect(Collectors.toList());
-        return ResponseEntity.ok(orgIdNameDTOs);
+        return createSuccessResponseWithPayload("Successfully fetched user organizations", orgIdNameDTOs);
     }
 }

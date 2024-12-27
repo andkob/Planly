@@ -1,6 +1,5 @@
 package com.melon.app.controller;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,9 +38,6 @@ public class ScheduleController extends BaseController {
         this.scheduleService = scheduleService;
     }
 
-    /**
-     * TODO - This is I think a good example of how to better handle responses that return data, not just a message.
-     */
     @PostMapping
     public ResponseEntity<?> createSchedule(
             @Valid @RequestBody ScheduleDTO scheduleDTO,
@@ -61,14 +57,9 @@ public class ScheduleController extends BaseController {
         Schedule createdSchedule = scheduleService.createSchedule(user, scheduleDTO);
 
         logSecurityEvent("CREATE_SCHEDULE", 
-            String.format("User ID: %d, Schedule Name: %s", user.getId(), scheduleDTO.getName()));
-
-        // Return both the success message and the created schedule
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Schedule created successfully");
-        response.put("schedule", new ScheduleDTO(createdSchedule));
+            String.format("User ID: %d, Schedule Name: %s", user.getId(), createdSchedule.getScheduleName()));
         
-        return ResponseEntity.ok(response);
+        return createSuccessResponseWithPayload("Schedule created successfully", new ScheduleDTO(createdSchedule));
     }
 
     @PutMapping("/{scheduleId}")
@@ -98,12 +89,12 @@ public class ScheduleController extends BaseController {
     }
 
     @GetMapping("/entries/me")
-    public ResponseEntity<?> getUserScheduleEntries() {
+    public ResponseEntity<Map<String, Object>> getUserScheduleEntries() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = (User) auth.getPrincipal();
         List<ScheduleDTO> schedules = scheduleService.getUserScheduleEntries(user);
-        
-        return ResponseEntity.ok(schedules);
+
+        return createSuccessResponseWithPayload("Successfully fetched user schedules", schedules);
     }
 
     @GetMapping("/entries/organization/{orgId}")
@@ -113,7 +104,7 @@ public class ScheduleController extends BaseController {
         }
 
         List<ScheduleDTO> schedules = scheduleService.getOrganizationMemberSchedules(orgId);
-        return ResponseEntity.ok(schedules);
+        return createSuccessResponseWithPayload("Successfully fetched member schedules", schedules);
     }
 
     // Helper methods for validation
