@@ -150,4 +150,8 @@ public class OrganizationService {
     public List<OrganizationMembership> getMembers(Long orgId) {
         return orgRepo.findMembershipsByOrganizationId(orgId);
     }
+
+    public Organization getOrganizationById(Long organizationId) {
+        return orgRepo.findById(organizationId).get();
+    }
 }

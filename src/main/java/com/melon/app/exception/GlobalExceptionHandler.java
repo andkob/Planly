@@ -1,5 +1,6 @@
 package com.melon.app.exception;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -91,6 +92,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleUserNotInOrganizationException(UserNotInOrganizationException e) {
         logger.warn("User not in organization: {}", Map.of("error", e.getMessage()));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException e) {
+        logger.warn("Access denied: {}", Map.of("error", e.getMessage()));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+    }
+
+    @ExceptionHandler(ChatRoomNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleChatRoomNotFoundException(ChatRoomNotFoundException e) {
+        logger.warn("Chat room not found: {}", Map.of("error", e.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
     }
 
     // Class to represent the error response structure
