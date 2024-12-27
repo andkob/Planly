@@ -104,12 +104,11 @@ public abstract class BaseController {
         return Encode.forHtml(input.trim());
     }
 
-    // TODO - may want to handle this exception in the GEH
     protected Long validateId(String id) {
         try {
             return Long.parseLong(id);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid ID format");
+            return -1L;
         }
     }
 
