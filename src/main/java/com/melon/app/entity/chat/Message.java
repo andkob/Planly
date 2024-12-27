@@ -3,6 +3,7 @@ package com.melon.app.entity.chat;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.melon.app.entity.User;
 
 import jakarta.persistence.Column;
@@ -33,6 +34,7 @@ public class Message {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
+    @JsonIgnoreProperties({"organizationMemberships", "ownedOrganizations", "password", "authorities"})
     private User sender;
 
     @Column(nullable = false, columnDefinition = "TEXT")

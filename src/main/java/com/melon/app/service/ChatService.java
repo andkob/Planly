@@ -2,8 +2,10 @@ package com.melon.app.service;
 
 import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
+import com.melon.app.entity.User;
 import com.melon.app.entity.chat.*;
 import com.melon.app.exception.ChatRoomNotFoundException;
+import com.melon.app.repository.UserRepository;
 import com.melon.app.repository.chat.*;
 
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.access.AccessDeniedException;
 
 @Service
@@ -19,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final OrganizationService organizationService;
 
@@ -75,12 +79,10 @@ public class ChatService {
             .orElseThrow(() -> new ChatRoomNotFoundException("Chat room not found"));
 
         // Verify sender is a member of the chat room
-        ChatRoomMember sender = chatRoom.getMembers().stream()
-            .filter(m -> m.getOrganizationMembership().getUser().getId().equals(senderId))
-            .findFirst()
-            .orElseThrow(() -> new AccessDeniedException("User is not a member of this chat room"));
+        User sender = userRepository.findById(senderId)
+        .orElseThrow(() -> new AccessDeniedException("User is not a member of this chat room"));
 
-        Message message = new Message(chatRoom, sender.getOrganizationMembership().getUser(), content);
+        Message message = new Message(chatRoom, sender, content);
         return messageRepository.save(message);
     }
 

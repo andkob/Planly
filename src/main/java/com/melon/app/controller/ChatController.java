@@ -1,5 +1,7 @@
 package com.melon.app.controller;
 
+import com.melon.app.controller.DTO.ChatRoomDTO;
+import com.melon.app.controller.DTO.ChatRoomDTO.MessageDTO;
 import com.melon.app.entity.*;
 import com.melon.app.entity.chat.ChatRoom;
 import com.melon.app.entity.chat.ChatType;
@@ -60,7 +62,8 @@ public class ChatController extends BaseController {
         }
 
         List<ChatRoom> rooms = chatService.getUserChatRooms(currentUser.getId(), organizationId);
-        return ResponseEntity.ok(rooms);
+        List<ChatRoomDTO> dtos = ChatRoomDTO.fromEntityList(rooms);
+        return createSuccessResponseWithPayload("Successfully fetched chat rooms", dtos);
     }
 
     @PostMapping("/rooms")
@@ -97,7 +100,9 @@ public class ChatController extends BaseController {
         }
 
         List<Message> messages = chatService.getChatRoomMessages(chatRoomId, currentUser.getId());
-        return ResponseEntity.ok(messages);
+        List<MessageDTO> dtos = MessageDTO.fromEntityList(messages, currentUser.getId());
+
+        return createSuccessResponseWithPayload("Successfully fetched messages", dtos);
     }
 
     @PostMapping("/rooms/{roomId}/messages")

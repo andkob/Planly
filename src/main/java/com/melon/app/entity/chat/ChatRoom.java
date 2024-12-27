@@ -90,4 +90,17 @@ public class ChatRoom {
     public int hashCode() {
         return getClass().hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "ChatRoom{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", organization=" + (organization != null ? organization.getId() : null) +
+                ", type=" + type +
+                ", createdAt=" + createdAt +
+                ", membersCount=" + (members != null ? members.size() : 0) +
+                ", messagesCount=" + (messages != null ? messages.size() : 0) +
+                '}';
+    }
 }
