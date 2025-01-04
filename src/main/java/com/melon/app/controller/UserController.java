@@ -58,6 +58,11 @@ public class UserController extends BaseController {
         return createSuccessResponseWithPayload("Successfully fetched user organizations", orgIdNameDTOs);
     }
 
+    @GetMapping("/me/id")
+    public ResponseEntity<Map<String, Object>> getId(@AuthenticationPrincipal User user) {
+        return createSuccessResponseWithPayload("Successfully fetched ID", user.getId());
+    }
+
     @GetMapping("/me/organizations/all")
     public ResponseEntity<?> getAllOrganizationData(@AuthenticationPrincipal User currentUser) {
         Set<Organization> orgs = userService.getOrganizations(currentUser);

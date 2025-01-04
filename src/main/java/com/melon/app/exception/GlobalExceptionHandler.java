@@ -1,6 +1,6 @@
 package com.melon.app.exception;
 
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -26,6 +26,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(Map.of("error", "An unexpected error occurred. Please try again later."));
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidRequestException(InvalidRequestException ex) {
+        logError(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)

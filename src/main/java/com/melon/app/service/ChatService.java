@@ -1,12 +1,12 @@
 package com.melon.app.service;
 
-import com.melon.app.controller.DTO.OrganizationMemberDTO;
 import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
 import com.melon.app.entity.Role;
 import com.melon.app.entity.User;
 import com.melon.app.entity.chat.*;
 import com.melon.app.exception.ChatRoomNotFoundException;
+import com.melon.app.exception.InvalidRequestException;
 import com.melon.app.repository.UserRepository;
 import com.melon.app.repository.chat.*;
 
@@ -40,24 +40,36 @@ public class ChatService {
     public ChatRoom createChatRoom(Long organizationId, String name, ChatType type, Long creatorUserId, List<Long> memberIds) {
         // Verify creator is a member and is the Owner or an Admin
         Organization organization = organizationService.getOrganizationById(organizationId);
-        OrganizationMembership creatorMembership = organization.getMemberships().stream()
-            .filter(m -> m.getUser().getId().equals(creatorUserId) 
-                        && (m.getRole().equals(Role.OWNER) 
-                            || m.getRole().equals(Role.ADMIN)))
-            .findFirst()
-            .orElseThrow(() -> new AccessDeniedException("User is not authorized to create this chat room"));
+        isAdmin(organizationId, creatorUserId)
+            .orElseThrow(() -> new AccessDeniedException("Unauthorized: Please contact an administrator"));
 
-
-        // create a list of OrganizationMemberships that match the given user IDs
+        // create a list of OrganizationMemberships that match the given user IDs (owner should have been included from the frontend)
         Set<OrganizationMembership> members = organization.getMemberships().stream()
             .filter(m -> memberIds.contains(m.getUser().getId()))
             .collect(Collectors.toSet());
-        members.add(creatorMembership);
 
         // Create chat room
         ChatRoom chatRooom = new ChatRoom(name, organization, type, members);
 
         return chatRoomRepository.save(chatRooom);
+    }
+
+    public void deleteChatRoom(Long organizationId, Long roomId, Long callerId) {
+        // Verify user has permissions to perform this action
+        isAdmin(organizationId, callerId)
+            .orElseThrow(() -> new AccessDeniedException("Unauthorized: Please contact an administrator"));
+
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+            .orElseThrow(() -> new ChatRoomNotFoundException("Chat room does not exist"));
+
+        if (!chatRoom.getOrganization().getId().equals(organizationId)) {
+            throw new InvalidRequestException("Chat room does not belong to the specified organization");
+        }
+
+        // Delete messages, memberships, and chat room
+        messageRepository.deleteAllByChatRoomId(roomId);
+        chatRoomMemberRepository.deleteAllByChatRoomId(roomId);
+        chatRoomRepository.deleteById(roomId);
     }
 
     @Transactional
@@ -125,5 +137,19 @@ public class ChatService {
         }
 
         return messageRepository.countUnreadMessages(chatRoomId, member.getLastRead());
+    }
+
+    /**
+     * Helper method to determine if a caller of an operation is either the organization owner or an admin
+     * @param organizationId
+     * @param userId
+     * @return
+     */
+    private Optional<OrganizationMembership> isAdmin(Long organizationId, Long userId) {
+        return organizationService.getMembers(organizationId).stream()
+            .filter(m -> m.getUser().getId().equals(userId)
+                        && (m.getRole().equals(Role.OWNER)
+                            || m.getRole().equals(Role.ADMIN)))
+            .findFirst();
     }
 }

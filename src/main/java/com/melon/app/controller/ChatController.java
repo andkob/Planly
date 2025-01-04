@@ -48,6 +48,12 @@ public class ChatController extends BaseController {
         private ChatType type;
         private List<Long> memberIds;
     }
+
+    @Data
+    public static class DeleteChatRoomRequest {
+        private Long orgId;
+        private Long roomId;
+    }
     
     @Data
     public static class SendMessageRequest {
@@ -101,6 +107,17 @@ public class ChatController extends BaseController {
 
         // TODO - should be a DTO
         return createSuccessResponseWithPayload("Chat room created successfully", chatRoom);
+    }
+
+    @DeleteMapping("/rooms")
+    public ResponseEntity<Map<String, String>> deleteChatRoom(
+            @Valid @RequestBody DeleteChatRoomRequest request,
+            @AuthenticationPrincipal User currentUser) {
+        if (!isValidId(request.getOrgId()) || !isValidId(request.getRoomId())) {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid chat room ID");
+        }
+        chatService.deleteChatRoom(request.getOrgId(), request.getRoomId(), currentUser.getId());
+        return createSuccessResponse("Chat room removed successfully");
     }
 
     // Message Endpoints
