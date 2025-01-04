@@ -1,19 +1,58 @@
 import React, { useState } from 'react';
 import { createChatRoom } from '../../util/EndpointManager';
+import { Check, Square } from 'lucide-react';
 
-export default function CreateChatRoomModal({ selectedOrg, showModal, closeModal }) {
+export default function CreateChatRoomModal({ selectedOrg, currentUserId, showModal, closeModal, reloadChats, addToast }) {
   const [roomName, setRoomName] = useState('New Chat Room');
+  const [selectedMembers, setSelectedMembers] = useState(new Set([currentUserId]));
+  const [selectAll, setSelectAll] = useState(false);
 
-  const handleSubmit = async () => {
-    const memberIds = [1, 2];
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedMembers(new Set([currentUserId]));
+    } else {
+      const allMemberIds = selectedOrg.members.map(member => member.id);
+      setSelectedMembers(new Set(allMemberIds));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const toggleMember = (memberId) => {
+    const newSelected = new Set(selectedMembers);
+    if (newSelected.has(memberId)) {
+      newSelected.delete(memberId);
+      setSelectAll(false);
+    } else {
+      newSelected.add(memberId);
+      if (newSelected.size === selectedOrg.members.length) {
+        setSelectAll(true);
+      }
+    }
+    setSelectedMembers(newSelected);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (selectedMembers.size === 0) {
+      addToast('error', 'Please select at least one member');
+      return;
+    }
+
     const result = await createChatRoom(
       roomName,
       selectedOrg.id,
       'GROUP',
-      memberIds
+      Array.from(selectedMembers)
     );
-    // TODO - handle 'result' if necessary
-  }
+    
+    if (!result.error) {
+      addToast('success', result.message);
+      reloadChats();
+    } else {
+      addToast('error', result.error);
+    }
+    closeModal();
+  };
 
   return (
     showModal && (
@@ -32,14 +71,52 @@ export default function CreateChatRoomModal({ selectedOrg, showModal, closeModal
               />
             </div>
 
-            {/* TODO - Here should be a container showing members of the organization to add (also a select all button) */}
-            <div className="divide-y divide-gray-200">
-              {selectedOrg.members.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No members found</p>
-              ) : (
-                selectedOrg.members.map((member) => (
-                  <p>{member.email}</p>
-                ))
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">Select Members</label>
+                <button
+                  type="button"
+                  onClick={handleSelectAll}
+                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                >
+                  {selectAll ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              
+              <div className="border rounded-md divide-y divide-gray-200 max-h-64 overflow-y-auto">
+                {selectedOrg.members.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No members found</p>
+                ) : (
+                  selectedOrg.members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => member.id !== currentUserId && toggleMember(member.id)}
+                    >
+                      <div className="mr-3">
+                        {selectedMembers.has(member.id) ? (
+                          <div className="w-5 h-5 bg-indigo-600 text-white flex items-center justify-center rounded">
+                            <Check className="w-4 h-4" />
+                          </div>
+                        ) : (
+                          <Square className="w-5 h-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">
+                          {member.username}
+                          <span className='text-sm text-indigo-600'>{member.id === currentUserId && " (you)"}</span>
+                        </p>
+                        <p className="text-sm text-gray-500">{member.email}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {selectedMembers.size > 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {selectedMembers.size} member{selectedMembers.size !== 1 ? 's' : ''} selected
+                </p>
               )}
             </div>
 
@@ -63,4 +140,4 @@ export default function CreateChatRoomModal({ selectedOrg, showModal, closeModal
       </div>
     )
   );
-};
+}

@@ -1,10 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Send, Plus, Search, Users, Settings, ChevronDown } from 'lucide-react';
-import { fetchChatRooms, sendMessage, markChatAsRead, fetchMessages, fetchAllUserOrganizationData } from '../../util/EndpointManager';
+import { fetchChatRooms, sendMessage, markChatAsRead, fetchMessages, fetchAllUserOrganizationData, fetchUserId } from '../../util/EndpointManager';
 import CreateChatRoomModal from '../modals/CreateChatRoomModal';
+import ChatSettingsModal from '../modals/ChatSettingsModal';
 import Message from './Message';
+import Toast from '../notification/Toast';
 
 const ChatPage = () => {
+  const [currentuserId, setCurrentUserId] = useState(-1); // only used for chat creation logic
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrg, setSelectedOrg] = useState([]); // org data for the selected ID
   const [selectedOrgId, setSelectedOrgId] = useState(null);
@@ -16,13 +19,32 @@ const ChatPage = () => {
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // modal
+  // modals
   const [showCreateChatRoomModal, setShowCreateChatRoomModal] = useState(false);
   const openCreateChatRoomModal  = () => setShowCreateChatRoomModal(true);
   const closeCreateChatRoomModal = () => setShowCreateChatRoomModal(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // toast
+  const [toasts, setToasts] = useState([]);
+  const [toastCounter, setToastCounter] = useState(0);
+  const addToast = (type, message) => {
+    const newToast = {
+      id: toastCounter,
+      type,
+      message
+    };
+    setToasts(prev => [...prev, newToast]);
+    setToastCounter(prev => prev + 1);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   useEffect(() => {
     loadOrganizations();
+    fetchUserId(setCurrentUserId);
   }, []);
 
   useEffect(() => {
@@ -90,7 +112,6 @@ const ChatPage = () => {
     // Find the organization data matching this ID
     for (let i = 0; i < organizations.length; i++) {
       if (organizations[i].id == orgId) {
-        console.log(organizations[i].id);
         setSelectedOrg(organizations[i]);
       }
     }
@@ -140,10 +161,8 @@ const ChatPage = () => {
     }
   };
 
-  const handleCreateRoom = async () => {
+  const openCreateRoomModal = async () => {
     if (!selectedOrgId) return;
-
-    console.log('selected org: ', selectedOrg);
     openCreateChatRoomModal();
   };
 
@@ -180,7 +199,7 @@ const ChatPage = () => {
           </div>
           {selectedOrgId && (
             <button 
-              onClick={handleCreateRoom}
+              onClick={openCreateRoomModal}
               className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
             >
               <Plus className="h-5 w-5" />
@@ -236,7 +255,11 @@ const ChatPage = () => {
                   <button className="p-2 hover:bg-gray-100 rounded-lg" title="Manage Members">
                     <Users className="h-5 w-5 text-gray-600" />
                   </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg" title="Chat Settings">
+                  <button 
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                    title="Chat Settings"
+                    onClick={() => setIsSettingsModalOpen(true)}
+                  >
                     <Settings className="h-5 w-5 text-gray-600" />
                   </button>
                 </div>
@@ -295,13 +318,46 @@ const ChatPage = () => {
         )}
       </div>
 
+      {/* Modals */}
       {showCreateChatRoomModal && (
         <CreateChatRoomModal 
           selectedOrg={selectedOrg}
+          currentUserId={currentuserId}
           showModal={showCreateChatRoomModal}
           closeModal={closeCreateChatRoomModal}
+          reloadChats={() => {
+            loadChatRooms();
+          }}
+          addToast={addToast}
         />
       )}
+
+      {selectedRoom && (
+        <ChatSettingsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          room={selectedRoom}
+          orgId={selectedOrgId}
+          onUpdateRoom={() => {
+            console.warn('Updating not currently supported')
+          }}
+          onRoomDeleted={() => {
+            setSelectedRoom(null);
+            loadChatRooms();
+          }}
+          addToast={addToast}
+        />
+      )}
+
+      {/* Toast Notifications */}
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 };
