@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,9 @@ class ChatControllerTest {
         request.setOrganizationId(1L);
         request.setType(ChatType.GROUP);
 
-        when(chatService.createChatRoom(eq(1L), any(), eq(ChatType.GROUP), eq(1L)))
+        List<Long> members = new ArrayList<>();
+        members.add(1L);
+        when(chatService.createChatRoom(eq(1L), any(), eq(ChatType.GROUP), eq(1L), members))
             .thenReturn(testChatRoom);
 
         // Act

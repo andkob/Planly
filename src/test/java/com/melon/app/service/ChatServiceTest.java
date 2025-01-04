@@ -12,7 +12,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -60,7 +62,9 @@ class ChatServiceTest {
         when(chatRoomMemberRepository.save(any(ChatRoomMember.class))).thenReturn(new ChatRoomMember());
 
         // Act
-        ChatRoom result = chatService.createChatRoom(1L, "Test Room", ChatType.GROUP, 1L);
+        List<Long> members = new ArrayList<>();
+        members.add(1L); // just the creator
+        ChatRoom result = chatService.createChatRoom(1L, "Test Room", ChatType.GROUP, 1L, members);
 
         // Assert
         assertNotNull(result);
@@ -75,8 +79,10 @@ class ChatServiceTest {
         when(organizationService.getOrganizationById(1L)).thenReturn(testOrg);
         
         // Act & Assert
+        List<Long> members = new ArrayList<>();
+        members.add(999L);
         assertThrows(AccessDeniedException.class, () -> 
-            chatService.createChatRoom(1L, "Test Room", ChatType.GROUP, 999L)
+            chatService.createChatRoom(1L, "Test Room", ChatType.GROUP, 1L, members)
         );
     }
 
