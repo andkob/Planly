@@ -255,7 +255,11 @@ export default function UserDashboard() {
                   <h3 className="text-lg font-medium">My Schedules</h3>
                 </div>
                 <div className="overflow-x-auto">
-                  <UserSchedules schedules={schedules} fetchSchedules={fetchSchedules} />
+                  <UserSchedules 
+                    schedules={schedules}
+                    fetchSchedules={fetchSchedules}
+                    openAddScheduleModal={openAddScheduleModal}
+                  />
                 </div>
               </div>
             </div>
