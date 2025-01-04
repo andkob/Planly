@@ -445,8 +445,7 @@ export async function fetchOrganizationMemberScheduleEntries(orgId, setScheduleD
 }
 
 /**
- * TODO - This also needs to be updated (should not use response.text())
- * @param {*} setName 
+ * TODO - doc
  */
 export async function fetchUserFirstName(setName) {
   try {
@@ -457,9 +456,24 @@ export async function fetchUserFirstName(setName) {
       throw new Error(data.error || 'Failed to fetch user name');
     }
 
-    setName(data.message);
+    setName(data.message); // TODO - not consistent with the rest
   } catch (err) {
     console.error('Error fetching user first name:', err);
+  }
+}
+
+export async function fetchUserId(setId) {
+  try {
+    const response = await CallServer('/api/users/me/id', 'GET');
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error };
+    }
+
+    setId(data.content);
+  } catch (err) {
+    console.error('Unexpected error occurred uh oh', err);
   }
 }
 
@@ -549,7 +563,12 @@ export const createChatRoom = async (name, organizationId, type, memberIds) => {
     const response = await CallServer(
       '/api/chat/rooms',
       'POST',
-      { name, organizationId, type, memberIds}
+      {
+        name: name,
+        organizationId: organizationId,
+        type: type,
+        memberIds: memberIds
+      }
     );
     const data = await response.json();
 
@@ -563,6 +582,29 @@ export const createChatRoom = async (name, organizationId, type, memberIds) => {
     return { error: 'Failed to create chat room' };
   }
 };
+
+export const deleteChatRoom = async (orgId, roomId) => {
+  try {
+    const response = await CallServer(
+      '/api/chat/rooms',
+      'DELETE',
+      {
+        orgId: orgId,
+        roomId: roomId
+      }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.error || 'Failed to delete chat room'};
+    }
+
+    return data;
+  } catch (err) {
+    console.error('Error deleting chat room: ', err);
+    return { error: 'Oops. Failed to delete chat room'};
+  }
+}
 
 /**
  * Fetches messages for a specific chat room

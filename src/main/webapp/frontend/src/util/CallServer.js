@@ -24,7 +24,7 @@ export default async function CallServer(endpoint, method, data=null) {
     credentials: 'include',
   }
 
-  if ((method === 'POST' || method === 'PUT') && data !== null) {
+  if ((method === 'POST' || method === 'PUT' || method === 'DELETE') && data !== null) {
     optionsObj.body = JSON.stringify(data);
   }
 
