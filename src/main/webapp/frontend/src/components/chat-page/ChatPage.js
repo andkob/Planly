@@ -1,28 +1,35 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Send, Plus, Search, Users, Settings, ChevronDown } from 'lucide-react';
-import { fetchChatRooms, fetchUserOrganizations, createChatRoom, sendMessage, markChatAsRead, fetchMessages } from '../../util/EndpointManager';
+import { fetchChatRooms, sendMessage, markChatAsRead, fetchMessages, fetchAllUserOrganizationData } from '../../util/EndpointManager';
+import CreateChatRoomModal from '../modals/CreateChatRoomModal';
 import Message from './Message';
 
 const ChatPage = () => {
   const [organizations, setOrganizations] = useState([]);
+  const [selectedOrg, setSelectedOrg] = useState([]); // org data for the selected ID
+  const [selectedOrgId, setSelectedOrgId] = useState(null);
   const [chatRooms, setChatRooms] = useState([]);
   const [messages, setMessages] = useState([]);
   const [messageContent, setMessageContent] = useState('');
-  const [selectedOrg, setSelectedOrg] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
+
+  // modal
+  const [showCreateChatRoomModal, setShowCreateChatRoomModal] = useState(false);
+  const openCreateChatRoomModal  = () => setShowCreateChatRoomModal(true);
+  const closeCreateChatRoomModal = () => setShowCreateChatRoomModal(false);
 
   useEffect(() => {
     loadOrganizations();
   }, []);
 
   useEffect(() => {
-    if (selectedOrg) {
+    if (selectedOrgId) {
       loadChatRooms();
     }
-  }, [selectedOrg]);
+  }, [selectedOrgId]);
 
   useEffect(() => {
     if (selectedRoom) {
@@ -38,20 +45,15 @@ const ChatPage = () => {
   }, [messages]);
 
   const loadOrganizations = async () => {
-    try {
-      await fetchUserOrganizations(setOrganizations);
-    } catch (err) {
-      setError('Failed to load organizations');
-      console.error(err);
-    }
-  };
+    await fetchAllUserOrganizationData(setOrganizations);
+  }
 
   const loadChatRooms = async () => {
-    if (!selectedOrg) return;
+    if (!selectedOrgId) return;
     
     setLoading(true);
     try {
-      const rooms = await fetchChatRooms(selectedOrg);
+      const rooms = await fetchChatRooms(selectedOrgId);
       if (!rooms.error) {
         setChatRooms(rooms);
       } else {
@@ -83,7 +85,16 @@ const ChatPage = () => {
 
   const handleOrgChange = (e) => {
     const orgId = e.target.value;
-    setSelectedOrg(orgId);
+    setSelectedOrgId(orgId);
+
+    // Find the organization data matching this ID
+    for (let i = 0; i < organizations.length; i++) {
+      if (organizations[i].id == orgId) {
+        console.log(organizations[i].id);
+        setSelectedOrg(organizations[i]);
+      }
+    }
+
     setSelectedRoom(null);
   };
 
@@ -130,23 +141,10 @@ const ChatPage = () => {
   };
 
   const handleCreateRoom = async () => {
-    if (!selectedOrg) return;
+    if (!selectedOrgId) return;
 
-    try {
-      const result = await createChatRoom(
-        'New Chat Room', // TODO - modal for naming the chat and choosing members
-        selectedOrg,
-        'GROUP'
-      );
-      if (!result.error) {
-        loadChatRooms();
-      } else {
-        setError(result.error);
-      }
-    } catch (err) {
-      setError('Failed to create chat room');
-      console.error(err);
-    }
+    console.log('selected org: ', selectedOrg);
+    openCreateChatRoomModal();
   };
 
   return (
@@ -159,7 +157,7 @@ const ChatPage = () => {
             <select 
               className="w-full p-2 bg-white border rounded-lg appearance-none pr-10"
               onChange={handleOrgChange}
-              value={selectedOrg || ''}
+              value={selectedOrgId || ''}
             >
               <option value="">Select Organization</option>
               {organizations.map(org => (
@@ -180,7 +178,7 @@ const ChatPage = () => {
             />
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
           </div>
-          {selectedOrg && (
+          {selectedOrgId && (
             <button 
               onClick={handleCreateRoom}
               className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
@@ -223,7 +221,7 @@ const ChatPage = () => {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        {selectedOrg ? (
+        {selectedOrgId ? (
           <>
             {/* Chat Header */}
             {selectedRoom && (
@@ -296,6 +294,14 @@ const ChatPage = () => {
           </div>
         )}
       </div>
+
+      {showCreateChatRoomModal && (
+        <CreateChatRoomModal 
+          selectedOrg={selectedOrg}
+          showModal={showCreateChatRoomModal}
+          closeModal={closeCreateChatRoomModal}
+        />
+      )}
     </div>
   );
 };

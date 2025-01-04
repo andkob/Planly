@@ -1,23 +1,34 @@
 package com.melon.app.controller;
 
-import com.melon.app.controller.DTO.ChatRoomDTO;
-import com.melon.app.controller.DTO.ChatRoomDTO.MessageDTO;
-import com.melon.app.entity.*;
-import com.melon.app.entity.chat.ChatRoom;
-import com.melon.app.entity.chat.ChatType;
-import com.melon.app.entity.chat.Message;
-import com.melon.app.service.*;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import lombok.RequiredArgsConstructor;
-import java.util.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.melon.app.controller.DTO.ChatRoomDTO;
+import com.melon.app.controller.DTO.ChatRoomDTO.MessageDTO;
+import com.melon.app.entity.Role;
+import com.melon.app.entity.User;
+import com.melon.app.entity.chat.ChatRoom;
+import com.melon.app.entity.chat.ChatType;
+import com.melon.app.entity.chat.Message;
+import com.melon.app.service.ChatRoomMembershipService;
+import com.melon.app.service.ChatService;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -35,6 +46,7 @@ public class ChatController extends BaseController {
         
         private Long organizationId;
         private ChatType type;
+        private List<Long> memberIds;
     }
     
     @Data
@@ -83,9 +95,11 @@ public class ChatController extends BaseController {
             request.getOrganizationId(),
             sanitizedName,
             request.getType(),
-            currentUser.getId()
+            currentUser.getId(),
+            request.getMemberIds()
         );
-        
+
+        // TODO - should be a DTO
         return createSuccessResponseWithPayload("Chat room created successfully", chatRoom);
     }
 

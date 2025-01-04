@@ -1,7 +1,9 @@
 package com.melon.app.service;
 
+import com.melon.app.controller.DTO.OrganizationMemberDTO;
 import com.melon.app.entity.Organization;
 import com.melon.app.entity.OrganizationMembership;
+import com.melon.app.entity.Role;
 import com.melon.app.entity.User;
 import com.melon.app.entity.chat.*;
 import com.melon.app.exception.ChatRoomNotFoundException;
@@ -13,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -32,23 +37,27 @@ public class ChatService {
     }
 
     @Transactional
-    public ChatRoom createChatRoom(Long organizationId, String name, ChatType type, Long creatorUserId) {
-        // Verify creator is a member of the organization
+    public ChatRoom createChatRoom(Long organizationId, String name, ChatType type, Long creatorUserId, List<Long> memberIds) {
+        // Verify creator is a member and is the Owner or an Admin
         Organization organization = organizationService.getOrganizationById(organizationId);
         OrganizationMembership creatorMembership = organization.getMemberships().stream()
-            .filter(m -> m.getUser().getId().equals(creatorUserId))
+            .filter(m -> m.getUser().getId().equals(creatorUserId) 
+                        && (m.getRole().equals(Role.OWNER) 
+                            || m.getRole().equals(Role.ADMIN)))
             .findFirst()
-            .orElseThrow(() -> new AccessDeniedException("User is not a member of this organization"));
+            .orElseThrow(() -> new AccessDeniedException("User is not authorized to create this chat room"));
+
+
+        // create a list of OrganizationMemberships that match the given user IDs
+        Set<OrganizationMembership> members = organization.getMemberships().stream()
+            .filter(m -> memberIds.contains(m.getUser().getId()))
+            .collect(Collectors.toSet());
+        members.add(creatorMembership);
 
         // Create chat room
-        ChatRoom chatRoom = new ChatRoom(name, organization, type);
-        chatRoom = chatRoomRepository.save(chatRoom);
+        ChatRoom chatRooom = new ChatRoom(name, organization, type, members);
 
-        // Add creator as first member
-        ChatRoomMember creatorMember = new ChatRoomMember(chatRoom, creatorMembership);
-        chatRoomMemberRepository.save(creatorMember);
-
-        return chatRoom;
+        return chatRoomRepository.save(chatRooom);
     }
 
     @Transactional

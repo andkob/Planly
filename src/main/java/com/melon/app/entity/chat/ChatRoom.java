@@ -6,9 +6,11 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.melon.app.entity.Organization;
+import com.melon.app.entity.OrganizationMembership;
 
 @Entity
 @Table(name = "chat_rooms")
@@ -51,6 +53,21 @@ public class ChatRoom {
         this.organization = organization;
         this.type = type;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public ChatRoom(String name, Organization organization, ChatType type, Set<OrganizationMembership> members) {
+        this(name, organization, type);
+
+        // Initialize members if not already
+        if (this.members == null) {
+            this.members = new HashSet<>();
+        }
+        
+        // Create ChatRoomMember entities for each OrganizationMembership
+        members.forEach(membership -> {
+            ChatRoomMember member = new ChatRoomMember(this, membership);
+            this.members.add(member);
+        });
     }
 
     // Helper methods

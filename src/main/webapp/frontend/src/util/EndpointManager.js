@@ -464,8 +464,7 @@ export async function fetchUserFirstName(setName) {
 }
 
 /**
- * TODO - same thing -> return type not good.
- * TODO - IdsNames should be combined into this function
+ * Fetches IDs and Names of joined organizations
  * @param {*} setMyOrganizations 
  * @param {*} addToast 
  */
@@ -482,6 +481,9 @@ export async function fetchUserOrganizations(setMyOrganizations, addToast = null
       id: org.id,
       name: org.name
     }));
+
+    console.log(organizations);
+
     setMyOrganizations(organizations);
   } catch (error) {
     console.error('Error fetching organizations:', error);
@@ -489,13 +491,26 @@ export async function fetchUserOrganizations(setMyOrganizations, addToast = null
   }
 }
 
+export async function fetchAllUserOrganizationData(setOrganizations) {
+  try {
+    const response = await CallServer('/api/users/me/organizations/all', 'GET');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch joined organization data');
+    }
+
+    setOrganizations(data.content);
+    return { content: data.content };
+  } catch (error) {
+    console.error('Error fetching full joined organization data', error);
+  }
+}
+
+
 // =======================
 // Chat Endpoint Functions
 // =======================
-
-// ChatEndpoints.js
-
-// ChatEndpoints.js
 
 /**
  * Fetches all chat rooms for the given organization
@@ -526,14 +541,15 @@ export const fetchChatRooms = async (orgId) => {
  * @param {string} name - Chat room name
  * @param {number} organizationId - Organization ID
  * @param {string} type - Chat room type (GROUP/ANNOUNCEMENT)
+ * @param {Array}  memberIds - IDs of the members this organization will be preloaded with
  * @returns {Promise<{error?: string, message?: string, content?: Object}>} Response containing created room or error
  */
-export const createChatRoom = async (name, organizationId, type) => {
+export const createChatRoom = async (name, organizationId, type, memberIds) => {
   try {
     const response = await CallServer(
       '/api/chat/rooms',
       'POST',
-      { name, organizationId, type }
+      { name, organizationId, type, memberIds}
     );
     const data = await response.json();
 
@@ -541,7 +557,7 @@ export const createChatRoom = async (name, organizationId, type) => {
       return { error: data.error || 'Failed to create chat room' };
     }
 
-    return data; // Contains both message and content
+    return data; // return both message and content
   } catch (error) {
     console.error('Error creating chat room:', error);
     return { error: 'Failed to create chat room' };
