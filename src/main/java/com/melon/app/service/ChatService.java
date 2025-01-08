@@ -101,7 +101,7 @@ public class ChatService {
 
         // Verify sender is a member of the chat room
         User sender = userRepository.findById(senderId)
-        .orElseThrow(() -> new AccessDeniedException("User is not a member of this chat room"));
+            .orElseThrow(() -> new AccessDeniedException("User is not a member of this chat room"));
 
         Message message = new Message(chatRoom, sender, content);
         return messageRepository.save(message);

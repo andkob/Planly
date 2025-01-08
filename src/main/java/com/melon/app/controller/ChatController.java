@@ -81,6 +81,7 @@ public class ChatController extends BaseController {
 
         List<ChatRoom> rooms = chatService.getUserChatRooms(currentUser.getId(), organizationId);
         List<ChatRoomDTO> dtos = ChatRoomDTO.fromEntityList(rooms);
+
         return createSuccessResponseWithPayload("Successfully fetched chat rooms", dtos);
     }
 
@@ -104,9 +105,9 @@ public class ChatController extends BaseController {
             currentUser.getId(),
             request.getMemberIds()
         );
+        ChatRoomDTO dto = ChatRoomDTO.fromEntity(chatRoom);
 
-        // TODO - should be a DTO
-        return createSuccessResponseWithPayload("Chat room created successfully", chatRoom);
+        return createSuccessResponseWithPayload("Chat room created successfully", dto);
     }
 
     @DeleteMapping("/rooms")
@@ -153,7 +154,9 @@ public class ChatController extends BaseController {
 
         String sanitizedContent = sanitizeInput(request.getContent());
         Message message = chatService.sendMessage(chatRoomId, currentUser.getId(), sanitizedContent);
-        return createSuccessResponseWithPayload("Message sent successfully", message);
+        MessageDTO dto = MessageDTO.fromEntity(message, currentUser.getId());
+
+        return createSuccessResponseWithPayload("Message sent successfully", dto);
     }
 
     // Member Management Endpoints
@@ -214,8 +217,8 @@ public class ChatController extends BaseController {
         if (!isValidId(chatRoomId)) {
             return createErrorResponse(HttpStatus.BAD_REQUEST, "Invalid chat room ID");
         }
-
         long unreadCount = chatService.getUnreadMessageCount(chatRoomId, currentUser.getId());
-        return ResponseEntity.ok(Map.of("unreadCount", unreadCount));
+
+        return createSuccessResponseWithPayload("Successfully fetched unread count", unreadCount);
     }
 }
