@@ -95,6 +95,10 @@ export default function UserDashboard() {
     navigate('/login?logout=true');
   };
 
+  const displayComingSoon = () => {
+    addToast('info', 'Coming Soon!');
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Mobile Header */}
@@ -145,23 +149,23 @@ export default function UserDashboard() {
               </button>
     
               <nav className="space-y-2 flex-1">
-                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-                  <Users className="h-5 w-5 mr-3" /> Organizations
-                </a>
-                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-                  <Calendar className="h-5 w-5 mr-3" /> Events
-                </a>
                 <a href="edit-schedule" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
                   <Clock className="h-5 w-5 mr-3" /> Schedules
                 </a>
-                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-                  <Calendar className="h-5 w-5 mr-3" /> My Calendar
-                </a>
-                <a href="#" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
-                  <Calendar className="h-5 w-5 mr-3" /> Organization Calendar
-                </a>
                 <a href="chat" className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
                   <MessageCircle className="h-5 w-5 mr-3" /> Chat
+                </a>
+                <a href="#" onClick={displayComingSoon} className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                    <Users className="h-5 w-5 mr-3" /> Organizations
+                </a>
+                <a href="#" onClick={displayComingSoon} className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Calendar className="h-5 w-5 mr-3" /> Events
+                </a>
+                <a href="#" onClick={displayComingSoon} className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Calendar className="h-5 w-5 mr-3" /> My Calendar
+                </a>
+                <a href="#" onClick={displayComingSoon} className="flex items-center p-2 text-gray-700 hover:bg-gray-100 rounded">
+                  <Calendar className="h-5 w-5 mr-3" /> Organization Calendar
                 </a>
                 
                 {/* Owned Organizations */}

@@ -2,7 +2,7 @@ import CallServer from "./CallServer";
 
 /**
  * Attempts to log a user in on the server. On success, navigates to the user's dashboard.
- * @param {json} formData JSON data contraining Identifier, Password
+ * @param {json} formData JSON data containing Identifier, Password
  * @param {function} setMessage Sets the message state.
  * @param {function} setIsAuthenticated Defined in App.js. Sets the isAuthenticated state in App.js.
  * @param {function} setIsSubmitting Sets the isSubmitting state in UserLogin.js
@@ -306,9 +306,9 @@ export async function fetchIdsAndNames(setOwnedOrgs, setSelectedOrgId, addToast)
  * @param {*} setError 
  * @param {*} setIsNewEvents 
  */
-export async function fetchOrganizationEvents(orgId, setLoading, setError, setEvents, setIsNewEvents) {
-  setLoading(true);
-  setError('');
+export async function fetchOrganizationEvents(orgId, setLoading=null, setError=null, setIsNewEvents=null) {
+  if (setLoading) setLoading(true);
+  if (setError) setError('');
 
   try {
     const response = await CallServer(`/api/organizations/${orgId}/events`, 'GET');
@@ -317,13 +317,14 @@ export async function fetchOrganizationEvents(orgId, setLoading, setError, setEv
     if (!response.ok) {
       throw new Error(data.error || 'Failed to fetch events');
     }
-    setEvents(data.content);
+
+    return { content: data.content };
   } catch (err) {
     console.error('Error fetching events:', err);
-    setError(err.message || 'Failed to load events');
+    if (setError) setError(err.message || 'Failed to load events');
   } finally {
-    setIsNewEvents(false);
-    setLoading(false);
+    if (setIsNewEvents) setIsNewEvents(false);
+    if (setLoading) setLoading(false);
   }
 }
 
@@ -401,28 +402,26 @@ export async function fetchUserSchedules(setSchedules) {
  * @param {*} addToast 
  */
 export async function updateUserScheduleEntries(scheduleId, scheduleToUpdate, schedules, scheduleEntries, setSchedules, setOldScheduleEntries, addToast) {
-  CallServer(`/api/schedules/${scheduleId}`, 'PUT', scheduleToUpdate)
-    .then(response => {
-      const data = response.json();
-      if (!response.ok)
-        throw new Error(data.error || 'Failed to save changes.');
+  try {
+    const response = await CallServer(`/api/schedules/${scheduleId}`, 'PUT', scheduleToUpdate);
+    const data = await response.json();
 
-      return data.message;
-    })
-    .then((message) => {
-      // Update local state with the modified schedule entries
-      setSchedules(schedules.map(s =>
-        s.id === scheduleId
-          ? { ...s, entries: scheduleEntries }
-          : s
-      ));
-      setOldScheduleEntries(scheduleEntries);
-      addToast('success', message);
-    })
-    .catch((error) => {
-      console.error("Error updating schedule", error);
-      addToast('error', 'Failed to save changes. An unexpected error occurred.')
-    });
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to save changes.');
+    }
+
+    // Update local state with the modified schedule entries
+    setSchedules(schedules.map(s =>
+      s.id === scheduleId
+        ? { ...s, entries: scheduleEntries }
+        : s
+    ));
+    setOldScheduleEntries(scheduleEntries);
+    addToast('success', data.message);
+  } catch (error) {
+    console.error("Error updating schedule", error);
+    addToast('error', error.message);
+  }
 }
 
 /**
@@ -495,8 +494,6 @@ export async function fetchUserOrganizations(setMyOrganizations, addToast = null
       id: org.id,
       name: org.name
     }));
-
-    console.log(organizations);
 
     setMyOrganizations(organizations);
   } catch (error) {

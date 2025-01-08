@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Send, Plus, Search, Users, Settings, ChevronDown } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { Send, Plus, Search, Users, Settings, ChevronDown, ChevronLeft } from 'lucide-react';
 import { fetchChatRooms, sendMessage, markChatAsRead, fetchMessages, fetchAllUserOrganizationData, fetchUserId } from '../../util/EndpointManager';
 import CreateChatRoomModal from '../modals/CreateChatRoomModal';
 import ChatSettingsModal from '../modals/ChatSettingsModal';
@@ -18,6 +19,7 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
 
   // modals
   const [showCreateChatRoomModal, setShowCreateChatRoomModal] = useState(false);
@@ -67,7 +69,8 @@ const ChatPage = () => {
   }, [messages]);
 
   const loadOrganizations = async () => {
-    await fetchAllUserOrganizationData(setOrganizations);
+    const data = await fetchAllUserOrganizationData(setOrganizations);
+    if (data.content.length > 0) setSelectedOrgId(data.content[0].id); // set selected org to the first one
   }
 
   const loadChatRooms = async () => {
@@ -109,13 +112,20 @@ const ChatPage = () => {
     const orgId = e.target.value;
     setSelectedOrgId(orgId);
 
+    // handle placeholder selector
+    if (orgId === "") {
+      setSelectedOrg([]);
+      setSelectedRoom(null);
+      setChatRooms([]);
+      return;
+    }
+
     // Find the organization data matching this ID
     for (let i = 0; i < organizations.length; i++) {
       if (organizations[i].id == orgId) {
         setSelectedOrg(organizations[i]);
       }
     }
-
     setSelectedRoom(null);
   };
 
@@ -172,6 +182,15 @@ const ChatPage = () => {
       <div className="w-64 bg-white border-r flex flex-col">
         {/* Organization Selector */}
         <div className="p-4 border-b">
+          <button
+            className="text-blue-600 mb-4"
+            onClick={() => navigate("/dashboard")}
+          >
+            <span className="flex items-center space-x-4">
+              <ChevronLeft />
+              <span>Back to Dashboard</span>
+            </span>
+          </button> 
           <div className="relative">
             <select 
               className="w-full p-2 bg-white border rounded-lg appearance-none pr-10"

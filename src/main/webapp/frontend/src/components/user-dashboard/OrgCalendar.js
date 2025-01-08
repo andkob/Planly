@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Calendar as CalendarIcon, Plus, X, Clock, MapPin } from 'lucide-react';
+import { fetchOrganizationEvents } from '../../util/EndpointManager';
 
 const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -11,32 +12,19 @@ const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents 
 
   // Fetch events from the API
   const fetchEvents = async () => {
-    if (selectedOrgId === -1) return;
+    if (selectedOrgId === -1 || selectedOrgId === undefined) return;
 
-    try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await fetch(`/api/organizations/${selectedOrgId}/events`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch events');
-      
-      const data = await response.json();
-      const formattedEvents = data.map(event => ({
-        ...event,
-        start: new Date(event.date + 'T' + event.startTime),
-        end: new Date(event.date + 'T' + event.endTime), // Add duration when available
-        color: getEventColor(event.type)
-      }));
-      
-      setEvents(formattedEvents);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    }
+    const data = await fetchOrganizationEvents(selectedOrgId);
+    if (data.content.length <= 0) return;
+    
+    const formattedEvents = data.content.map(event => ({
+      ...event,
+      start: new Date(event.date + 'T' + event.startTime),
+      end: new Date(event.date + 'T' + event.endTime), // Add duration when available
+      color: getEventColor(event.type)
+    }));
+    
+    setEvents(formattedEvents);
   };
 
   useEffect(() => {

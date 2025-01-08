@@ -28,7 +28,8 @@ export default function OrganizationEvents({
 
   useEffect(() => {
     if (selectedOrgId !== -1 && selectedOrgId !== undefined) {
-      fetchOrganizationEvents(selectedOrgId, setLoading, setError, setEvents, setIsNewEvents);
+      const data = fetchOrganizationEvents(selectedOrgId, setLoading, setError, setIsNewEvents);
+      setEvents(data.content);
     }
   }, [selectedOrgId, isNewEvents]);
 

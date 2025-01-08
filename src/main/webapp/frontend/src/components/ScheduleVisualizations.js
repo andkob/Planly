@@ -81,7 +81,7 @@ const SortedScheduleVisualizations = ({ schedules, expandedSchedule, onToggle, o
               <div className="mt-6 space-y-6">
                 {/* Weekly Schedule Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                  <WeeklyScheduleGrid entries={schedule.entries} height={300} hourInterval={4} />
+                  <WeeklyScheduleGrid entries={schedule.entries} customCellHeight={25} hourInterval={2} />
                 </div>
 
                 {/* Event List Grouped by Day */}
