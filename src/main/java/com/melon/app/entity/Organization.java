@@ -72,7 +72,7 @@ public class Organization {
 
     public boolean removeUser(User user) {
         return memberships.removeIf(membership -> {
-            if (membership.getUser().equals(user)) {
+            if (membership.getUser().getId().equals(user.getId())) {
                 user.getOrganizationMemberships().remove(membership);
                 return true;
             }

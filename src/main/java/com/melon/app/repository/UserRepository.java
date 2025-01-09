@@ -35,4 +35,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Check if a user belongs to a specific organization
     @Query("SELECT COUNT(m) > 0 FROM OrganizationMembership m WHERE m.user.id = :userId AND m.organization.id = :organizationId")
     boolean isUserInOrganization(@Param("userId") Long userId, @Param("organizationId") Long organizationId);
+
+    // Load OrganizationMemberships eagerly while loading the user
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.organizationMemberships WHERE u.id = :userId")
+    Optional<User> findByIdWithMemberships(@Param("userId") Long userId);
 }

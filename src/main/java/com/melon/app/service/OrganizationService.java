@@ -21,6 +21,7 @@ import com.melon.app.exception.UserNotInOrganizationException;
 import com.melon.app.repository.OrganizationRepository;
 import com.melon.app.repository.UpcomingEventRepository;
 import com.melon.app.repository.UserRepository;
+import com.melon.app.repository.chat.ChatRoomMemberRepository;
 
 @Service
 public class OrganizationService {
@@ -34,11 +35,15 @@ public class OrganizationService {
     @Autowired
     private UpcomingEventRepository eventRepo;
 
+    @Autowired
+    private ChatRoomMemberRepository chatRoomMemberRepository;
+
+    @Transactional
     public String removeMember(Long orgId, Long userId) {
-        Organization org = orgRepo.findById(orgId)
+        Organization org = orgRepo.findByIdWithMemberships(orgId)
             .orElseThrow(() -> new OrganizationDoesNotExistException("Organization not found"));
         
-        User user = userRepo.findById(userId)
+        User user = userRepo.findByIdWithMemberships(userId)
             .orElseThrow(() -> new UserNotInOrganizationException("User not found"));
 
         String username = user.getUsername();
@@ -51,13 +56,18 @@ public class OrganizationService {
         if (membershipOpt.isEmpty()) {
             throw new UserNotInOrganizationException("User is not a member of this organization");
         }
+
         
         // Check if trying to remove an owner
         OrganizationMembership membership = membershipOpt.get();
         if (membership.getRole() == Role.OWNER) {
             throw new CannotRemoveOwnerException("Cannot remove the owner of the organization");
         }
-
+        
+        // First remove all chat room memberships for this user in this organization
+        chatRoomMemberRepository.deleteAllByOrganizationIdAndUserId(orgId, userId);
+        
+        // Finally remove the membership
         org.removeUser(user);
         orgRepo.save(org);
         userRepo.save(user);
