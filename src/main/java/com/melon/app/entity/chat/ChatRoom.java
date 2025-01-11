@@ -70,42 +70,12 @@ public class ChatRoom {
         });
     }
 
-    // Helper methods
-    public boolean addMember(ChatRoomMember member) {
-        if (members.add(member)) {
-            member.setChatRoom(this);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean removeMember(ChatRoomMember member) {
-        if (members.remove(member)) {
-            member.setChatRoom(null);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean addMessage(Message message) {
-        if (messages.add(message)) {
-            message.setChatRoom(this);
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ChatRoom)) return false;
         ChatRoom that = (ChatRoom) o;
         return id != null && id.equals(that.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 
     @Override

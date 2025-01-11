@@ -48,9 +48,4 @@ public class ChatRoomMember {
         ChatRoomMember that = (ChatRoomMember) o;
         return id != null && id.equals(that.getId());
     }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }

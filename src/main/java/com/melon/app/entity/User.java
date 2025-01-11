@@ -8,11 +8,15 @@ import java.util.HashSet;
 import java.util.List;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "\"user\"")  // Escape the table name due to "user" being a reserved keyword
 public class User implements UserDetails {
     
@@ -61,48 +65,12 @@ public class User implements UserDetails {
         this.ownedOrganizations = new HashSet<>();
     }
 
-    public boolean addOwnedOrganization(Organization org) {
-        if (ownedOrganizations.add(org)) {
-            org.setOwner(this);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean removeOwnedOrganization(Organization org) {
-        return ownedOrganizations.remove(org);
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
-    }
-
     @Override
     public String getPassword() {
         return passwordHash;
     }
 
-    public Set<OrganizationMembership> getOrganizationMemberships() {
-        return organizationMemberships;
-    }
-
-    public Set<Organization> getOwnedOrganizations() {
-        return ownedOrganizations;
-    }
-
-    public void setOwnedOrganizations(Set<Organization> ownedOrganizations) {
-        this.ownedOrganizations = ownedOrganizations;
-    }
-
+    // Unused stuff
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(); // TODO if roles, implement this accordingly
@@ -135,11 +103,6 @@ public class User implements UserDetails {
         if (!(o instanceof User)) return false;
         User user = (User) o;
         return id != null && id.equals(user.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 
     @Override

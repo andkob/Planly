@@ -22,7 +22,7 @@ public class Organization {
     private String organizationName;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id", nullable = true) // TODO - should be false
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -46,8 +46,7 @@ public class Organization {
 
     public Organization(String organizationName, User owner) {
         this.organizationName = organizationName;
-        this.owner = owner;
-        // addUser(owner, Role.OWNER); // TODO - this should happen here idk why im doing it independently in OrgService
+        addOwner(owner);
     }
 
     /**
@@ -55,66 +54,26 @@ public class Organization {
      * @param organizationName
      * @param id
      */
-    public Organization(Long id, String organizationName) {
+    public Organization(Long id, String organizationName, User owner) {
         this.id = id;
         this.organizationName = organizationName;
+        addOwner(owner);
     }
 
-    // Helper methods for managing users
-    public boolean addUser(User user, Role role) {
-        OrganizationMembership membership = new OrganizationMembership(user, this, role);
+    /**
+     * Upon creation of an organization, call this method to add the first member
+     * of the organization, the owner.
+     * @param owner
+     * @return
+     */
+    private void addOwner(User owner) {
+        this.owner = owner;
+        OrganizationMembership membership = new OrganizationMembership(owner, this, Role.OWNER);
         if (memberships.add(membership)) {
-            user.getOrganizationMemberships().add(membership);
-            return true;
+            owner.getOrganizationMemberships().add(membership);
         }
-        return false;
     }
 
-    public boolean removeUser(User user) {
-        return memberships.removeIf(membership -> {
-            if (membership.getUser().getId().equals(user.getId())) {
-                user.getOrganizationMemberships().remove(membership);
-                return true;
-            }
-            return false;
-        });
-    }
-
-    // Helper methods for managing events
-    public boolean addEvent(UpcomingEvent event) {
-        if (events.add(event)) {
-            event.setOrganization(this);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean removeEvent(UpcomingEvent event) {
-        if (events.remove(event)) {
-            event.setOrganization(null);
-            return true;
-        }
-        return false;
-    }
-
-    // Helper methods for managing schedules
-    public boolean addSchedule(Schedule schedule) {
-        if (schedules.add(schedule)) {
-            schedule.setOrganization(this);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean removeSchedule(Schedule schedule) {
-        if (schedules.remove(schedule)) {
-            schedule.setOrganization(null);
-            return true;
-        }
-        return false;
-    }
-
-    // Override equals() and hashCode() based on the ID
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

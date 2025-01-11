@@ -37,9 +37,4 @@ public class ScheduleEntry {
         this.eventEndTime = eventEndTime;
         this.eventName = eventName;
     }
-
-    @Override
-    public String toString() {
-        return "";
-    }
 }
