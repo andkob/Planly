@@ -18,6 +18,7 @@ import com.melon.app.exception.InvalidIdException;
 import com.melon.app.exception.OrganizationDoesNotExistException;
 import com.melon.app.exception.OrganizationException;
 import com.melon.app.exception.UserNotInOrganizationException;
+import com.melon.app.repository.OrganizationMembershipRepository;
 import com.melon.app.repository.OrganizationRepository;
 import com.melon.app.repository.UpcomingEventRepository;
 import com.melon.app.repository.UserRepository;
@@ -30,6 +31,12 @@ public class OrganizationService {
     private OrganizationRepository orgRepo;
 
     @Autowired
+    private OrganizationMembershipRepository organizationMembershipRepo;
+
+    @Autowired
+    private UpcomingEventRepository upcomingEventRepo;
+
+    @Autowired
     private UserRepository userRepo;
 
     @Autowired
@@ -40,37 +47,21 @@ public class OrganizationService {
 
     @Transactional
     public String removeMember(Long orgId, Long userId) {
-        Organization org = orgRepo.findByIdWithMemberships(orgId)
-            .orElseThrow(() -> new OrganizationDoesNotExistException("Organization not found"));
-        
-        User user = userRepo.findByIdWithMemberships(userId)
-            .orElseThrow(() -> new UserNotInOrganizationException("User not found"));
+        OrganizationMembership membership = organizationMembershipRepo
+            .findByOrganizationIdAndUserId(orgId, userId)
+            .orElseThrow(() -> new UserNotInOrganizationException("User is not a member of this organization"));
 
-        String username = user.getUsername();
-        
-        // Find the membership
-        Optional<OrganizationMembership> membershipOpt = org.getMemberships().stream()
-            .filter(m -> m.getUser().getId().equals(userId))
-            .findFirst();
-
-        if (membershipOpt.isEmpty()) {
-            throw new UserNotInOrganizationException("User is not a member of this organization");
-        }
-
-        
-        // Check if trying to remove an owner
-        OrganizationMembership membership = membershipOpt.get();
         if (membership.getRole() == Role.OWNER) {
             throw new CannotRemoveOwnerException("Cannot remove the owner of the organization");
         }
-        
-        // First remove all chat room memberships for this user in this organization
+
+        String username = membership.getUser().getUsername();
+
+        // Remove chat room memberships first
         chatRoomMemberRepository.deleteAllByOrganizationIdAndUserId(orgId, userId);
         
-        // Finally remove the membership
-        org.removeUser(user);
-        orgRepo.save(org);
-        userRepo.save(user);
+        // Remove organization membership
+        organizationMembershipRepo.deleteByOrganizationIdAndUserId(orgId, userId);
 
         return username;
     }
@@ -119,7 +110,6 @@ public class OrganizationService {
     public Organization createNewOrganization(String orgName, User owner) {
         owner = userRepo.findById(owner.getId()).get();
         Organization newOrg = new Organization(orgName, owner);
-        newOrg.addUser(owner, Role.OWNER); // add creator as the org owner
         return orgRepo.save(newOrg);
     }
 
@@ -145,8 +135,8 @@ public class OrganizationService {
         Organization org = orgRepo.findById(orgId)
             .orElseThrow(() -> new OrganizationDoesNotExistException("Organization not found"));
         
-        org.addEvent(event);
-        orgRepo.save(org);
+        event.setOrganization(org);
+        upcomingEventRepo.save(event);
     }
 
     public List<UpcomingEvent> getUpcomingEvents(Long orgId) {

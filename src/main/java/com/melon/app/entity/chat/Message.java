@@ -67,9 +67,4 @@ public class Message {
         Message that = (Message) o;
         return id != null && id.equals(that.getId());
     }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }

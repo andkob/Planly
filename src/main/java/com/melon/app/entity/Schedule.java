@@ -52,11 +52,4 @@ public class Schedule {
         this.scheduleName = scheduleName;
         this.user = owner;
     }
-
-    // public void setEntries(List<ScheduleEntry> entries) {
-    //     this.entries = entries;
-    //     for (ScheduleEntry entry : entries) {
-    //         entry.setSchedule(this);
-    //     }
-    // }
 }
