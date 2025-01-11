@@ -67,7 +67,7 @@ public class OrganizationService {
     }
 
     @Transactional // keeps the Hibernate session open throughout the method execution
-    public boolean joinOrganization(User user, String orgId) {
+    public Organization joinOrganization(User user, String orgId) {
         if (!orgId.matches("\\d+")) {
             throw new InvalidIdException("Invalid ID format: " + orgId);
         }
@@ -103,7 +103,7 @@ public class OrganizationService {
         orgRepo.save(org);
         userRepo.save(freshUser);
 
-        return true;
+        return org;
     }
 
     @Transactional

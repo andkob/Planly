@@ -155,17 +155,17 @@ export async function searchOrganizations(orgName, setLoading, setError, addToas
 
 /**
  * Used in JoinOrgModal.js. Attempts to associate a user with an organization of specified id.
- * @param {BigInt} orgId The id of the organization to join
- * @param {string} orgName The name of the organization to join
+ * @param {BigInt} org The id and name of the organization to join
  * @param {function} setLoading Sets the loading state
  * @param {function} addToast Adds a Toast notification
  * @param {function} setError Sets the error state
  * @param {function} closeModal Defined in UserDashboard. Closes the modal on success.
+ * @param {function} setMyOrganizations For updating the joined org state
  */
-export async function joinOrganization(orgId, orgName, setLoading, addToast, setError, closeModal) {
+export async function joinOrganization(org, setLoading, addToast, setError, closeModal, setMyOrganizations) {
   setLoading(true);
 
-  CallServer(`/api/organizations/${orgId}/members`, 'POST')
+  CallServer(`/api/organizations/${org.id}/members`, 'POST')
     .then(async response => {
       const data = await response.json();
       if (!response.ok) {
@@ -178,7 +178,13 @@ export async function joinOrganization(orgId, orgName, setLoading, addToast, set
         }
         return;
       }
-      addToast('success', `Successfully joined ${orgName}`);
+      const newOrg = {
+        id: org.id,
+        name: org.name
+      };
+
+      setMyOrganizations(prevOrgs => [...prevOrgs, newOrg]);
+      addToast('success', data.message);
       closeModal();
     })
     .catch(err => {

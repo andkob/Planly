@@ -54,17 +54,12 @@ public class OrganizationController extends BaseController {
         logSecurityEvent("JOIN_ORG_ATTEMPT", 
             String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
         
-        boolean success = orgService.joinOrganization(user, orgId);
+        Organization joinedOrg = orgService.joinOrganization(user, orgId);
         
-        if (success) {
-            logSecurityEvent("JOIN_ORG_SUCCESS", 
-                String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
-            return createSuccessResponse("Organization joined successfully");
-        } else {
-            logSecurityEvent("JOIN_ORG_FAILURE", 
-                String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
-            return createErrorResponse(HttpStatus.BAD_REQUEST, "Failed to join organization");
-        }
+        logSecurityEvent("JOIN_ORG_SUCCESS", 
+        String.format("User ID: %d, Org ID: %s", user.getId(), orgId));
+        
+        return createSuccessResponse(String.format("Successfully joined %s", joinedOrg.getName()));
     }
 
     @DeleteMapping("/{orgId}/members")

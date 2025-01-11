@@ -23,7 +23,7 @@ export default function UserDashboard() {
   const [showStartOrgModal, setShowStartOrgModal] = useState(false);
   const [schedules, setSchedules] = useState([]);
   const [isNewEvents, setIsNewEvents] = useState(false); // so OrganizationEvents knows when to refresh
-  const [myOrganizations, setMyOrganizations] = useState([]); // List of joined organization IDs
+  const [myOrganizations, setMyOrganizations] = useState([]); // List of joined organization IDs and Names
   const [selectedOrgId, setSelectedOrgId] = useState(-1); // Selected org ID (via dropdown)
                                                           // TODO - make a global dropdown since the calendar now relies on this too
   const [ownedOrgs, setOwnedOrgs] = useState([]); // List of organizations owned by this user
@@ -293,6 +293,7 @@ export default function UserDashboard() {
         <JoinOrgModal 
           showModal={showJoinOrgModal}  
           closeModal={closeJoinOrgModal}
+          setMyOrganizations={setMyOrganizations}
           addToast={addToast}
         />
       )}

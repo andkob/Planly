@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { joinOrganization, searchOrganizations } from "../../util/EndpointManager";
 
-export default function JoinOrgModal({ showModal, closeModal, addToast }) {
+export default function JoinOrgModal({ showModal, closeModal, setMyOrganizations, addToast }) {
   const [orgName, setOrgName] = useState('');
   const [matchingOrganizations, setMatchingOrganizations] = useState([]);
   const [error, setError] = useState('');
@@ -12,8 +12,8 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
     searchOrganizations(orgName, setLoading, setError, addToast, setMatchingOrganizations);
   };
 
-  const handleJoinOrg = (orgId, orgName) => {
-    joinOrganization(orgId, orgName, setLoading, addToast, setError, closeModal);
+  const handleJoinOrg = (org) => {
+    joinOrganization(org, setLoading, addToast, setError, closeModal, setMyOrganizations);
   };
 
   return (
@@ -59,7 +59,7 @@ export default function JoinOrgModal({ showModal, closeModal, addToast }) {
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleJoinOrg(org.id, org.name)}
+                          onClick={() => handleJoinOrg(org)}
                           disabled={loading}
                           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 disabled:opacity-50"
                         >
