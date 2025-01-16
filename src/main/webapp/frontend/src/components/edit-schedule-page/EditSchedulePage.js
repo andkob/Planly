@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, 
   Save, 
@@ -28,6 +28,7 @@ export default function EditSchedule() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeView, setActiveView] = useState('grid'); // 'grid' or 'chart'
   const navigate = useNavigate();
+  const location = useLocation();
 
   const addToast = (type, message) => {
     const newToast = {
@@ -48,13 +49,20 @@ export default function EditSchedule() {
       setIsLoading(true);
       const data = await fetchUserSchedules(setSchedules);
       if (data?.content?.length > 0) {
-        setActiveScheduleId(data.content[0].id);
+        const queryParams = new URLSearchParams(location.search);
+        const idOpt = queryParams.get('id');
+        
+        if (idOpt) {
+          setActiveScheduleId(parseInt(idOpt, 10)); // Convert string to number
+        } else {
+          setActiveScheduleId(data.content[0].id);
+        }
       }
       setIsLoading(false);
     };
-
+  
     fetchScheduleData();
-  }, []);
+  }, [location]);
 
   useEffect(() => {
     if (activeScheduleId) {

@@ -27,15 +27,16 @@ export default function OrganizationEvents({
   const[error, setError] = useState('');
 
   useEffect(() => {
-    fetchEvents();
-  }, [selectedOrgId, isNewEvents]);
-
-  const fetchEvents = async () => {
-    if (selectedOrgId !== -1 && selectedOrgId !== undefined) {
-      const data = await fetchOrganizationEvents(selectedOrgId, setLoading, setError, setIsNewEvents);
-      setEvents(data.content);
+    const fetchEvents = async () => {
+      if (selectedOrgId !== -1 && selectedOrgId !== undefined) {
+        const data = await fetchOrganizationEvents(selectedOrgId, setLoading, setError, setIsNewEvents);
+        setEvents(data.content);
+      }
     }
-  }
+    
+    fetchEvents();
+  }, [selectedOrgId, isNewEvents, setIsNewEvents]);
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {

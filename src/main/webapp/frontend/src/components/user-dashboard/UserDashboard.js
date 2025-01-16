@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutGrid, Calendar, Users, Clock, MessageCircle, LogOut, Boxes, Menu, X, CircleEllipsis } from 'lucide-react';
 import AddScheduleModal from '../modals/AddScheduleModal';
@@ -10,7 +10,7 @@ import Toast from '../notification/Toast';
 import CreateOrgModal from '../modals/CreateOrgModal';
 import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
-import { fetchIdsAndNames, fetchUserOrganizations, fetchUserSchedules, postNewSchedule } from '../../util/EndpointManager';
+import { fetchIdsAndNames, fetchUserOrganizations, fetchUserSchedules } from '../../util/EndpointManager';
 
 export default function UserDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -48,6 +48,16 @@ export default function UserDashboard() {
     }]);
   };
 
+  const addToast = useCallback((type, message) => {
+    const newToast = {
+      id: toastCounter,
+      type,
+      message
+    };
+    setToasts(prev => [...prev, newToast]);
+    setToastCounter(prev => prev + 1);
+  }, [toastCounter]);
+
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,36 +69,26 @@ export default function UserDashboard() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSidebarOpen]);
 
-  const fetchOwnedOrganizationIdsNames = async () => {
-    fetchIdsAndNames(setOwnedOrgs, setSelectedOrgId, addToast);
-  }
-
-  const fetchOrganizations = async () => {
-    fetchUserOrganizations(setMyOrganizations, addToast);
-  };
-
   useEffect(() => {
+    const fetchOwnedOrganizationIdsNames = async () => {
+      fetchIdsAndNames(setOwnedOrgs, setSelectedOrgId, addToast);
+    }
+  
+    const fetchOrganizations = async () => {
+      fetchUserOrganizations(setMyOrganizations, addToast);
+    };
+
     fetchOrganizations();
     fetchOwnedOrganizationIdsNames();
-  }, []);
-
-  const addToast = (type, message) => {
-    const newToast = {
-      id: toastCounter,
-      type,
-      message
-    };
-    setToasts(prev => [...prev, newToast]);
-    setToastCounter(prev => prev + 1);
-  };
+  }, [addToast]);
 
   const removeToast = (id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
-  const fetchSchedules = async () => {
+  const fetchSchedules = useCallback(async () => {
     fetchUserSchedules(setSchedules);
-  };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');

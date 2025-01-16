@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Clock, X, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, X, CalendarDays } from 'lucide-react';
 
 export default function WeeklyScheduleGrid({ 
   entries = [], 
@@ -18,19 +18,19 @@ export default function WeeklyScheduleGrid({
   const dayLetters = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const hours = Array.from({ length: Math.ceil(24/hourInterval) }, (_, i) => i * hourInterval);
 
-  const calculateCellHeight = () => {
-    if (customCellHeight !== -1) {
-      return customCellHeight;
-    }
-    if (!containerRef.current) return 50;
-    const containerHeight = containerRef.current.clientHeight;
-    return Math.max(30, Math.floor((containerHeight - 60) / 24));
-  };
-
   const totalHeight = cellHeight * 24;
 
   useEffect(() => {
     const updateDimensions = () => {
+      const calculateCellHeight = () => {
+        if (customCellHeight !== -1) {
+          return customCellHeight;
+        }
+        if (!containerRef.current) return 50;
+        const containerHeight = containerRef.current.clientHeight;
+        return Math.max(30, Math.floor((containerHeight - 60) / 24));
+      };
+      
       if (containerRef.current) {
         const containerWidth = containerRef.current.clientWidth;
         // Subtract the width of the time labels column (56px) and some padding

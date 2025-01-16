@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Calendar as CalendarIcon, Plus, X, Clock, MapPin } from 'lucide-react';
 import { fetchOrganizationEvents } from '../../util/EndpointManager';
 
+const EVENT_TYPES = {
+  BROTHERHOOD: { label: 'Brotherhood', color: 'bg-green-100 text-green-800' },
+  MANDATORY: { label: 'Mandatory', color: 'bg-red-300 text-red-800' },
+  SOCIAL: { label: 'Social', color: 'bg-blue-100 text-blue-800' },
+  PHILANTHROPY: { label: 'Philanthropy', color: 'bg-purple-300 text-purple-800' },
+  OTHER: { label: 'Other', color: 'bg-gray-300 text-gray-800' },
+  MEETING: { label: 'Meeting', color: 'bg-yellow-100 text-yellow-800' },
+  DEADLINE: { label: 'Deadline', color: 'bg-red-300 text-red-800' }
+};
+
 const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -10,40 +20,30 @@ const OrgCalendar = ({ selectedOrgId, openAddEventModal, ownedOrgs, isNewEvents 
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [filteredEventTypes, setFilteredEventTypes] = useState([]);
 
-  // Fetch events from the API
-  const fetchEvents = async () => {
-    if (selectedOrgId === -1 || selectedOrgId === undefined) return;
-
-    const data = await fetchOrganizationEvents(selectedOrgId);
-    if (data.content.length <= 0) return;
-    
-    const formattedEvents = data.content.map(event => ({
-      ...event,
-      start: new Date(event.date + 'T' + event.startTime),
-      end: new Date(event.date + 'T' + event.endTime), // Add duration when available
-      color: getEventColor(event.type)
-    }));
-    
-    setEvents(formattedEvents);
-  };
-
   useEffect(() => {
+    const getEventColor = (type) => {
+      return EVENT_TYPES[type]?.color || EVENT_TYPES.OTHER.color;
+    };
+    
+    // Fetch events from the API
+    const fetchEvents = async () => {
+      if (selectedOrgId === -1 || selectedOrgId === undefined) return;
+
+      const data = await fetchOrganizationEvents(selectedOrgId);
+      if (data.content.length <= 0) return;
+      
+      const formattedEvents = data.content.map(event => ({
+        ...event,
+        start: new Date(event.date + 'T' + event.startTime),
+        end: new Date(event.date + 'T' + event.endTime), // Add duration when available
+        color: getEventColor(event.type)
+      }));
+      
+      setEvents(formattedEvents);
+    };
+
     fetchEvents();
   }, [selectedOrgId, isNewEvents]);
-
-  const EVENT_TYPES = {
-    BROTHERHOOD: { label: 'Brotherhood', color: 'bg-green-100 text-green-800' },
-    MANDATORY: { label: 'Mandatory', color: 'bg-red-300 text-red-800' },
-    SOCIAL: { label: 'Social', color: 'bg-blue-100 text-blue-800' },
-    PHILANTHROPY: { label: 'Philanthropy', color: 'bg-purple-300 text-purple-800' },
-    OTHER: { label: 'Other', color: 'bg-gray-300 text-gray-800' },
-    MEETING: { label: 'Meeting', color: 'bg-yellow-100 text-yellow-800' },
-    DEADLINE: { label: 'Deadline', color: 'bg-red-300 text-red-800' }
-  };
-
-  const getEventColor = (type) => {
-    return EVENT_TYPES[type]?.color || EVENT_TYPES.OTHER.color;
-  };
 
   const FilterChip = ({ type, isSelected, onToggle }) => (
     <button

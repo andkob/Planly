@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -26,11 +26,7 @@ export default function OrganizationDashboard() {
   const [toasts, setToasts] = useState([]);
   const [toastCounter, setToastCounter] = useState(0);
 
-  useEffect(() => {
-    fetchOrganizationDetails(orgId, setOrgDetails, addToast);
-  }, [orgId]);
-
-  const addToast = (type, message) => {
+  const addToast = useCallback((type, message) => {
     const newToast = {
       id: toastCounter,
       type,
@@ -38,7 +34,11 @@ export default function OrganizationDashboard() {
     };
     setToasts(prev => [...prev, newToast]);
     setToastCounter(prev => prev + 1);
-  };
+  }, [toastCounter]);
+
+  useEffect(() => {
+    fetchOrganizationDetails(orgId, setOrgDetails, addToast);
+  }, [orgId, addToast]);
 
   const removeToast = (id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
