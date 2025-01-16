@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Send, Plus, Search, Users, Settings, ChevronDown, ChevronLeft } from 'lucide-react';
 import { fetchChatRooms, sendMessage, markChatAsRead, fetchMessages, fetchAllUserOrganizationData, fetchUserId } from '../../util/EndpointManager';
@@ -44,6 +44,25 @@ const ChatPage = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
+  const loadChatRooms = useCallback(async () => {
+    if (!selectedOrgId) return;
+
+    setLoading(true);
+    try {
+      const rooms = await fetchChatRooms(selectedOrgId);
+      if (!rooms.error) {
+        setChatRooms(rooms);
+      } else {
+        setError(rooms.error);
+      }
+    } catch (err) {
+      setError('Failed to load chat rooms');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedOrgId]);
+
   useEffect(() => {
     loadOrganizations();
     fetchUserId(setCurrentUserId);
@@ -53,9 +72,25 @@ const ChatPage = () => {
     if (selectedOrgId) {
       loadChatRooms();
     }
-  }, [selectedOrgId]);
+  }, [selectedOrgId, loadChatRooms]);
 
   useEffect(() => {
+    const loadMessages = async () => {
+      if (!selectedRoom?.id) return;
+      
+      try {
+        const result = await fetchMessages(selectedRoom.id);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setMessages(result.content || []);
+        }
+      } catch (err) {
+        setError('Failed to load messages');
+        console.error(err);
+      }
+    };
+
     if (selectedRoom) {
       loadMessages();
     } else {
@@ -73,41 +108,6 @@ const ChatPage = () => {
     if (data.content.length > 0) setSelectedOrgId(data.content[0].id); // set selected org to the first one
   }
 
-  const loadChatRooms = async () => {
-    if (!selectedOrgId) return;
-    
-    setLoading(true);
-    try {
-      const rooms = await fetchChatRooms(selectedOrgId);
-      if (!rooms.error) {
-        setChatRooms(rooms);
-      } else {
-        setError(rooms.error);
-      }
-    } catch (err) {
-      setError('Failed to load chat rooms');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMessages = async () => {
-    if (!selectedRoom?.id) return;
-    
-    try {
-      const result = await fetchMessages(selectedRoom.id);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setMessages(result.content || []);
-      }
-    } catch (err) {
-      setError('Failed to load messages');
-      console.error(err);
-    }
-  };
-
   const handleOrgChange = (e) => {
     const orgId = e.target.value;
     setSelectedOrgId(orgId);
@@ -122,7 +122,7 @@ const ChatPage = () => {
 
     // Find the organization data matching this ID
     for (let i = 0; i < organizations.length; i++) {
-      if (organizations[i].id == orgId) {
+      if (organizations[i].id == orgId) { // TODO - not using === bc one of these is a string (compiler gives warning tho)
         setSelectedOrg(organizations[i]);
       }
     }

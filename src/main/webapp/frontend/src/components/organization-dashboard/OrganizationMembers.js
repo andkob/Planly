@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { UserCircle, Mail, MoreVertical, UserCog, UserMinus } from 'lucide-react';
 import ConfirmDialog from './menus/ConfirmDialog';
 import { fetchOrganizationMembers, removeOrganizationMember } from '../../util/EndpointManager';
@@ -11,6 +11,10 @@ const OrganizationMembers = ({ orgId, addToast }) => {
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, userId: null, username: '' });
   const menuRef = useRef(null);
 
+  const fetchMembers = useCallback(async () => {
+    fetchOrganizationMembers(orgId, setMembers, setLoading, setError);
+  }, [orgId]);
+
   useEffect(() => {
     fetchMembers();
     const handleClickOutside = (event) => {
@@ -20,11 +24,7 @@ const OrganizationMembers = ({ orgId, addToast }) => {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [orgId]);
-
-  const fetchMembers = async () => {
-    fetchOrganizationMembers(orgId, setMembers, setLoading, setError);
-  };
+  }, [orgId, fetchMembers]);
 
   const handleChangeRole = (userId) => {
     // TODO: Implement role change logic

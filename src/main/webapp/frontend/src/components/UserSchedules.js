@@ -9,14 +9,14 @@ export default function UserSchedules( { schedules, fetchSchedules, openAddSched
 
   useEffect(() => {
     fetchSchedules();
-  }, []);
+  }, [fetchSchedules]);
 
   const toggleSchedule = (scheduleId) => {
       setExpandedSchedule(expandedSchedule === scheduleId ? null : scheduleId);
   };
 
   const handleEditSchedule = (scheduleId) => {
-    navigate("/edit-schedule");
+    navigate(`/edit-schedule?id=${scheduleId}`);
   };
 
   if (!schedules || schedules.length === 0) {

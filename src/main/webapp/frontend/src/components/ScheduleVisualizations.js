@@ -122,7 +122,7 @@ const SortedScheduleVisualizations = ({ schedules, expandedSchedule, onToggle, o
                         )}
                       </div>
                     ))}
-                    {!schedule.entries || schedule.entries.length === 0 && (
+                    {(!schedule.entries || schedule.entries.length === 0) && (
                       <p className="text-sm text-gray-500">No events available.</p>
                     )}
                   </div>
