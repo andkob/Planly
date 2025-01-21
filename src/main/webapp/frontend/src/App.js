@@ -5,7 +5,7 @@ import Register from './components/login/Register';
 import UserDashboard from './components/user-dashboard/UserDashboard';
 import EditSchedule from './components/edit-schedule-page/EditSchedulePage';
 import OrganizationDashboard from './components/organization-dashboard/OrganizationDashboard';
-import { validateToken } from './util/JwtAuth';
+import { checkAuthStatus } from './util/JwtAuth';
 import ChatPage from './components/chat-page/ChatPage';
 
 function App() {
@@ -14,13 +14,18 @@ function App() {
 
   // Check if the user is authenticated when the app loads
   useEffect(() => {
-    const token = localStorage.getItem("jwtToken");
-    if (token && validateToken(token)) {
-      setIsAuthenticated(true);
-    } else {
-      setIsAuthenticated(false);
-    }
-    setLoading(false);
+    const validateAuth = async () => {
+      try {
+        const isValid = await checkAuthStatus();
+        setIsAuthenticated(isValid);
+      } catch (error) {
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    validateAuth();
   }, []);
 
   // Protected Route wrapper component

@@ -14,12 +14,10 @@ export default async function CallServer(endpoint, method, data=null) {
       return;
   }
 
-  const token = localStorage.getItem('jwtToken'); // TODO - Temporary
   const optionsObj = {  
     method: `${method}`,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
     },
     credentials: 'include',
   }

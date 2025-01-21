@@ -91,8 +91,22 @@ export default function UserDashboard() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('jwtToken');
-    navigate('/login?logout=true');
+    const clearJwtCookie = async () => {
+      try {
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          navigate('/login?logout=true');
+        }
+      } catch (error) {
+        console.error('Error logging out: ', error);
+      }
+    }
+
+    clearJwtCookie();
   };
 
   const displayComingSoon = () => {

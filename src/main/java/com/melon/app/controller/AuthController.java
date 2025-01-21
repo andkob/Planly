@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,8 @@ import com.melon.app.exception.UsernameAlreadyExistsException;
 import com.melon.app.security.JwtUtil;
 import com.melon.app.service.UserService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 /**
@@ -37,11 +41,28 @@ public class AuthController extends BaseController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    private void addJwtCookie(HttpServletResponse response, String jwt) {
+        Cookie cookie = new Cookie("jwt", jwt);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true); // only send over https
+        cookie.setPath("/");
+        cookie.setMaxAge(36000); // 10 hrs
+
+        // In development, you might want to set the domain explicitly
+        // jwtCookie.setDomain("localhost");
+
+        response.addCookie(cookie);
+    }
+
     /**
      * Handles user login by verifying credentials and generating a JWT token on successful authentication.
      */
     @PostMapping("/sessions")
-    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest loginReqest, BindingResult bindingResult) {
+    public ResponseEntity<Map<String, String>> login(
+            @Valid @RequestBody LoginRequest loginReqest,
+            BindingResult bindingResult,
+            HttpServletResponse response) {
+            
         if (bindingResult.hasErrors()) {
             return handleValidationErrors(bindingResult);
         }
@@ -57,8 +78,9 @@ public class AuthController extends BaseController {
             
             if (user.isPresent()) {
                 String jwt = jwtUtil.generateToken(user.get().getUsername());
+                addJwtCookie(response, jwt); // Add the HTTP only cookie containing the JWT
                 logSecurityEvent("Login", "Successful login for user: " + sanitizedIdentifier);
-                return ResponseEntity.ok(Map.of("token", jwt));
+                return createSuccessResponse("Login successful");
             } else {
                 logSecurityEvent("Login", "Failed login attempt for user: " + sanitizedIdentifier);
                 return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials");
@@ -121,5 +143,38 @@ public class AuthController extends BaseController {
             logError("Registration error", e);
             return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during registration");
         }
+    }
+
+    /**
+     * Validates the current session and returns basic user info if authenticated
+     */
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateSession(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            User user = (User) authentication.getPrincipal();
+            return ResponseEntity.ok(Map.of(
+                "authenticated", true,
+                "username", user.getUsername()
+            ));
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("authenticated", false));
+    }
+
+    /**
+     * Handles user logout by clearing the JWT cookie.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        // Create a cookie with the same name but null value and 0 max age to remove it
+        Cookie jwtCookie = new Cookie("jwt", null);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(true);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0); // Immediately expires the cookie
+        
+        response.addCookie(jwtCookie);
+        
+        return ResponseEntity.ok(Map.of("message", "Logout successful"));
     }
 }
