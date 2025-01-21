@@ -23,8 +23,8 @@ export async function userLogin(formData, setMessage, setIsAuthenticated, setIsS
     const data = await response.json();
 
     if (response.ok) {
-      localStorage.setItem('jwtToken', data.token);
-      setMessage('Login successful');
+      // localStorage.setItem('jwtToken', data.token);
+      setMessage(data.message);
       setIsAuthenticated(true);
       navigate('/dashboard');
     } else {
