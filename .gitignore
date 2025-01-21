@@ -48,6 +48,7 @@ src/main/webapp/frontend/build
 
 # misc
 src/main/webapp/frontend/.DS_Store
+src/main/webapp/frontend/.env
 src/main/webapp/frontend/.env.local
 src/main/webapp/frontend/.env.development.local
 src/main/webapp/frontend/.env.test.local
@@ -56,6 +57,9 @@ src/main/webapp/frontend/.env.production.local
 src/main/webapp/frontend/npm-debug.log*
 src/main/webapp/frontend/yarn-debug.log*
 src/main/webapp/frontend/yarn-error.log*
+
+# certs
+src/main/webapp/frontend/certs
 
 # other
 /stashed

@@ -29,6 +29,8 @@ public class SecurityConfig {
         http
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable()) // TODO Disable CSRF protection (not recommended in production)
+            .requiresChannel(channel -> channel
+                .anyRequest().requiresSecure()) // Require HTTPS for all requests
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // Allow preflight CORS requests
                 .requestMatchers("/api/auth/sessions", "/api/auth/users").permitAll() // allow everyone to access these endpoints
