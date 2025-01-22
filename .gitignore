@@ -34,6 +34,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Keystore ###
+src/main/resources/keystore.p12
+
 ### React App ###
 # dependencies
 src/main/webapp/frontend/node_modules
@@ -60,6 +63,7 @@ src/main/webapp/frontend/yarn-error.log*
 
 # certs
 src/main/webapp/frontend/certs
+
 
 # other
 /stashed
