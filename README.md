@@ -172,6 +172,8 @@ erDiagram
 #### Authentication
 - POST `/api/auth/sessions`: User login with JWT token response
 - POST `/api/auth/users`: New user registration
+- GET `/api/auth/validate`: Validate the current session
+- POST `/logout`: Clear the JWT cookie
 
 #### Organizations
 - POST `/api/organizations/new`: Create new organization
@@ -206,7 +208,7 @@ erDiagram
 - GET `api/users/me/organizations`: Get organizations the current user is a member of
 
 ## 🚧 Getting Started
-***Note:** This project is currently in development (many security vulnerabilities have not yet been addressed). Please follow the instructions below only if you are interested in building on it or trying out the existing features.*
+***Note:** This project is currently in development. Please follow the instructions below only if you are interested in building on it or trying out the existing features.*
 
 ### Prerequisites
 - Java JDK 21
@@ -220,36 +222,98 @@ erDiagram
 git clone https://github.com/andkob/Planly.git
 cd Planly
 ```
+
 2. Configure JWT Secret
 *This is a temporary solution for development only*
 * If you're on Linux or macOS, you can generate a random secret key with the following command:
     ```bash
-    $ openssl rand -base64 32
+    openssl rand -base64 32
     ```
     Or if you're on Windows, you can use the provided powershell script located in the root directory:
     ```bash
-    $ powershell -File jwt-secret-generator.ps1
+    powershell -File jwt-secret-generator.ps1
     ```
-* Copy the generated secret and hardcode it into the **application.properties** file (located in resources)
+* Copy the generated secret and add the following line to the **application.properties** file
 ```properties
-jwt.secret=YourSuperSecretKeyThatIsHardToGuess
+# Add this to src/main/resources/application.properties
+jwt.secret=YourGeneratedSecretKey
 ```
-3. Build and Run Backend
+
+3. Create a self-signed SSL certificate (for development only)
+```bash
+keytool -genkeypair -alias your_key_alias -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore keystore.p12 -validity 365
+
+# You will be prompted for:
+# - Keystore password (remember this for application.properties)
+# - Your name and organizational details (can use defaults for development)
+# - Confirmation of the details
+```
+Place the generated keystore.p12 file in the project's src/main/resources directory.
+
+4. Add SSL configuration to application.properties
+```properties
+# SSL Configuration
+server.ssl.key-store=classpath:keystore.p12
+server.ssl.key-store-type=PKCS12
+server.ssl.key-alias=your_key_alias
+server.port=8443
+
+# Add this line with your keystore password
+server.ssl.key-store-password=your_keystore_password
+```
+
+5. Build and Run Backend
 ```bash
 mvn clean install
 mvn spring-boot:run
 ```
-4. Install and Run the React Development Server
+
+6. Create a .env file in the React root (src/main/webapp/frontend) with the following content:
 ```bash
-cd src/main/webapp/frontend
+# Create .env in src/main/webapp/frontend/.env
+HTTPS=true
+# Assuming mkcert files are in the frontend directory:
+SSL_CRT_FILE=./localhost.pem
+SSL_KEY_FILE=./localhost-key.pem
+```
+For development, you can generate these certificates using mkcert
+```bash
+mkcert -install
+mkcert localhost
+```
+This will generate localhost.pem and localhost-key.pem files. Ensure the paths match those in your .env file.
+
+7. Install and Run the React Development Server
+```bash
 npm install
 npm start
 ```
-5. Access the application at http://localhost:3000
+8. Access the application at https://localhost:3000
+
+9. Verify Installation
+- Backend should be running on https://localhost:8443
+- Frontend should be running on https://localhost:3000
+- You should see the login page when accessing the frontend URL
+- Your browser might warn about self-signed certificates (this is normal in development)
+
+### Common Issues
+1. Certificate errors in browser
+   - This is expected with self-signed certificates
+   - Click "Advanced" and proceed to the website
+
+2. Frontend can't connect to backend
+   - Ensure backend is running on port 8443
+   - Check that all SSL configurations match
+   - Verify proxy setting in package.json points to https://localhost:8443
+
+3. CORS errors
+   - Verify SecurityConfig.java has correct CORS settings
+   - Check that frontend URL matches allowed origins in CORS configuration
 
 ## 🔜 Upcoming Features
 - Google OAuth 2.0 integration
 - Google Calendar synchronization
+- GroupMe synchronization
 - Enhanced event management tools
 - Mobile application
 
