@@ -1,6 +1,8 @@
 package com.melon.app.exception;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -26,6 +28,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(Map.of("error", "An unexpected error occurred. Please try again later."));
+    }
+
+    /**
+     * This happens if a user is not found but was issued a JWT with a non-existing username.
+     * Measures have been taken in the frontend to attempt to avoid this, but I'm not sure it won't happen for
+     * different reasons.
+     * This error should only occur in development.
+     */
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handledUsernameNotFoundException(UsernameNotFoundException ex) {
+        logError(ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "An unexpected error occurred. Please clear cookies in your browser."));
     }
 
     @ExceptionHandler(InvalidRequestException.class)

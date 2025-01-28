@@ -32,7 +32,7 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isEmpty()) {
-            throw new UsernameNotFoundException("User not found with email: " + username);
+            throw new UsernameNotFoundException("User not found with username: " + username);
         }
         return user.get();
     }

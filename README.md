@@ -47,6 +47,28 @@ Planly is a sophisticated web application engineered to streamline schedule coor
 - Session management
 - Protected API endpoints
 
+## Deployment
+
+Planly uses a multi-tier deployment architecture:
+
+### Backend (API)
+- Spring Boot application running on a private server
+- PostgreSQL database running locally on the server
+- Exposed securely through Cloudflare Tunnel at `api.plan-ly.com`
+- Protected by JWT authentication
+
+### Frontend
+- React application hosted on Cloudflare Pages
+- Accessible at `plan-ly.com`
+- Makes API calls to `api.plan-ly.com`
+
+### Security & Infrastructure
+- All traffic proxied through Cloudflare
+- SSL/TLS encryption using Cloudflare's Full mode
+- Cloudflare Tunnel provides secure connection without exposing server IP
+- CORS configured to allow only legitimate origins
+- Environment variables managed securely for different deployment stages
+
 ## 🔧 Technical Implementation
 
 ### Backend Architecture
@@ -208,7 +230,7 @@ erDiagram
 - GET `api/users/me/organizations`: Get organizations the current user is a member of
 
 ## 🚧 Getting Started
-***Note:** This project is currently in development. Please follow the instructions below only if you are interested in building on it or trying out the existing features.*
+***Note:** This project is currently in development. Please follow the instructions below only if you are interested in running it locally on your machine and building on it.*
 
 ### Prerequisites
 - Java JDK 21
@@ -239,62 +261,38 @@ cd Planly
 jwt.secret=YourGeneratedSecretKey
 ```
 
-3. Create a self-signed SSL certificate (for development only)
-```bash
-keytool -genkeypair -alias your_key_alias -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore keystore.p12 -validity 365
-
-# You will be prompted for:
-# - Keystore password (remember this for application.properties)
-# - Your name and organizational details (can use defaults for development)
-# - Confirmation of the details
-```
-Place the generated keystore.p12 file in the project's src/main/resources directory.
-
-4. Add SSL configuration to application.properties
+3. Setup H2 Development Database.
+In application.properties:
 ```properties
-# SSL Configuration
-server.ssl.key-store=classpath:keystore.p12
-server.ssl.key-store-type=PKCS12
-server.ssl.key-alias=your_key_alias
-server.port=8443
+# Uncomment this line for an in-memory database:
+# spring.datasource.url=jdbc:h2:mem:testdb
 
-# Add this line with your keystore password
-server.ssl.key-store-password=your_keystore_password
+# Comment this line out:
+spring.datasource.url=jdbc:h2:file:~/testdb
+```
+or:
+```properties
+# Adjust the path of your file-based database
+spring.datasource.url=jdbc:h2:file:~/testdb
 ```
 
-5. Build and Run Backend
+4. Build and Run Backend
 ```bash
 mvn clean install
 mvn spring-boot:run
 ```
 
-6. Create a .env file in the React root (src/main/webapp/frontend) with the following content:
-```bash
-# Create .env in src/main/webapp/frontend/.env
-HTTPS=true
-# Assuming mkcert files are in the frontend directory:
-SSL_CRT_FILE=./localhost.pem
-SSL_KEY_FILE=./localhost-key.pem
-```
-For development, you can generate these certificates using mkcert
-```bash
-mkcert -install
-mkcert localhost
-```
-This will generate localhost.pem and localhost-key.pem files. Ensure the paths match those in your .env file.
-
-7. Install and Run the React Development Server
+5. Install and Run the React Development Server
 ```bash
 npm install
 npm start
 ```
-8. Access the application at https://localhost:3000
+8. Access the application at http://localhost:3000
 
 9. Verify Installation
-- Backend should be running on https://localhost:8443
+- Backend should be running on https://localhost:8080
 - Frontend should be running on https://localhost:3000
 - You should see the login page when accessing the frontend URL
-- Your browser might warn about self-signed certificates (this is normal in development)
 
 ### Common Issues
 1. Certificate errors in browser
@@ -302,9 +300,8 @@ npm start
    - Click "Advanced" and proceed to the website
 
 2. Frontend can't connect to backend
-   - Ensure backend is running on port 8443
-   - Check that all SSL configurations match
-   - Verify proxy setting in package.json points to https://localhost:8443
+   - Ensure backend is running on port 8080
+   - Verify server URL in .env.development points to http://localhost:8080
 
 3. CORS errors
    - Verify SecurityConfig.java has correct CORS settings

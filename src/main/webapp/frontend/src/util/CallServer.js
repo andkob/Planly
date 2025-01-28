@@ -1,4 +1,7 @@
 export default async function CallServer(endpoint, method, data=null) {
+  const baseUrl = process.env.REACT_APP_API_URL;
+  const fullUrl = `${baseUrl}${endpoint}`;
+
   switch (method) {
     case 'GET':
       break;
@@ -27,7 +30,7 @@ export default async function CallServer(endpoint, method, data=null) {
   }
 
   // Make the call
-  const response = await fetch(endpoint, optionsObj);
+  const response = await fetch(fullUrl, optionsObj);
 
   return response;
 }

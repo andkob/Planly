@@ -12,7 +12,7 @@ import AddEventModal from '../modals/AddEventModal';
 import OrganizationEvents from '../OrganizationEvents';
 import { fetchIdsAndNames, fetchUserOrganizations, fetchUserSchedules } from '../../util/EndpointManager';
 
-export default function UserDashboard() {
+export default function UserDashboard({ setIsAuthenticated }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -93,12 +93,13 @@ export default function UserDashboard() {
   const handleLogout = () => {
     const clearJwtCookie = async () => {
       try {
-        const response = await fetch('/api/auth/logout', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/logout`, {
           method: 'POST',
           credentials: 'include'
         });
 
         if (response.ok) {
+          setIsAuthenticated(false); // to prevent rerouting to /dashboard (since isAuthenticated woudn't update until /validate)
           navigate('/login?logout=true');
         }
       } catch (error) {

@@ -149,7 +149,7 @@ public class AuthController extends BaseController {
      * Validates the current session and returns basic user info if authenticated
      */
     @GetMapping("/validate")
-    public ResponseEntity<?> validateSession(Authentication authentication) {
+    public ResponseEntity<?> validateSession(Authentication authentication, HttpServletResponse response) {
         if (authentication != null && authentication.isAuthenticated()) {
             User user = (User) authentication.getPrincipal();
             return ResponseEntity.ok(Map.of(
@@ -157,6 +157,7 @@ public class AuthController extends BaseController {
                 "username", user.getUsername()
             ));
         }
+        clearJwtCookie(response);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(Map.of("authenticated", false));
     }
@@ -166,6 +167,11 @@ public class AuthController extends BaseController {
      */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        clearJwtCookie(response);
+        return ResponseEntity.ok(Map.of("message", "Logout successful"));
+    }
+
+    private HttpServletResponse clearJwtCookie(HttpServletResponse response) {
         // Create a cookie with the same name but null value and 0 max age to remove it
         Cookie jwtCookie = new Cookie("jwt", null);
         jwtCookie.setHttpOnly(true);
@@ -174,7 +180,6 @@ public class AuthController extends BaseController {
         jwtCookie.setMaxAge(0); // Immediately expires the cookie
         
         response.addCookie(jwtCookie);
-        
-        return ResponseEntity.ok(Map.of("message", "Logout successful"));
+        return response;
     }
 }
