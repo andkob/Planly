@@ -272,14 +272,25 @@ mvn clean install
 ```
 *If you choose to run the server manually you will need to set the JWT_SECRET environment variable yourself*
 
-5. Install and Run the React Development Server
+5. Install frontend dependencies
 ```bash
+cd src/main/webapp/frontend
 npm install
+```
+
+6. Configure frontend environment variables
+```bash
+./envconfig.sh
+```
+
+7. Run the React Development Server
+```bash
 npm start
 ```
-6. Access the application at http://localhost:3000
 
-7. Verify Installation
+8. Access the application at http://localhost:3000
+
+9. Verify Installation
 - Backend should be running on https://localhost:8080
 - Frontend should be running on https://localhost:3000
 - You should see the login page when accessing the frontend URL

@@ -48,7 +48,7 @@ src/main/webapp/frontend/coverage
 
 # production
 src/main/webapp/frontend/build
-src/main/webapp/frontend/.env.production
+src/main/webapp/frontend/*.env.*
 src/main/resources/application-prod.properties
 
 
