@@ -36,6 +36,14 @@ function App() {
     return children;
   };
 
+  // Will prevent access to /login until the current user logs out and the jwt is cleared
+  const LoginRoute = ({ children }) => {
+    if (isAuthenticated) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    return children;
+  }
+
   // Error Boundary component
   const ErrorBoundary = () => {
     return (
@@ -60,7 +68,11 @@ function App() {
     },
     {
       path: '/login',
-      element: <UserLogin setIsAuthenticated={setIsAuthenticated} />
+      element: (
+        <LoginRoute>
+          <UserLogin setIsAuthenticated={setIsAuthenticated} />
+        </LoginRoute>
+      )
     },
     {
       path: '/register',
@@ -70,7 +82,7 @@ function App() {
       path: '/dashboard',
       element: (
         <ProtectedRoute>
-          <UserDashboard />
+          <UserDashboard setIsAuthenticated={setIsAuthenticated}/>
         </ProtectedRoute>
       )
     },

@@ -48,6 +48,9 @@ src/main/webapp/frontend/coverage
 
 # production
 src/main/webapp/frontend/build
+src/main/webapp/frontend/*.env.*
+src/main/resources/application-prod.properties
+
 
 # misc
 src/main/webapp/frontend/.DS_Store
@@ -69,3 +72,4 @@ src/main/webapp/frontend/certs
 /stashed
 *.db
 .github
+*.env.*

@@ -15,6 +15,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.melon.app.service.UserService;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
@@ -40,10 +43,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String username = null;
         String jwt = null;
-
+        
         if (jwtCookie.isPresent()) {
-            jwt = jwtCookie.get().getValue();
-            username = jwtUtil.extractUsername(jwt);
+            try {
+                jwt = jwtCookie.get().getValue();
+                username = jwtUtil.extractUsername(jwt);
+            } catch (SignatureException | ExpiredJwtException e) {
+                clearJwtCookie(response);
+            }
         }
 
         // Validate the token and authenticate the user
@@ -60,5 +67,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    private HttpServletResponse clearJwtCookie(HttpServletResponse response) {
+        // Create a cookie with the same name but null value and 0 max age to remove it
+        Cookie jwtCookie = new Cookie("jwt", null);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(true);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0); // Immediately expires the cookie
+        
+        response.addCookie(jwtCookie);
+        return response;
     }
 }

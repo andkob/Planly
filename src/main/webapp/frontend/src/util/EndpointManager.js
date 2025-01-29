@@ -11,7 +11,7 @@ import CallServer from "./CallServer";
 export async function userLogin(formData, setMessage, setIsAuthenticated, setIsSubmitting, navigate) {
   setIsSubmitting(true);
   try {
-    const response = await fetch('/api/auth/sessions', {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/sessions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export async function userLogin(formData, setMessage, setIsAuthenticated, setIsS
 export async function userRegister(registrationData, setIsSubmitting, setErrors, navigate) {
   setIsSubmitting(true);
   try {
-    const response = await fetch('/api/auth/users', {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

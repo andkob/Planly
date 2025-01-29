@@ -1,6 +1,6 @@
 export const checkAuthStatus = async () => {
   try {
-    const response = await fetch('/api/auth/validate', {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/validate`, {
       credentials: 'include'
     });
 

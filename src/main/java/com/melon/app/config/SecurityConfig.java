@@ -20,7 +20,6 @@ import com.melon.app.security.JwtAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
-
 @Configuration
 public class SecurityConfig {
     
@@ -29,19 +28,15 @@ public class SecurityConfig {
         http
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable()) // TODO Disable CSRF protection (not recommended in production)
-            .requiresChannel(channel -> channel
-                .anyRequest().requiresSecure()) // Require HTTPS for all requests
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // Allow preflight CORS requests
-                .requestMatchers("/api/auth/sessions", "/api/auth/users").permitAll() // allow everyone to access these endpoints
-                .requestMatchers("/h2-console/*").permitAll()
+                .requestMatchers("/health").permitAll() // Server health check endpoint
+                .requestMatchers("/api/auth/sessions", "/api/auth/users", "/api/auth/validate").permitAll() // allow everyone to access these endpoints
                 .anyRequest().authenticated() // require authentication for any other requests
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // JWT filter
-            .headers(headers -> headers
-                .frameOptions(frameOptions -> frameOptions.disable())  // Disable X-Frame-Options for H2 console
-            );
+            ;
         return http.build();
     }
 
@@ -53,9 +48,25 @@ public class SecurityConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:3000");  // Allow requests from the frontend
-        config.addAllowedHeader("*");  // Allow all headers
-        config.addAllowedMethod("*");  // Allow all HTTP methods
+        config.addAllowedOrigin("https://plan-ly.com");  // Allow requests from cloudflare domain
+        config.addAllowedOrigin("https://www.plan-ly.com");
+        config.addAllowedOrigin("https://api.plan-ly.com"); // Argo tunnel endpoint
+        config.addAllowedOrigin("http://localhost:3000"); // for development
+
+        // Allow common headers
+        config.addAllowedHeader("Authorization");
+        config.addAllowedHeader("Content-Type");
+        config.addAllowedHeader("Accept");
+        
+        // Allow common methods
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("OPTIONS");
+
+        // config.addAllowedHeader("*");  // Allow all headers
+        // config.addAllowedMethod("*");  // Allow all HTTP methods
         config.setAllowCredentials(true);  // Allow credentials (e.g., cookies, authorization headers)
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
