@@ -245,24 +245,14 @@ git clone https://github.com/andkob/Planly.git
 cd Planly
 ```
 
-2. Configure JWT Secret
-*This is a temporary solution for development only*
-* If you're on Linux or macOS, you can generate a random secret key with the following command:
-    ```bash
-    openssl rand -base64 32
-    ```
-    Or if you're on Windows, you can use the provided powershell script located in the root directory:
-    ```bash
-    powershell -File jwt-secret-generator.ps1
-    ```
-* Copy the generated secret and add the following line to the **application.properties** file
-```properties
-# Add this to src/main/resources/application.properties
-jwt.secret=YourGeneratedSecretKey
-```
-
-3. Setup H2 Development Database.
+2. Configure H2 Development Database. *(Optional)*
 In application.properties:
+If you want your test data to persist over sessions:
+```properties
+# Adjust the path of your file-based database to the location you want it to be stored
+spring.datasource.url=jdbc:h2:file:~/testdb
+```
+Or if you want a temporary database:
 ```properties
 # Uncomment this line for an in-memory database:
 # spring.datasource.url=jdbc:h2:mem:testdb
@@ -270,42 +260,29 @@ In application.properties:
 # Comment this line out:
 spring.datasource.url=jdbc:h2:file:~/testdb
 ```
-or:
-```properties
-# Adjust the path of your file-based database
-spring.datasource.url=jdbc:h2:file:~/testdb
-```
 
-4. Build and Run Backend
+3. Build Backend
 ```bash
 mvn clean install
-mvn spring-boot:run
 ```
+
+4. Run Backend in development mode
+```bash
+./startDevServer.sh
+```
+*If you choose to run the server manually you will need to set the JWT_SECRET environment variable yourself*
 
 5. Install and Run the React Development Server
 ```bash
 npm install
 npm start
 ```
-8. Access the application at http://localhost:3000
+6. Access the application at http://localhost:3000
 
-9. Verify Installation
+7. Verify Installation
 - Backend should be running on https://localhost:8080
 - Frontend should be running on https://localhost:3000
 - You should see the login page when accessing the frontend URL
-
-### Common Issues
-1. Certificate errors in browser
-   - This is expected with self-signed certificates
-   - Click "Advanced" and proceed to the website
-
-2. Frontend can't connect to backend
-   - Ensure backend is running on port 8080
-   - Verify server URL in .env.development points to http://localhost:8080
-
-3. CORS errors
-   - Verify SecurityConfig.java has correct CORS settings
-   - Check that frontend URL matches allowed origins in CORS configuration
 
 ## 🔜 Upcoming Features
 - Google OAuth 2.0 integration

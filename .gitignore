@@ -72,4 +72,4 @@ src/main/webapp/frontend/certs
 /stashed
 *.db
 .github
-.env
+*.env.*
